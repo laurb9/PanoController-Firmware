@@ -36,16 +36,20 @@ D0/RX
 D1/TX
 D2(int) - Joystick SW
 D3(int)
-D4 - StepperV EN
-D5 - StepperH EN
-D6 - StepperV DIR
-D7 - StepperV STEP
+D4 - StepperV ~EN
+D5 - StepperV DIR
+D6 - StepperV STEP
+D7 - StepperH ~EN
 D8 - StepperH DIR
 D9 - StepperH STEP
-D10- M0
-D11- M1
+D10- M0 (unless we preset stepping mode)
+D11- M1 (unless we preset stepping mode)
 D12- camera focus
 D13(led) - camera shutter
 
 ## Wiring Diagram
 
+DRV8834:
+- M0 - GND (1:1 step)
+- M1 - GND (1:1 step)
+- SLEEP - Vcc
