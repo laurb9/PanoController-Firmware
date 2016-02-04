@@ -19,8 +19,34 @@ protected:
     Camera camera;
     Motor horiz_motor;
     Motor vert_motor;
+    int horiz_motor_enable_pin;
+    int vert_motor_enable_pin;
+    unsigned horiz_fov;
+    unsigned vert_fov;
+    unsigned shots_per_position = 1;
+    unsigned shutter_delay = 1000/250;
+    unsigned pre_shutter_delay = 0;
 public:
-    Pano(Motor horiz_motor, Motor vert_motor, Camera camera);
+    volatile unsigned active;
+    // state information
+    unsigned horiz_position = 0;
+    unsigned vert_position = 0;
+    unsigned position;
+    Pano(Motor horiz_motor, Motor vert_motor, Camera camera, int, int);
+    void setFOV(unsigned horiz_angle, unsigned vert_angle);
+    void setFocalLength(unsigned focal_length);
+    void setShutter(unsigned shutter_delay, unsigned pre_delay);
+    void setShots(unsigned shots);
+    void setMode(unsigned mode);
+    unsigned getHorizShots(void);
+    unsigned getVertShots(void);
+    void start(void);
+    bool next(void);
+    void end(void);
+    void run(void);
+    void motorsOn(void);
+    void motorsOff(void);
+
 };
 
 #endif /* PANO_H_ */

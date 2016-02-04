@@ -41,7 +41,7 @@ static Motor vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
 static Adafruit_SSD1306 display(OLED_RESET);
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
-static Pano pano(horiz_motor, vert_motor, camera);
+static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
 void setup() {
     Serial.begin(9600);
@@ -65,14 +65,19 @@ void setup() {
 void loop() {
     display.clearDisplay();
     display.setCursor(0,0);
-    camera.shutter(250);
-    display.print("Start\n");
+    display.print("Start ");
     display.display();
-    digitalWrite(HORIZ_EN, LOW);
-    horiz_motor.rotate(30);
-    digitalWrite(HORIZ_EN, HIGH);
-    digitalWrite(VERT_EN, LOW);
-    vert_motor.rotate(5);
-    digitalWrite(VERT_EN, HIGH);
-    delay(1000);
+    pano.setFocalLength(50);
+    pano.setFOV(180, 90);
+    pano.setShutter(250, 250);
+    pano.start();
+    while(pano.next()){
+        display.print(pano.horiz_position);
+        display.print("x");
+        display.print(pano.vert_position);
+        display.print(" ");
+        display.display();
+    }
+    pano.end();
+    delay(5000);
 }

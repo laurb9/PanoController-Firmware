@@ -13,14 +13,18 @@ class Camera {
 protected:
     int focus_pin;
     int shutter_pin;
-    int lens_idx;
-    static const int vert_degrees[];
-    static const int horiz_degrees[];
+    unsigned lens_idx;
+    static const unsigned vert_degrees[];
+    static const unsigned horiz_degrees[];
+    static const unsigned vert_steps[];
+    static const unsigned horiz_steps[];
 public:
-    static const int focal_lengths[];
+    static const unsigned focal_lengths[];
     Camera(int focus_pin, int shutter_pin);
     void shutter(int delay_ms);
-    int setFocalLength(int focal_length);;
+    unsigned setFocalLength(unsigned focal_length);;
+    unsigned getHorizFOV(void);
+    unsigned getVertFOV(void);
 };
 
 #endif /* CAMERA_H_ */

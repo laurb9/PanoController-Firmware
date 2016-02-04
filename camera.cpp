@@ -11,13 +11,13 @@
 #include <Arduino.h>
 
 // taken from https://en.wikipedia.org/wiki/Angle_of_view for now
-const int Camera::focal_lengths[] = {
+const unsigned Camera::focal_lengths[] = {
         12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400
 };
-const int Camera::vert_degrees[] = {
+const unsigned Camera::vert_degrees[] = {
         90, 81, 74, 62, 53, 38, 27, 19,  13,   7,   5,   3
 };
-const int Camera::horiz_degrees[] = {
+const unsigned Camera::horiz_degrees[] = {
        111,103, 95, 82, 74, 54, 40, 29,  19,  10,   7,   5
 };
 
@@ -40,9 +40,17 @@ void Camera::shutter(int delay_ms){
     digitalWrite(shutter_pin, HIGH);
 }
 
-int Camera::setFocalLength(int focal_length){
-    int i;
+unsigned Camera::setFocalLength(unsigned focal_length){
+    unsigned i;
     for (i=0; i<sizeof(focal_lengths) && focal_lengths[i] < focal_length; i++);
     lens_idx = i < sizeof(focal_lengths) ? i : sizeof(focal_lengths)-1;
     return lens_idx;
+}
+
+unsigned Camera::getHorizFOV(void){
+    return horiz_degrees[lens_idx];
+}
+
+unsigned Camera::getVertFOV(void){
+    return vert_degrees[lens_idx];
 }
