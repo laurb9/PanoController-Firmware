@@ -22,23 +22,21 @@
 #define JOYSTICK_X A2
 #define JOYSTICK_Y A3
 #define JOYSTICK_SW 2
-#define SDA A4
-#define SCL A5
 
 #define MOTOR_STEPS 200
 #define VERT_EN 4
 #define VERT_DIR 5
 #define VERT_STEP 6
-#define HORZ_EN 7
-#define HORZ_DIR 8
-#define HORZ_STEP 9
+#define HORIZ_EN 7
+#define HORIZ_DIR 8
+#define HORIZ_STEP 9
 
 #define DRV_M0 10
 #define DRV_M1 11
 #define CAMERA_FOCUS 12
 #define CAMERA_SHUTTER 13
 
-static Motor horiz_motor(MOTOR_STEPS, HORZ_DIR, HORZ_STEP, DRV_M0, DRV_M1);
+static Motor horiz_motor(MOTOR_STEPS, HORIZ_DIR, HORIZ_STEP, DRV_M0, DRV_M1);
 static Motor vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
 static Adafruit_SSD1306 display(OLED_RESET);
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
@@ -50,7 +48,7 @@ void setup() {
 
     delay(100);  // give time for display to init; if display blank increase delay
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
-    display.setRotation(2);
+    display.setRotation(0);
     display.clearDisplay();
     display.setCursor(0,0);
     display.setTextColor(WHITE);
@@ -59,9 +57,9 @@ void setup() {
     display.display();
 
     pinMode(VERT_EN, OUTPUT);
-    pinMode(HORZ_EN, OUTPUT);
+    pinMode(HORIZ_EN, OUTPUT);
     digitalWrite(VERT_EN, HIGH);
-    digitalWrite(HORZ_EN, HIGH);
+    digitalWrite(HORIZ_EN, HIGH);
 }
 
 void loop() {
@@ -70,9 +68,9 @@ void loop() {
     camera.shutter(250);
     display.print("Start\n");
     display.display();
-    digitalWrite(HORZ_EN, LOW);
-    horiz_motor.rotate(10);
-    digitalWrite(HORZ_EN, HIGH);
+    digitalWrite(HORIZ_EN, LOW);
+    horiz_motor.rotate(30);
+    digitalWrite(HORIZ_EN, HIGH);
     digitalWrite(VERT_EN, LOW);
     vert_motor.rotate(5);
     digitalWrite(VERT_EN, HIGH);
