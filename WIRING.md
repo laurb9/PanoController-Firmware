@@ -13,8 +13,8 @@
   - Stepper gigapan's 39BYG001 (5V,1A,1.8Kg-cm) or 39BYG101 (5V,0.4A,0.66Kg-cm)
   - 100uF cap
 - 7.2V - 10.8V batter or power supply
-  - 1.25A for gigapan
-  - 0.5A for the other
+  - 2.5A for gigapan
+  - 1.25A for the other
 - Camera shutter cable (GND/Focus/Shutter)
 
 ### Expansion
