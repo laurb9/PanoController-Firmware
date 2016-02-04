@@ -55,11 +55,6 @@ void setup() {
     display.setTextSize(1);
     Serial.print("Ready\n");
     display.display();
-
-    pinMode(VERT_EN, OUTPUT);
-    pinMode(HORIZ_EN, OUTPUT);
-    digitalWrite(VERT_EN, HIGH);
-    digitalWrite(HORIZ_EN, HIGH);
 }
 
 void loop() {
@@ -69,15 +64,22 @@ void loop() {
     display.display();
     pano.setFocalLength(50);
     pano.setFOV(180, 90);
-    pano.setShutter(250, 250);
+    pano.setShutter(500, 250);
     pano.start();
-    while(pano.next()){
-        display.print(pano.horiz_position);
-        display.print("x");
-        display.print(pano.vert_position);
-        display.print(" ");
+    do {
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.println("running\n");
+        display.print("pos = ");
+        display.println(pano.position);
+        display.print("horiz = ");
+        display.println(pano.horiz_position);
+        display.print("vert = ");
+        display.println(pano.vert_position);
         display.display();
-    }
+    } while(pano.next());
     pano.end();
-    delay(5000);
+    display.println("end");
+    display.display();
+    delay(10000);
 }

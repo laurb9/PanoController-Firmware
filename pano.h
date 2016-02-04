@@ -26,12 +26,12 @@ protected:
     unsigned shots_per_position = 1;
     unsigned shutter_delay = 1000/250;
     unsigned pre_shutter_delay = 0;
-public:
-    volatile unsigned active;
     // state information
+public:
     unsigned horiz_position = 0;
     unsigned vert_position = 0;
     unsigned position;
+    volatile unsigned active;
     Pano(Motor horiz_motor, Motor vert_motor, Camera camera, int, int);
     void setFOV(unsigned horiz_angle, unsigned vert_angle);
     void setFocalLength(unsigned focal_length);
