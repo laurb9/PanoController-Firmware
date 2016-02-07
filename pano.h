@@ -8,11 +8,11 @@
  */
 #ifndef PANO_H_
 #define PANO_H_
-#include <DRV8834.h>
+#include <BasicStepperDriver.h>
 #include "camera.h"
 #include "pano.h"
 
-#define Motor DRV8834
+#define Motor BasicStepperDriver
 
 class Pano {
 protected:

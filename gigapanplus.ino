@@ -36,8 +36,8 @@
 #define CAMERA_FOCUS 12
 #define CAMERA_SHUTTER 13
 
-static Motor horiz_motor(MOTOR_STEPS, HORIZ_DIR, HORIZ_STEP, DRV_M0, DRV_M1);
-static Motor vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
+static DRV8834 horiz_motor(MOTOR_STEPS, HORIZ_DIR, HORIZ_STEP, DRV_M0, DRV_M1);
+static DRV8834 vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
 static Adafruit_SSD1306 display(OLED_RESET);
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
