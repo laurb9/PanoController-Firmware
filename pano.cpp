@@ -26,9 +26,12 @@ Pano::Pano(Motor horiz_motor, Motor vert_motor, Camera camera,
     vert_motor.setMicrostep(1);
     vert_motor.setRPM(60);
 
+    horiz_gear_ratio = 8;
+    vert_gear_ratio = 32;
+
     setFOV(360,180);
 }
-void Pano::setFOV(unsigned horiz_angle, unsigned vert_angle){
+void Pano::setFOV(int horiz_angle, int vert_angle){
     if (horiz_angle && vert_angle && horiz_angle <= 360 && vert_angle <= 180){
         horiz_fov = horiz_angle;
         vert_fov = vert_angle;
@@ -71,17 +74,17 @@ bool Pano::next(void){
 
     horiz_position += camera.getHorizFOV();
     if (horiz_position < horiz_fov){
-        horiz_motor.rotate((int)camera.getHorizFOV());
+        horiz_motor.rotate((int)camera.getHorizFOV()*horiz_gear_ratio);
     } else {
         // move to next row, reset column
-        horiz_motor.rotate((int)camera.getHorizFOV()-(int)horiz_position);
+        horiz_motor.rotate(horiz_gear_ratio*((int)camera.getHorizFOV()-horiz_position));
         horiz_position = 0;
         vert_position += camera.getVertFOV();
         if (vert_position >= vert_fov){
-            vert_motor.rotate((int)camera.getVertFOV()-(int)vert_position);
+            vert_motor.rotate(vert_gear_ratio*((int)camera.getVertFOV()-vert_position));
             return false;
         }
-        vert_motor.rotate((int)camera.getVertFOV());
+        vert_motor.rotate((int)camera.getVertFOV()*vert_gear_ratio);
     }
     motorsOff(); // temporary
     return true;

@@ -16,24 +16,26 @@
 
 class Pano {
 protected:
-    Camera camera;
     Motor horiz_motor;
     Motor vert_motor;
+    Camera camera;
     int horiz_motor_enable_pin;
     int vert_motor_enable_pin;
-    unsigned horiz_fov;
-    unsigned vert_fov;
+    int horiz_gear_ratio = 8;
+    int vert_gear_ratio = 32;
+    int horiz_fov;
+    int vert_fov;
     unsigned shots_per_position = 1;
     unsigned shutter_delay = 1000/250;
     unsigned pre_shutter_delay = 0;
     // state information
 public:
-    unsigned horiz_position = 0;
-    unsigned vert_position = 0;
+    int horiz_position = 0;
+    int vert_position = 0;
     unsigned position;
     volatile unsigned active;
     Pano(Motor horiz_motor, Motor vert_motor, Camera camera, int, int);
-    void setFOV(unsigned horiz_angle, unsigned vert_angle);
+    void setFOV(int horiz_angle, int vert_angle);
     void setFocalLength(unsigned focal_length);
     void setShutter(unsigned shutter_delay, unsigned pre_delay);
     void setShots(unsigned shots);
