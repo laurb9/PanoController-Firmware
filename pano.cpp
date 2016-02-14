@@ -48,10 +48,10 @@ void Pano::setMode(unsigned mode){
 
 }
 unsigned Pano::getHorizShots(void){
-
+    return horiz_fov/camera.getHorizFOV();
 }
 unsigned Pano::getVertShots(void){
-
+    return vert_fov/camera.getVertFOV();
 }
 void Pano::start(void){
     motorsOn();
@@ -74,10 +74,11 @@ bool Pano::next(void){
         horiz_motor.rotate((int)camera.getHorizFOV());
     } else {
         // move to next row, reset column
-        horiz_motor.rotate(-(int)horiz_position);
+        horiz_motor.rotate((int)camera.getHorizFOV()-(int)horiz_position);
         horiz_position = 0;
         vert_position += camera.getVertFOV();
         if (vert_position >= vert_fov){
+            vert_motor.rotate((int)camera.getVertFOV()-(int)vert_position);
             return false;
         }
         vert_motor.rotate((int)camera.getVertFOV());
