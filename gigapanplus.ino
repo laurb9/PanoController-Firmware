@@ -13,6 +13,7 @@
 #include "pano.h"
 #include "camera.h"
 #include "joystick.h"
+#include "menu.h"
 
 // Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
@@ -45,7 +46,7 @@ static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
 void setup() {
     Serial.begin(9600);
-
+    delay(1000); // wait for serial
     delay(100);  // give time for display to init; if display blank increase delay
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
     display.setRotation(0);
@@ -55,9 +56,65 @@ void setup() {
     display.setTextSize(1);
     Serial.print(F("Ready\n"));
     display.display();
+    displayMenu(EVENT_NONE);
+}
+
+void displayMenu(int event) {
+    const int rows = 6;
+    static int selected = 0;
+    static int start = 0;
+    static Options *current_option;
+
+    display.clearDisplay();
+    display.setCursor(0,0);
+
+    if (!current_option && (isEventRight(event) || isEventClick(event))){
+        current_option = &menu[selected];
+    } else if (current_option && isEventLeft(event)){
+        current_option = NULL;
+    }
+
+    if (!current_option){
+        display.println(F("----- Main Menu -----"));
+        Serial.println(F("----- Main Menu -----"));
+
+        if (isEventDown(event) && selected < menu_size-1){
+            selected++;
+            if (selected > rows/2 && start < menu_size-rows){
+                start++;
+            }
+        };
+        if (isEventUp(event) && selected > 0){
+            selected--;
+            if (start > 0){
+                start--;
+            }
+        };
+        for (int i=start; i<start+rows && i<menu_size; i++){
+            if (i == selected){
+                display.setTextColor(BLACK, WHITE);
+                Serial.print(F(">"));
+            }
+            display.println(menu[i].description);
+            Serial.println(menu[i].description);
+            if (i == selected){
+                display.setTextColor(WHITE, BLACK);
+            }
+        }
+    } else {
+        display.println(current_option->description);
+        display.print("---------------------");
+        display.println(*current_option->value);
+    }
+    display.display();
 }
 
 void loop() {
+    int event = joystick.read();
+    if (event){
+        displayMenu(event);
+    }
+    /*
     display.clearDisplay();
     display.setCursor(0,0);
     display.print(F("Start "));
@@ -83,4 +140,5 @@ void loop() {
     display.println(F("end"));
     display.display();
     delay(10000);
+    */
 }

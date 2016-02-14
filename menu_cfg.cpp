@@ -26,7 +26,7 @@ static ValueOptionMenu menu3("Focal Length", &focal, 35, 12,
            VALUES {12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400}
 );
 static NamedOptionMenu menu4("Shutter Speed", &shutter, 10, 9,
-           NAMES  {"1/100", "1/20", "1/10", "1/4","0.5","1",   "2",  "4",  "8"},
+           NAMES  {"1/100", "1/20", "1/10", "1/4","0.5", "1s", "2s", "4s", "8s"},
            VALUES {10,      50,     100,    250,   500,   1000, 2000, 4000, 8000}
 );
 static NamedOptionMenu menu5("Pre-Shutter Delay", &pre_shutter, 10, 6,
@@ -43,5 +43,6 @@ static NamedOptionMenu menu9("Motors", &motor, 0, 2,
            VALUES {0,    1}
 );
 
-const Options menu[] = {menu1, menu2, menu3, menu4, menu5, menu6, menu7, menu8, menu9};
-const unsigned menu_size = sizeof(menu);
+Options menu[] = {menu1, menu2, menu3, menu4, menu5, menu6, menu7, menu8, menu9};
+const int menu_size = 9;
+
