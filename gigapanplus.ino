@@ -53,14 +53,14 @@ void setup() {
     display.setCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(1);
-    Serial.print("Ready\n");
+    Serial.print(F("Ready\n"));
     display.display();
 }
 
 void loop() {
     display.clearDisplay();
     display.setCursor(0,0);
-    display.print("Start ");
+    display.print(F("Start "));
     display.display();
     pano.setFocalLength(50);
     pano.setFOV(180, 90);
@@ -69,17 +69,18 @@ void loop() {
     do {
         display.clearDisplay();
         display.setCursor(0,0);
-        display.println("running\n");
-        display.print("pos = ");
+        display.println(F("running\n"));
+        display.display();
+        display.print(F("pos = "));
         display.println(pano.position);
-        display.print("horiz = ");
+        display.print(F("horiz = "));
         display.println(pano.horiz_position);
-        display.print("vert = ");
+        display.print(F("vert = "));
         display.println(pano.vert_position);
         display.display();
     } while(pano.next());
     pano.end();
-    display.println("end");
+    display.println(F("end"));
     display.display();
     delay(10000);
 }
