@@ -13,9 +13,11 @@ def main(menu_file):
     for i, menu_item in enumerate(menu):
         menu_name = "menu_" + re.sub(r"[^\w]", "_", menu_item["description"].lower())
         menu_item["name"] = menu_name
+        output.append("// %(description)s" % menu_item)
+        output.append("volatile int %(variable)s;" % menu_item);
         names = []
         values = []
-        default_val = None
+        default_val = 0
         output.append('static const char %(name)s_desc[] PROGMEM = "%(description)s";' % menu_item)
         
         if "step" in menu_item:
@@ -26,19 +28,21 @@ def main(menu_file):
             for j, option in enumerate(menu_item["options"]):
                 try:
                     name, value = option.items()[0]
+                    if menu_item["default"] == name:
+                        default_val = value
                 except AttributeError:
                     name, value = str(option) + menu_item.get("unit", ""), option
+                    if menu_item["default"] == value:
+                        default_val = value
 
                 var_name = "%s_name_%d" % (menu_name, j)
                 var_value = "%s_val_%d" % (menu_name, j)
-                if menu_item["default"] == name:
-                    default_val = value
                 output.append('static const char %s[] PROGMEM = "%s";' % (var_name, name))
                 output.append("static const int %s = %s;" % (var_value, value))
                 names.append(var_name)
                 values.append(var_value)
 
-        menu_item["default_val"] = default_val or 0
+        menu_item["default_val"] = default_val
         menu_item["size"] = len(names)
         menu_item["names"] = ", ".join(names)
         menu_item["values"] = ", ".join(values)
@@ -47,9 +51,6 @@ def main(menu_file):
         
         output.append(
 """
-// %(description)s
-volatile int %(variable)s;
-static const int %(name)s_size = %(size)d;
 static const char *%(name)s_names[%(size)d] = {%(names)s};
 static const int %(name)s_values[%(size)d] = {%(values)s};
 static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);

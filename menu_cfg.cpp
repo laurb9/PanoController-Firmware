@@ -1,4 +1,6 @@
 #include "menu.h"
+// Camera Orientation
+volatile int orientation;
 static const char menu_camera_orientation_desc[] PROGMEM = "Camera Orientation";
 static const char menu_camera_orientation_name_0[] PROGMEM = "portrait";
 static const int menu_camera_orientation_val_0 = 0;
@@ -7,13 +9,12 @@ static const int menu_camera_orientation_val_1 = 1;
 static const char menu_camera_orientation_name_2[] PROGMEM = "square";
 static const int menu_camera_orientation_val_2 = 2;
 
-// Camera Orientation
-volatile int orientation;
-static const int menu_camera_orientation_size = 3;
 static const char *menu_camera_orientation_names[3] = {menu_camera_orientation_name_0, menu_camera_orientation_name_1, menu_camera_orientation_name_2};
 static const int menu_camera_orientation_values[3] = {menu_camera_orientation_val_0, menu_camera_orientation_val_1, menu_camera_orientation_val_2};
 static NamedOptionMenu menu_camera_orientation(menu_camera_orientation_desc, &orientation, 0, 3, menu_camera_orientation_names, menu_camera_orientation_values);
 
+// Aspect Ratio
+volatile int aspect;
 static const char menu_aspect_ratio_desc[] PROGMEM = "Aspect Ratio";
 static const char menu_aspect_ratio_name_0[] PROGMEM = "3:2";
 static const int menu_aspect_ratio_val_0 = 0;
@@ -24,13 +25,12 @@ static const int menu_aspect_ratio_val_2 = 2;
 static const char menu_aspect_ratio_name_3[] PROGMEM = "1:1";
 static const int menu_aspect_ratio_val_3 = 3;
 
-// Aspect Ratio
-volatile int aspect;
-static const int menu_aspect_ratio_size = 4;
 static const char *menu_aspect_ratio_names[4] = {menu_aspect_ratio_name_0, menu_aspect_ratio_name_1, menu_aspect_ratio_name_2, menu_aspect_ratio_name_3};
 static const int menu_aspect_ratio_values[4] = {menu_aspect_ratio_val_0, menu_aspect_ratio_val_1, menu_aspect_ratio_val_2, menu_aspect_ratio_val_3};
 static NamedOptionMenu menu_aspect_ratio(menu_aspect_ratio_desc, &aspect, 0, 4, menu_aspect_ratio_names, menu_aspect_ratio_values);
 
+// Focal Length
+volatile int focal;
 static const char menu_focal_length_desc[] PROGMEM = "Focal Length";
 static const char menu_focal_length_name_0[] PROGMEM = "12mm";
 static const int menu_focal_length_val_0 = 12;
@@ -57,13 +57,12 @@ static const int menu_focal_length_val_10 = 300;
 static const char menu_focal_length_name_11[] PROGMEM = "400mm";
 static const int menu_focal_length_val_11 = 400;
 
-// Focal Length
-volatile int focal;
-static const int menu_focal_length_size = 12;
 static const char *menu_focal_length_names[12] = {menu_focal_length_name_0, menu_focal_length_name_1, menu_focal_length_name_2, menu_focal_length_name_3, menu_focal_length_name_4, menu_focal_length_name_5, menu_focal_length_name_6, menu_focal_length_name_7, menu_focal_length_name_8, menu_focal_length_name_9, menu_focal_length_name_10, menu_focal_length_name_11};
 static const int menu_focal_length_values[12] = {menu_focal_length_val_0, menu_focal_length_val_1, menu_focal_length_val_2, menu_focal_length_val_3, menu_focal_length_val_4, menu_focal_length_val_5, menu_focal_length_val_6, menu_focal_length_val_7, menu_focal_length_val_8, menu_focal_length_val_9, menu_focal_length_val_10, menu_focal_length_val_11};
-static NamedOptionMenu menu_focal_length(menu_focal_length_desc, &focal, 0, 12, menu_focal_length_names, menu_focal_length_values);
+static NamedOptionMenu menu_focal_length(menu_focal_length_desc, &focal, 35, 12, menu_focal_length_names, menu_focal_length_values);
 
+// Shutter Speed
+volatile int shutter;
 static const char menu_shutter_speed_desc[] PROGMEM = "Shutter Speed";
 static const char menu_shutter_speed_name_0[] PROGMEM = "1/100";
 static const int menu_shutter_speed_val_0 = 10;
@@ -84,13 +83,12 @@ static const int menu_shutter_speed_val_7 = 4000;
 static const char menu_shutter_speed_name_8[] PROGMEM = "8s";
 static const int menu_shutter_speed_val_8 = 8000;
 
-// Shutter Speed
-volatile int shutter;
-static const int menu_shutter_speed_size = 9;
 static const char *menu_shutter_speed_names[9] = {menu_shutter_speed_name_0, menu_shutter_speed_name_1, menu_shutter_speed_name_2, menu_shutter_speed_name_3, menu_shutter_speed_name_4, menu_shutter_speed_name_5, menu_shutter_speed_name_6, menu_shutter_speed_name_7, menu_shutter_speed_name_8};
 static const int menu_shutter_speed_values[9] = {menu_shutter_speed_val_0, menu_shutter_speed_val_1, menu_shutter_speed_val_2, menu_shutter_speed_val_3, menu_shutter_speed_val_4, menu_shutter_speed_val_5, menu_shutter_speed_val_6, menu_shutter_speed_val_7, menu_shutter_speed_val_8};
 static NamedOptionMenu menu_shutter_speed(menu_shutter_speed_desc, &shutter, 10, 9, menu_shutter_speed_names, menu_shutter_speed_values);
 
+// Pre-Shutter Delay
+volatile int pre_shutter;
 static const char menu_pre_shutter_delay_desc[] PROGMEM = "Pre-Shutter Delay";
 static const char menu_pre_shutter_delay_name_0[] PROGMEM = "0.1s";
 static const int menu_pre_shutter_delay_val_0 = 100;
@@ -103,13 +101,12 @@ static const int menu_pre_shutter_delay_val_3 = 2000;
 static const char menu_pre_shutter_delay_name_4[] PROGMEM = "4s";
 static const int menu_pre_shutter_delay_val_4 = 4000;
 
-// Pre-Shutter Delay
-volatile int pre_shutter;
-static const int menu_pre_shutter_delay_size = 5;
 static const char *menu_pre_shutter_delay_names[5] = {menu_pre_shutter_delay_name_0, menu_pre_shutter_delay_name_1, menu_pre_shutter_delay_name_2, menu_pre_shutter_delay_name_3, menu_pre_shutter_delay_name_4};
 static const int menu_pre_shutter_delay_values[5] = {menu_pre_shutter_delay_val_0, menu_pre_shutter_delay_val_1, menu_pre_shutter_delay_val_2, menu_pre_shutter_delay_val_3, menu_pre_shutter_delay_val_4};
 static NamedOptionMenu menu_pre_shutter_delay(menu_pre_shutter_delay_desc, &pre_shutter, 100, 5, menu_pre_shutter_delay_names, menu_pre_shutter_delay_values);
 
+// Shots per position
+volatile int shots;
 static const char menu_shots_per_position_desc[] PROGMEM = "Shots per position";
 static const char menu_shots_per_position_name_0[] PROGMEM = "1";
 static const int menu_shots_per_position_val_0 = 1;
@@ -122,13 +119,12 @@ static const int menu_shots_per_position_val_3 = 4;
 static const char menu_shots_per_position_name_4[] PROGMEM = "5";
 static const int menu_shots_per_position_val_4 = 5;
 
-// Shots per position
-volatile int shots;
-static const int menu_shots_per_position_size = 5;
 static const char *menu_shots_per_position_names[5] = {menu_shots_per_position_name_0, menu_shots_per_position_name_1, menu_shots_per_position_name_2, menu_shots_per_position_name_3, menu_shots_per_position_name_4};
 static const int menu_shots_per_position_values[5] = {menu_shots_per_position_val_0, menu_shots_per_position_val_1, menu_shots_per_position_val_2, menu_shots_per_position_val_3, menu_shots_per_position_val_4};
-static NamedOptionMenu menu_shots_per_position(menu_shots_per_position_desc, &shots, 0, 5, menu_shots_per_position_names, menu_shots_per_position_values);
+static NamedOptionMenu menu_shots_per_position(menu_shots_per_position_desc, &shots, 1, 5, menu_shots_per_position_names, menu_shots_per_position_values);
 
+// Horizontal FOV
+volatile int horiz;
 static const char menu_horizontal_fov_desc[] PROGMEM = "Horizontal FOV";
 static const char menu_horizontal_fov_name_0[] PROGMEM = "10deg";
 static const int menu_horizontal_fov_val_0 = 10;
@@ -201,13 +197,12 @@ static const int menu_horizontal_fov_val_33 = 340;
 static const char menu_horizontal_fov_name_34[] PROGMEM = "350deg";
 static const int menu_horizontal_fov_val_34 = 350;
 
-// Horizontal FOV
-volatile int horiz;
-static const int menu_horizontal_fov_size = 35;
 static const char *menu_horizontal_fov_names[35] = {menu_horizontal_fov_name_0, menu_horizontal_fov_name_1, menu_horizontal_fov_name_2, menu_horizontal_fov_name_3, menu_horizontal_fov_name_4, menu_horizontal_fov_name_5, menu_horizontal_fov_name_6, menu_horizontal_fov_name_7, menu_horizontal_fov_name_8, menu_horizontal_fov_name_9, menu_horizontal_fov_name_10, menu_horizontal_fov_name_11, menu_horizontal_fov_name_12, menu_horizontal_fov_name_13, menu_horizontal_fov_name_14, menu_horizontal_fov_name_15, menu_horizontal_fov_name_16, menu_horizontal_fov_name_17, menu_horizontal_fov_name_18, menu_horizontal_fov_name_19, menu_horizontal_fov_name_20, menu_horizontal_fov_name_21, menu_horizontal_fov_name_22, menu_horizontal_fov_name_23, menu_horizontal_fov_name_24, menu_horizontal_fov_name_25, menu_horizontal_fov_name_26, menu_horizontal_fov_name_27, menu_horizontal_fov_name_28, menu_horizontal_fov_name_29, menu_horizontal_fov_name_30, menu_horizontal_fov_name_31, menu_horizontal_fov_name_32, menu_horizontal_fov_name_33, menu_horizontal_fov_name_34};
 static const int menu_horizontal_fov_values[35] = {menu_horizontal_fov_val_0, menu_horizontal_fov_val_1, menu_horizontal_fov_val_2, menu_horizontal_fov_val_3, menu_horizontal_fov_val_4, menu_horizontal_fov_val_5, menu_horizontal_fov_val_6, menu_horizontal_fov_val_7, menu_horizontal_fov_val_8, menu_horizontal_fov_val_9, menu_horizontal_fov_val_10, menu_horizontal_fov_val_11, menu_horizontal_fov_val_12, menu_horizontal_fov_val_13, menu_horizontal_fov_val_14, menu_horizontal_fov_val_15, menu_horizontal_fov_val_16, menu_horizontal_fov_val_17, menu_horizontal_fov_val_18, menu_horizontal_fov_val_19, menu_horizontal_fov_val_20, menu_horizontal_fov_val_21, menu_horizontal_fov_val_22, menu_horizontal_fov_val_23, menu_horizontal_fov_val_24, menu_horizontal_fov_val_25, menu_horizontal_fov_val_26, menu_horizontal_fov_val_27, menu_horizontal_fov_val_28, menu_horizontal_fov_val_29, menu_horizontal_fov_val_30, menu_horizontal_fov_val_31, menu_horizontal_fov_val_32, menu_horizontal_fov_val_33, menu_horizontal_fov_val_34};
-static NamedOptionMenu menu_horizontal_fov(menu_horizontal_fov_desc, &horiz, 0, 35, menu_horizontal_fov_names, menu_horizontal_fov_values);
+static NamedOptionMenu menu_horizontal_fov(menu_horizontal_fov_desc, &horiz, 120, 35, menu_horizontal_fov_names, menu_horizontal_fov_values);
 
+// Vertical FOV
+volatile int vert;
 static const char menu_vertical_fov_desc[] PROGMEM = "Vertical FOV";
 static const char menu_vertical_fov_name_0[] PROGMEM = "10deg";
 static const int menu_vertical_fov_val_0 = 10;
@@ -244,22 +239,18 @@ static const int menu_vertical_fov_val_15 = 160;
 static const char menu_vertical_fov_name_16[] PROGMEM = "170deg";
 static const int menu_vertical_fov_val_16 = 170;
 
-// Vertical FOV
-volatile int vert;
-static const int menu_vertical_fov_size = 17;
 static const char *menu_vertical_fov_names[17] = {menu_vertical_fov_name_0, menu_vertical_fov_name_1, menu_vertical_fov_name_2, menu_vertical_fov_name_3, menu_vertical_fov_name_4, menu_vertical_fov_name_5, menu_vertical_fov_name_6, menu_vertical_fov_name_7, menu_vertical_fov_name_8, menu_vertical_fov_name_9, menu_vertical_fov_name_10, menu_vertical_fov_name_11, menu_vertical_fov_name_12, menu_vertical_fov_name_13, menu_vertical_fov_name_14, menu_vertical_fov_name_15, menu_vertical_fov_name_16};
 static const int menu_vertical_fov_values[17] = {menu_vertical_fov_val_0, menu_vertical_fov_val_1, menu_vertical_fov_val_2, menu_vertical_fov_val_3, menu_vertical_fov_val_4, menu_vertical_fov_val_5, menu_vertical_fov_val_6, menu_vertical_fov_val_7, menu_vertical_fov_val_8, menu_vertical_fov_val_9, menu_vertical_fov_val_10, menu_vertical_fov_val_11, menu_vertical_fov_val_12, menu_vertical_fov_val_13, menu_vertical_fov_val_14, menu_vertical_fov_val_15, menu_vertical_fov_val_16};
-static NamedOptionMenu menu_vertical_fov(menu_vertical_fov_desc, &vert, 0, 17, menu_vertical_fov_names, menu_vertical_fov_values);
+static NamedOptionMenu menu_vertical_fov(menu_vertical_fov_desc, &vert, 90, 17, menu_vertical_fov_names, menu_vertical_fov_values);
 
+// Motor Control
+volatile int motors_enable;
 static const char menu_motor_control_desc[] PROGMEM = "Motor Control";
 static const char menu_motor_control_name_0[] PROGMEM = "On";
 static const int menu_motor_control_val_0 = 1;
 static const char menu_motor_control_name_1[] PROGMEM = "Off";
 static const int menu_motor_control_val_1 = 0;
 
-// Motor Control
-volatile int motors_enable;
-static const int menu_motor_control_size = 2;
 static const char *menu_motor_control_names[2] = {menu_motor_control_name_0, menu_motor_control_name_1};
 static const int menu_motor_control_values[2] = {menu_motor_control_val_0, menu_motor_control_val_1};
 static NamedOptionMenu menu_motor_control(menu_motor_control_desc, &motors_enable, 1, 2, menu_motor_control_names, menu_motor_control_values);

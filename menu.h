@@ -39,7 +39,6 @@ public:
 class NumericSelection : public Options {
 public:
     static const ClassID class_id = CLASS_NUMERIC;
-    static const int type = 2;
     int min_val, max_val, step;
     NumericSelection(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step);
     void render(DISPLAY_DEVICE display, int rows);
@@ -61,13 +60,6 @@ public:
     void render(DISPLAY_DEVICE display, int rows);
 };
 
-union MenuItem {
-    Options *option;
-    NumericSelection *slider;
-    ValueOptionMenu *values;
-    NamedOptionMenu *names;
-};
-
 class Menu : public Options {
 protected:
     bool drilldown = false;
@@ -83,6 +75,27 @@ public:
     void select(void);
     void render(DISPLAY_DEVICE display, int rows);
 };
+
+union MenuItem {
+    Options *option;
+    NumericSelection *slider;
+    ValueOptionMenu *values;
+    NamedOptionMenu *names;
+    Menu *menu;
+};
+
+/*
+ * Macro to cast a MenuItem to the correct pointer type and invoke the requested method
+ */
+#define invoke_method(method, ...) \
+switch(types[pos]){ \
+case Menu::class_id: menus[pos].menu->method(__VA_ARGS__); break; \
+case NamedOptionMenu::class_id: menus[pos].names->method(__VA_ARGS__); break; \
+case ValueOptionMenu::class_id: menus[pos].values->method(__VA_ARGS__); break; \
+case NumericSelection::class_id: menus[pos].slider->method(__VA_ARGS__); break; \
+case Options::class_id: menus[pos].option->method(__VA_ARGS__); break; \
+default: break; \
+        }
 
 extern Menu menu;
 

@@ -15,6 +15,7 @@
 Options::Options(const char *description, volatile int *value, int default_val)
 :description(description), value(value), default_val(default_val)
 {
+    pos = default_val;
     if (value){
         *value = default_val;
     }
@@ -79,7 +80,7 @@ ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, i
 {
     this->count = count;
     // find the position corresponding to the default value
-    for (pos=count; pos > 0; pos--){
+    for (pos=count-1; pos > 0; pos--){
         if (values[pos] == default_val){
             break;
         }
@@ -135,31 +136,31 @@ void Menu::open(void){
 
 void Menu::cancel(void){
     if (drilldown){
-        menus[pos].names->cancel();
+        invoke_method(cancel);
         drilldown = false;
     }
 }
 void Menu::next(void){
     if (drilldown){
-        menus[pos].names->next();
+        invoke_method(next);
     } else {
         Options::next();
     }
 }
 void Menu::prev(void){
     if (drilldown){
-        menus[pos].names->prev();
+        invoke_method(prev);
     } else {
         Options::prev();
     }
 }
 void Menu::select(void){
     if (drilldown){
-        menus[pos].names->select();
+        invoke_method(select);
     } else {
         Options::select();
         drilldown = true;
-        menus[pos].names->open();
+        invoke_method(open);
     }
 }
 void Menu::render(DISPLAY_DEVICE display, int rows){
@@ -167,7 +168,7 @@ void Menu::render(DISPLAY_DEVICE display, int rows){
     Serial.println(drilldown);
 
     if (drilldown){
-        menus[pos].names->render(display, rows);
+        invoke_method(render, display, rows);
         return;
     }
 
