@@ -2,9 +2,8 @@ import json
 import re
 
 def main(menu_file):
-    print("""
-#include "menu.h"
-""")
+    output = ['#include "menu.h"']
+
     with open(menu_file) as f:
         menu = json.load(f)
 
@@ -14,10 +13,10 @@ def main(menu_file):
     for i, menu_item in enumerate(menu):
         menu_name = "menu_" + re.sub(r"[^\w]", "_", menu_item["description"].lower())
         menu_item["name"] = menu_name
-        print('static const char %(name)s_desc[] PROGMEM = "%(description)s";' % menu_item)
         names = []
         values = []
         default_val = None
+        output.append('static const char %(name)s_desc[] PROGMEM = "%(description)s";' % menu_item)
         
         if "step" in menu_item:
             menu_item["options"] = range(menu_item["min"], menu_item["max"], menu_item["step"])
@@ -28,15 +27,14 @@ def main(menu_file):
                 try:
                     name, value = option.items()[0]
                 except AttributeError:
-                    name, value = str(option), option
-                    menu_item["default"] = str(menu_item["default"])
+                    name, value = str(option) + menu_item.get("unit", ""), option
 
                 var_name = "%s_name_%d" % (menu_name, j)
                 var_value = "%s_val_%d" % (menu_name, j)
                 if menu_item["default"] == name:
                     default_val = value
-                print('static const char %s[] PROGMEM = "%s";' % (var_name, name))
-                print("static const int %s = %s;" % (var_value, value))
+                output.append('static const char %s[] PROGMEM = "%s";' % (var_name, name))
+                output.append("static const int %s = %s;" % (var_value, value))
                 names.append(var_name)
                 values.append(var_value)
 
@@ -47,7 +45,7 @@ def main(menu_file):
         
         menus.append(menu_name)
         
-        print(
+        output.append(
 """
 // %(description)s
 volatile int %(variable)s;
@@ -57,7 +55,7 @@ static const int %(name)s_values[%(size)d] = {%(values)s};
 static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);
 """ % menu_item)
 
-    print(
+    output.append(
 """
 static union MenuItem menus[%d] = {&%s};
 static const int menu_types[%d] = {%s};
@@ -66,5 +64,8 @@ Menu menu("Main Menu", %d, menus, menu_types);
        len(menus), ",".join(menu_types), 
        len(menus)))
 
+    return output
+
 if __name__ == "__main__":
-    main("menu_cfg.json")
+    output = main("menu_cfg.json")
+    print "\n".join(output)

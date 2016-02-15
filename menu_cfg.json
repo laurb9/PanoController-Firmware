@@ -37,6 +37,7 @@
   {
     "default": 35, 
     "description": "Focal Length", 
+    "unit": "mm",
     "options": [
       12, 
       14, 
@@ -127,6 +128,7 @@
     "max": 360, 
     "min": 10, 
     "step": 10, 
+    "unit": "deg",
     "variable": "horiz"
   }, 
   {
@@ -135,6 +137,7 @@
     "max": 180, 
     "min": 10, 
     "step": 10, 
+    "unit": "deg",
     "variable": "vert"
   }, 
   {
