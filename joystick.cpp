@@ -7,7 +7,7 @@
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include "joystick.h"
 
 Joystick::Joystick(int sw_pin, int x_pin, int y_pin)

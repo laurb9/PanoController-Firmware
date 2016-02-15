@@ -1,0 +1,153 @@
+[
+  {
+    "default": "portrait", 
+    "description": "Camera Orientation", 
+    "options": [
+      {
+        "portrait": 0
+      }, 
+      {
+        "landscape": 1
+      }, 
+      {
+        "square": 2
+      }
+    ], 
+    "variable": "orientation"
+  }, 
+  {
+    "default": "3:2", 
+    "description": "Aspect Ratio", 
+    "options": [
+      {
+        "3:2": 0
+      }, 
+      {
+        "16:9": 1
+      }, 
+      {
+        "4:3": 2
+      }, 
+      {
+        "1:1": 3
+      }
+    ], 
+    "variable": "aspect"
+  }, 
+  {
+    "default": 35, 
+    "description": "Focal Length", 
+    "options": [
+      12, 
+      14, 
+      16, 
+      20, 
+      24, 
+      35, 
+      50, 
+      70, 
+      105, 
+      200, 
+      300, 
+      400
+    ], 
+    "variable": "focal"
+  }, 
+  {
+    "default": "1/100", 
+    "description": "Shutter Speed", 
+    "options": [
+      {
+        "1/100": 10
+      }, 
+      {
+        "1/20": 50
+      }, 
+      {
+        "1/10": 100
+      }, 
+      {
+        "1/4": 250
+      }, 
+      {
+        "0.5s": 500
+      }, 
+      {
+        "1s": 1000
+      }, 
+      {
+        "2s": 2000
+      }, 
+      {
+        "4s": 4000
+      }, 
+      {
+        "8s": 8000
+      }
+    ], 
+    "variable": "shutter"
+  }, 
+  {
+    "default": "0.1s", 
+    "description": "Pre-Shutter Delay", 
+    "options": [
+      {
+        "0.1s": 100
+      }, 
+      {
+        "0.5s": 500
+      }, 
+      {
+        "1s": 1000
+      }, 
+      {
+        "2s": 2000
+      }, 
+      {
+        "4s": 4000
+      }
+    ], 
+    "variable": "pre_shutter"
+  }, 
+  {
+    "default": 1, 
+    "description": "Shots per position", 
+    "options": [
+      1, 
+      2, 
+      3, 
+      4, 
+      5
+    ], 
+    "variable": "shots"
+  }, 
+  {
+    "default": 120, 
+    "description": "Horizontal FOV", 
+    "max": 360, 
+    "min": 10, 
+    "step": 10, 
+    "variable": "horiz"
+  }, 
+  {
+    "default": 90, 
+    "description": "Vertical FOV", 
+    "max": 180, 
+    "min": 10, 
+    "step": 10, 
+    "variable": "vert"
+  }, 
+  {
+    "default": "On",
+    "description": "Motor Control", 
+    "options": [
+      {
+        "On": 1
+      }, 
+      {
+        "Off": 0
+      }
+    ], 
+    "variable": "motors_enable"
+  }
+]

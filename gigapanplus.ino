@@ -62,19 +62,26 @@ void setup() {
 void displayMenu(int event) {
     const int rows = 6;
     static int selected = 0;
+    static int pointer = 0;
     static int start = 0;
-    static Options *current_option;
+    static union MenuItem current_option;
 
+    Serial.println();
     display.clearDisplay();
     display.setCursor(0,0);
 
-    if (!current_option && (isEventRight(event) || isEventClick(event))){
-        current_option = &menu[selected];
-    } else if (current_option && isEventLeft(event)){
-        current_option = NULL;
+    if (!current_option.option && (isEventRight(event) || isEventClick(event))){
+        current_option = menu[selected];
+        pointer = current_option.names->pos;
+    } else if (current_option.option && isEventLeft(event)){
+        current_option.option = NULL;
+    } else if (current_option.option && (isEventRight(event) || isEventClick(event))){
+        // select
+        current_option.names->pos = pointer;
+        current_option.option = NULL;
     }
 
-    if (!current_option){
+    if (!current_option.option){
         display.println(F("----- Main Menu -----"));
         Serial.println(F("----- Main Menu -----"));
 
@@ -95,16 +102,20 @@ void displayMenu(int event) {
                 display.setTextColor(BLACK, WHITE);
                 Serial.print(F(">"));
             }
-            display.println(menu[i].description);
-            Serial.println(menu[i].description);
+            display.println(menu[i].option->description);
+            Serial.println(menu[i].option->description);
             if (i == selected){
                 display.setTextColor(WHITE, BLACK);
             }
         }
     } else {
-        display.println(current_option->description);
-        display.print("---------------------");
-        display.println(*current_option->value);
+        if (isEventDown(event) && pointer < current_option.names->count-1){
+            pointer++;
+        }
+        if (isEventUp(event) && pointer > 0){
+            pointer--;
+        }
+        current_option.names->render(&display, rows, pointer);
     }
     display.display();
 }
