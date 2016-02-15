@@ -23,7 +23,7 @@ def main(menu_file):
             menu_item["options"] = range(menu_item["min"], menu_item["max"], menu_item["step"])
 
         if "options" in menu_item:
-            menu_types.append("TYPE_NAMES")
+            menu_types.append("NamedOptionMenu::class_id")
             for j, option in enumerate(menu_item["options"]):
                 try:
                     name, value = option.items()[0]
@@ -51,18 +51,20 @@ def main(menu_file):
 """
 // %(description)s
 volatile int %(variable)s;
-const static int %(name)s_size = %(size)d;
-const static char *%(name)s_names[%(size)d] = {%(names)s};
-const static int %(name)s_values[%(size)d] = {%(values)s};
+static const int %(name)s_size = %(size)d;
+static const char *%(name)s_names[%(size)d] = {%(names)s};
+static const int %(name)s_values[%(size)d] = {%(values)s};
 static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);
 """ % menu_item)
 
     print(
 """
-union MenuItem menu[%d] = {&%s};
-const int menu_types[%d] = {%s};
-const int menu_size = %d;
-""" % (len(menus), ", &".join(menus), len(menus), ",".join(menu_types), len(menus)))
+static union MenuItem menus[%d] = {&%s};
+static const int menu_types[%d] = {%s};
+Menu menu("Main Menu", %d, menus, menu_types);
+""" % (len(menus), ", &".join(menus), 
+       len(menus), ",".join(menu_types), 
+       len(menus)))
 
 if __name__ == "__main__":
     main("menu_cfg.json")

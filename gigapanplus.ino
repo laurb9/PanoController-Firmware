@@ -44,8 +44,10 @@ static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
+const int rows = 6;
+
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(38400);
     delay(1000); // wait for serial
     delay(100);  // give time for display to init; if display blank increase delay
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
@@ -54,76 +56,34 @@ void setup() {
     display.setCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(1);
-    Serial.print(F("Ready\n"));
+    Serial.println(F("Ready\n"));
+    menu.open();
+    menu.render(&display, rows);
     display.display();
-    displayMenu(EVENT_NONE);
 }
 
-void displayMenu(int event) {
-    const int rows = 6;
-    static int selected = 0;
-    static int start = 0;
-    static union MenuItem current_option;
+void handleEvent(int event) {
+
+    if (isEventLeft(event)) menu.cancel();
+    else if (isEventRight(event) || isEventClick(event)) menu.select();
+    else if (isEventDown(event)) menu.next();
+    else if (isEventUp(event)) menu.prev();
 
     Serial.println();
     display.clearDisplay();
     display.setCursor(0,0);
 
-    if (!current_option.option && (isEventRight(event) || isEventClick(event))){
-        current_option = menu[selected];
-        current_option.names->open();
-    } else if (current_option.option && isEventLeft(event)){
-        current_option.option = NULL;
-    } else if (current_option.option && (isEventRight(event) || isEventClick(event))){
-        // select
-        current_option.names->select();
-        current_option.option = NULL;
-    }
+    menu.render(&display, rows);
 
-    if (!current_option.option){
-        display.println(F("----- Main Menu -----"));
-        Serial.println(F("----- Main Menu -----"));
-
-        if (isEventDown(event) && selected < menu_size-1){
-            selected++;
-            if (selected > rows/2 && start < menu_size-rows){
-                start++;
-            }
-        };
-        if (isEventUp(event) && selected > 0){
-            selected--;
-            if (start > 0){
-                start--;
-            }
-        };
-        for (int i=start; i<start+rows && i<menu_size; i++){
-            if (i == selected){
-                display.setTextColor(BLACK, WHITE);
-                Serial.print(F(">"));
-            }
-            display.println(menu[i].option->description);
-            Serial.println(menu[i].option->description);
-            if (i == selected){
-                display.setTextColor(WHITE, BLACK);
-            }
-        }
-    } else {
-        if (isEventDown(event)){
-            current_option.names->prev();
-        } else if (isEventUp(event)){
-            current_option.names->next();
-        }
-        current_option.names->render(&display, rows);
-    }
     display.display();
 }
 
 void loop() {
     int event = joystick.read();
     if (event){
-        displayMenu(event);
+        handleEvent(event);
     }
-    /*
+/*
     display.clearDisplay();
     display.setCursor(0,0);
     display.print(F("Start "));
@@ -149,5 +109,5 @@ void loop() {
     display.println(F("end"));
     display.display();
     delay(10000);
-    */
+*/
 }
