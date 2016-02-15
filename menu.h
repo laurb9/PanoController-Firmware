@@ -25,7 +25,11 @@ public:
     int default_val;
     Options(const char *description, volatile int *value, int default_val);
     int getCurrentValue(void);
-    void render(Print *display, int rows, int pointer);
+    void open(void);
+    void next(void);
+    void prev(void);
+    void select(void);
+    void render(Print *display, int rows);
 };
 
 class NumericSelection : public Options {
@@ -34,7 +38,7 @@ public:
     int min_val, max_val, step;
     NumericSelection(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step);
     int getCurrentValue(void);
-    void render(Print *display, int rows, int pointer);
+    void render(Print *display, int rows);
 };
 
 class ValueOptionMenu : public Options {
@@ -43,9 +47,14 @@ public:
     const int count;
     const int *values;
     int pos;
+    int pointer;
     ValueOptionMenu(const char *description, volatile int *value, int default_val, int count, const int values[]);
     int getCurrentValue(void);
-    void render(Print *display, int rows, int pointer);
+    void open(void);
+    void next(void);
+    void prev(void);
+    void select(void);
+    void render(Print *display, int rows);
 };
 
 class NamedOptionMenu : public ValueOptionMenu {
@@ -55,7 +64,7 @@ public:
     NamedOptionMenu(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[]);
     const char* getCurrentName(void);
     int getCurrentValue(void);
-    void render(Print *display, int rows, int pointer);
+    void render(Print *display, int rows);
 };
 
 union MenuItem {

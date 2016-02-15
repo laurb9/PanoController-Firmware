@@ -21,7 +21,7 @@ int Options::getCurrentValue(void){
     return *value;
 }
 
-void Options::render(Print *display, int rows, int pointer){
+void Options::render(Print *display, int rows){
     Serial.println();
     Serial.println(description);
     Serial.println("---------------------");
@@ -36,8 +36,8 @@ NumericSelection::NumericSelection(const char *description, volatile int *value,
 
 };
 
-void NumericSelection::render(Print *display, int rows, int pointer){
-    Options::render(display, rows, pointer);
+void NumericSelection::render(Print *display, int rows){
+    Options::render(display, rows);
 }
 
 ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, int default_val, int count, const int values[])
@@ -49,10 +49,11 @@ ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, i
             break;
         }
     }
+    pointer = pos;
 };
 
-void ValueOptionMenu::render(Print *display, int rows, int pointer){
-    Options::render(display, rows, pointer);
+void ValueOptionMenu::render(Print *display, int rows){
+    Options::render(display, rows);
 }
 
 int NamedOptionMenu::getCurrentValue(void){
@@ -65,8 +66,26 @@ NamedOptionMenu::NamedOptionMenu(const char *description, volatile int *value, i
 {
 }
 
-void NamedOptionMenu::render(Print *display, int rows, int pointer){
-    ValueOptionMenu::render(display, rows, pointer);
+void ValueOptionMenu::open(void){
+    pointer = pos;
+}
+
+void ValueOptionMenu::next(void){
+    if (pointer < count-1){
+        pointer++;
+    }
+}
+void ValueOptionMenu::prev(void){
+    if (pointer > 0){
+        pointer--;
+    }
+}
+void ValueOptionMenu::select(void){
+    pos = pointer;
+}
+
+void NamedOptionMenu::render(Print *display, int rows){
+    ValueOptionMenu::render(display, rows);
     int start;
     if (pointer < rows/2){
         start = 0;

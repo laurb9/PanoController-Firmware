@@ -62,7 +62,6 @@ void setup() {
 void displayMenu(int event) {
     const int rows = 6;
     static int selected = 0;
-    static int pointer = 0;
     static int start = 0;
     static union MenuItem current_option;
 
@@ -72,12 +71,12 @@ void displayMenu(int event) {
 
     if (!current_option.option && (isEventRight(event) || isEventClick(event))){
         current_option = menu[selected];
-        pointer = current_option.names->pos;
+        current_option.names->open();
     } else if (current_option.option && isEventLeft(event)){
         current_option.option = NULL;
     } else if (current_option.option && (isEventRight(event) || isEventClick(event))){
         // select
-        current_option.names->pos = pointer;
+        current_option.names->select();
         current_option.option = NULL;
     }
 
@@ -109,13 +108,12 @@ void displayMenu(int event) {
             }
         }
     } else {
-        if (isEventDown(event) && pointer < current_option.names->count-1){
-            pointer++;
+        if (isEventDown(event)){
+            current_option.names->prev();
+        } else if (isEventUp(event)){
+            current_option.names->next();
         }
-        if (isEventUp(event) && pointer > 0){
-            pointer--;
-        }
-        current_option.names->render(&display, rows, pointer);
+        current_option.names->render(&display, rows);
     }
     display.display();
 }
