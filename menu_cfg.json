@@ -1,5 +1,14 @@
 [
   {
+    "description": "Start",
+    "default": "No",
+    "variable": "running",
+    "options": [
+                {"On": 1}, 
+                {"Off": 0}
+               ]
+  },
+  {
     "default": "portrait", 
     "description": "Camera Orientation", 
     "options": [

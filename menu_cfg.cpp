@@ -1,4 +1,14 @@
 #include "menu.h"
+// Start
+volatile int running;
+static const char menu_start_desc[] PROGMEM = "Start";
+static const char menu_start_name_0[] PROGMEM = "On";
+static const char menu_start_name_1[] PROGMEM = "Off";
+
+static const char *menu_start_names[2] = {menu_start_name_0, menu_start_name_1};
+static const int menu_start_values[2] = {1, 0};
+static NamedListSelector menu_start(menu_start_desc, &running, 0, 2, menu_start_names, menu_start_values);
+
 // Camera Orientation
 volatile int orientation;
 static const char menu_camera_orientation_desc[] PROGMEM = "Camera Orientation";
@@ -88,7 +98,7 @@ static const int menu_motor_control_values[2] = {1, 0};
 static NamedListSelector menu_motor_control(menu_motor_control_desc, &motors_enable, 1, 2, menu_motor_control_names, menu_motor_control_values);
 
 
-static union MenuItem menus[9] = {&menu_camera_orientation, &menu_aspect_ratio, &menu_focal_length, &menu_shutter_speed, &menu_pre_shutter_delay, &menu_shots_per_position, &menu_horizontal_fov, &menu_vertical_fov, &menu_motor_control};
-static const int menu_types[9] = {NamedListSelector::class_id,NamedListSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id};
-Menu menu("Main Menu", 9, menus, menu_types);
+static union MenuItem menus[10] = {&menu_start, &menu_camera_orientation, &menu_aspect_ratio, &menu_focal_length, &menu_shutter_speed, &menu_pre_shutter_delay, &menu_shots_per_position, &menu_horizontal_fov, &menu_vertical_fov, &menu_motor_control};
+static const int menu_types[10] = {NamedListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id};
+Menu menu("Main Menu", 10, menus, menu_types);
 
