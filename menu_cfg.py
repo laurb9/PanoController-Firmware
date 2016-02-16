@@ -29,11 +29,9 @@ def main(menu_file):
                         default_val = value
     
                     var_name = "%s_name_%d" % (menu_name, j)
-                    var_value = "%s_val_%d" % (menu_name, j)
                     output.append('static const char %s[] PROGMEM = "%s";' % (var_name, name))
-                    output.append("static const int %s = %s;" % (var_value, value))
                     names.append(var_name)
-                    values.append(var_value)
+                    values.append(str(value))
                     
                 menu_item["names"] = ", ".join(names)
                 output_fmt = """
@@ -47,9 +45,7 @@ static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %
                     if menu_item["default"] == value:
                         default_val = value
     
-                    var_value = "%s_val_%d" % (menu_name, j)
-                    output.append("static const int %s = %s;" % (var_value, value))
-                    values.append(var_value)
+                    values.append(str(value))
 
                 output_fmt = """
 static const int %(name)s_values[%(size)d] = {%(values)s};
