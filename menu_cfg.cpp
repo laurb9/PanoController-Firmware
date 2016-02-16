@@ -63,8 +63,7 @@ static NamedOptionMenu menu_pre_shutter_delay(menu_pre_shutter_delay_desc, &pre_
 volatile int shots;
 static const char menu_shots_per_position_desc[] PROGMEM = "Shots per position";
 
-static const int menu_shots_per_position_values[5] = {1, 2, 3, 4, 5};
-static ValueOptionMenu menu_shots_per_position(menu_shots_per_position_desc, &shots, 1, 5, menu_shots_per_position_values);
+static NumericSelection menu_shots_per_position(menu_shots_per_position_desc, &shots, 1, 1, 5, 1);
 
 // Horizontal FOV
 volatile int horiz;
@@ -90,6 +89,6 @@ static NamedOptionMenu menu_motor_control(menu_motor_control_desc, &motors_enabl
 
 
 static union MenuItem menus[9] = {&menu_camera_orientation, &menu_aspect_ratio, &menu_focal_length, &menu_shutter_speed, &menu_pre_shutter_delay, &menu_shots_per_position, &menu_horizontal_fov, &menu_vertical_fov, &menu_motor_control};
-static const int menu_types[9] = {NamedOptionMenu::class_id,NamedOptionMenu::class_id,ValueOptionMenu::class_id,NamedOptionMenu::class_id,NamedOptionMenu::class_id,ValueOptionMenu::class_id,NumericSelection::class_id,NumericSelection::class_id,NamedOptionMenu::class_id};
+static const int menu_types[9] = {NamedOptionMenu::class_id,NamedOptionMenu::class_id,ValueOptionMenu::class_id,NamedOptionMenu::class_id,NamedOptionMenu::class_id,NumericSelection::class_id,NumericSelection::class_id,NumericSelection::class_id,NamedOptionMenu::class_id};
 Menu menu("Main Menu", 9, menus, menu_types);
 
