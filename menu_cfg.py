@@ -22,7 +22,7 @@ def main(menu_file):
         
         if "options" in menu_item:
             if isinstance(menu_item["options"][0], dict):
-                menu_types.append("NamedOptionMenu::class_id")
+                menu_types.append("NamedListSelector::class_id")
                 for j, option in enumerate(menu_item["options"]):
                     name, value = option.items()[0]
                     if menu_item["default"] == name:
@@ -37,10 +37,10 @@ def main(menu_file):
                 output_fmt = """
 static const char *%(name)s_names[%(size)d] = {%(names)s};
 static const int %(name)s_values[%(size)d] = {%(values)s};
-static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);
+static NamedListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);
 """
             else:
-                menu_types.append("ValueOptionMenu::class_id")
+                menu_types.append("ListSelector::class_id")
                 for j, value in enumerate(menu_item["options"]):
                     if menu_item["default"] == value:
                         default_val = value
@@ -49,7 +49,7 @@ static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %
 
                 output_fmt = """
 static const int %(name)s_values[%(size)d] = {%(values)s};
-static ValueOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_values);
+static ListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_values);
 """
             menu_item["default_val"] = default_val
             menu_item["size"] = len(values)
@@ -57,10 +57,10 @@ static ValueOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %
             output.append(output_fmt % menu_item)
         
         elif "step" in menu_item:
-            menu_types.append("NumericSelection::class_id")
+            menu_types.append("RangeSelector::class_id")
             output.append(
 """
-static NumericSelection %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(min)d, %(max)d, %(step)d);
+static RangeSelector %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(min)d, %(max)d, %(step)d);
 """ % menu_item)
             
         

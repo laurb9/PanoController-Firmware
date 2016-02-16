@@ -13,9 +13,9 @@
 #define INVERSE 2
 
 /*
- * Options: share functionality among the other menu classes
+ * OptionSelector: share functionality among the other menu classes
  */
-Options::Options(const char *description, volatile int *value, int default_val)
+OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val)
 :description(description), value(value), default_val(default_val)
 {
     pos = default_val;
@@ -24,37 +24,36 @@ Options::Options(const char *description, volatile int *value, int default_val)
     }
 }
 
-void Options::render(DISPLAY_DEVICE display, int rows){
-    Serial.println();
+void OptionSelector::render(DISPLAY_DEVICE display, int rows){
     Serial.println(description);
     Serial.println("---------------------");
     display->println(description);
     display->print("---------------------");
 }
 
-void Options::cancel(void){
+void OptionSelector::cancel(void){
     pointer = pos;
 }
 
-void Options::open(void){
+void OptionSelector::open(void){
     pointer = pos;
 }
 
-void Options::next(void){
+void OptionSelector::next(void){
     if (pointer < count-1){
         pointer++;
     }
 }
-void Options::prev(void){
+void OptionSelector::prev(void){
     if (pointer > 0){
         pointer--;
     }
 }
-void Options::select(void){
+void OptionSelector::select(void){
     pos = pointer;
 }
 
-int Options::calc_start(int rows){
+int OptionSelector::calc_start(int rows){
     int start = 0;
     if (count > rows && pointer > rows/2){
         if (pointer < count - rows/2){
@@ -67,41 +66,41 @@ int Options::calc_start(int rows){
 }
 
 /*
- * NumericSelection: a number with up/down controls
+ * RangeSelector: a number with up/down controls
  */
 
-NumericSelection::NumericSelection(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step)
-:Options(description, value, default_val),
+RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step)
+:OptionSelector(description, value, default_val),
  min_val(min_val), max_val(max_val), step(step)
 {
 
 };
 
-void NumericSelection::cancel(void){
+void RangeSelector::cancel(void){
     pointer = pos;
 }
 
-void NumericSelection::open(void){
+void RangeSelector::open(void){
     pointer = pos;
 }
 
-void NumericSelection::next(void){
+void RangeSelector::next(void){
     if (pointer > min_val){
         pointer -= step;
     }
 }
-void NumericSelection::prev(void){
+void RangeSelector::prev(void){
     if (pointer < max_val){
         pointer += step;
     }
 }
-void NumericSelection::select(void){
+void RangeSelector::select(void){
     pos = pointer;
     *value = pointer;
 }
 
-void NumericSelection::render(DISPLAY_DEVICE display, int rows){
-    Options::render(display, rows);
+void RangeSelector::render(DISPLAY_DEVICE display, int rows){
+    OptionSelector::render(display, rows);
     const char *marker;
 
     marker = (pointer < max_val) ? " \x1e": "";
@@ -121,10 +120,10 @@ void NumericSelection::render(DISPLAY_DEVICE display, int rows){
 }
 
 /*
- * ValueOptionMenu: list of numeric options
+ * ListSelector: list of numeric options
  */
-ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, int default_val, int count, const int values[])
-:Options(description, value, default_val),
+ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int count, const int values[])
+:OptionSelector(description, value, default_val),
  values(values)
 {
     this->count = count;
@@ -137,11 +136,11 @@ ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, i
     pointer = pos;
 };
 
-void ValueOptionMenu::render(DISPLAY_DEVICE display, int rows){
+void ListSelector::render(DISPLAY_DEVICE display, int rows){
     char buf[16];
     int start = calc_start(rows);
 
-    Options::render(display, rows);
+    OptionSelector::render(display, rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         snprintf(buf, sizeof(buf), "%d", values[i]);
@@ -165,18 +164,18 @@ void ValueOptionMenu::render(DISPLAY_DEVICE display, int rows){
 }
 
 /*
- * NamedOptionMenu: list of named numeric options
+ * NamedListSelector: list of named numeric options
  */
-NamedOptionMenu::NamedOptionMenu(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[])
-:ValueOptionMenu(description, value, default_val, count, values),
+NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[])
+:ListSelector(description, value, default_val, count, values),
  names(names)
 {
 }
 
-void NamedOptionMenu::render(DISPLAY_DEVICE display, int rows){
+void NamedListSelector::render(DISPLAY_DEVICE display, int rows){
     int start = calc_start(rows);
 
-    Options::render(display, rows);
+    OptionSelector::render(display, rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         char marker = (i==pos) ? '\x10' : ' ';
@@ -201,7 +200,7 @@ void NamedOptionMenu::render(DISPLAY_DEVICE display, int rows){
  * Menu: this is a regular menu, nothing is set here.
  */
 Menu::Menu(const char *description, int count, const union MenuItem *menus, const int *types)
-:Options(description, NULL, 0),
+:OptionSelector(description, NULL, 0),
  menus(menus),
  types(types)
 {
@@ -224,21 +223,21 @@ void Menu::next(void){
     if (drilldown){
         invoke_method(next);
     } else {
-        Options::next();
+        OptionSelector::next();
     }
 }
 void Menu::prev(void){
     if (drilldown){
         invoke_method(prev);
     } else {
-        Options::prev();
+        OptionSelector::prev();
     }
 }
 void Menu::select(void){
     if (drilldown){
         invoke_method(select);
     } else {
-        Options::select();
+        OptionSelector::select();
         drilldown = true;
         invoke_method(open);
     }
@@ -251,7 +250,7 @@ void Menu::render(DISPLAY_DEVICE display, int rows){
         return;
     }
 
-    Options::render(display, rows);
+    OptionSelector::render(display, rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         if (i == pointer){

@@ -10,13 +10,12 @@
 #define MENU_H_
 
 #include <Adafruit_GFX.h>
-//#define char __FlashStringHelper
 
 #define DISPLAY_DEVICE Adafruit_GFX*
 
-enum ClassID { CLASS_OPTIONS, CLASS_NUMERIC, CLASS_VALUES, CLASS_NAMES, CLASS_MENU };
+enum ClassID { CLASS_OPTIONS, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
 
-class Options {
+class OptionSelector {
 protected:
     int pointer = 0;
     int pos = 0;
@@ -27,7 +26,7 @@ public:
     volatile int *value;
     int default_val;
     int count = 0;
-    Options(const char *description, volatile int *value, int default_val);
+    OptionSelector(const char *description, volatile int *value, int default_val);
     void cancel(void);
     void open(void);
     void next(void);
@@ -36,11 +35,11 @@ public:
     void render(DISPLAY_DEVICE display, int rows);
 };
 
-class NumericSelection : public Options {
+class RangeSelector : public OptionSelector {
 public:
-    static const ClassID class_id = CLASS_NUMERIC;
+    static const ClassID class_id = CLASS_RANGE;
     int min_val, max_val, step;
-    NumericSelection(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step);
+    RangeSelector(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step);
     void open(void);
     void cancel(void);
     void next(void);
@@ -49,23 +48,23 @@ public:
     void render(DISPLAY_DEVICE display, int rows);
 };
 
-class ValueOptionMenu : public Options {
+class ListSelector : public OptionSelector {
 public:
-    static const ClassID class_id = CLASS_VALUES;
+    static const ClassID class_id = CLASS_LIST;
     const int *values;
-    ValueOptionMenu(const char *description, volatile int *value, int default_val, int count, const int values[]);
+    ListSelector(const char *description, volatile int *value, int default_val, int count, const int values[]);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
-class NamedOptionMenu : public ValueOptionMenu {
+class NamedListSelector : public ListSelector {
 public:
     static const ClassID class_id = CLASS_NAMES;
     const char* *names;
-    NamedOptionMenu(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[]);
+    NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[]);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
-class Menu : public Options {
+class Menu : public OptionSelector {
 protected:
     bool drilldown = false;
 public:
@@ -82,10 +81,10 @@ public:
 };
 
 union MenuItem {
-    Options *option;
-    NumericSelection *slider;
-    ValueOptionMenu *values;
-    NamedOptionMenu *names;
+    OptionSelector *option;
+    RangeSelector *slider;
+    ListSelector *values;
+    NamedListSelector *names;
     Menu *menu;
 };
 
@@ -95,10 +94,10 @@ union MenuItem {
 #define invoke_method(method, ...) \
 switch(types[pos]){ \
 case Menu::class_id: menus[pos].menu->method(__VA_ARGS__); break; \
-case NamedOptionMenu::class_id: menus[pos].names->method(__VA_ARGS__); break; \
-case ValueOptionMenu::class_id: menus[pos].values->method(__VA_ARGS__); break; \
-case NumericSelection::class_id: menus[pos].slider->method(__VA_ARGS__); break; \
-case Options::class_id: menus[pos].option->method(__VA_ARGS__); break; \
+case NamedListSelector::class_id: menus[pos].names->method(__VA_ARGS__); break; \
+case ListSelector::class_id: menus[pos].values->method(__VA_ARGS__); break; \
+case RangeSelector::class_id: menus[pos].slider->method(__VA_ARGS__); break; \
+case OptionSelector::class_id: menus[pos].option->method(__VA_ARGS__); break; \
 default: break; \
         }
 
