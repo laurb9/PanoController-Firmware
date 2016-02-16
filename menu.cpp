@@ -12,6 +12,9 @@
 #define WHITE 1
 #define INVERSE 2
 
+/*
+ * Options: share functionality among the other menu classes
+ */
 Options::Options(const char *description, volatile int *value, int default_val)
 :description(description), value(value), default_val(default_val)
 {
@@ -63,6 +66,10 @@ int Options::calc_start(int rows){
     return start;
 }
 
+/*
+ * NumericSelection: a number with up/down controls
+ */
+
 NumericSelection::NumericSelection(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step)
 :Options(description, value, default_val),
  min_val(min_val), max_val(max_val), step(step)
@@ -113,6 +120,9 @@ void NumericSelection::render(DISPLAY_DEVICE display, int rows){
     display->println(marker);
 }
 
+/*
+ * ValueOptionMenu: list of numeric options
+ */
 ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, int default_val, int count, const int values[])
 :Options(description, value, default_val),
  values(values)
@@ -128,9 +138,35 @@ ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, i
 };
 
 void ValueOptionMenu::render(DISPLAY_DEVICE display, int rows){
+    char buf[16];
+    int start = calc_start(rows);
+
     Options::render(display, rows);
+
+    for (int i=start; i<start+rows && i<count; i++){
+        snprintf(buf, sizeof(buf), "%d", values[i]);
+
+        char marker = (i==pos) ? '\x10' : ' ';
+
+        Serial.print((i==pointer) ? F(">") : F(" "));
+
+        Serial.print(marker);
+        display->print(marker);
+
+        if (i == pointer) display->setTextColor(BLACK, WHITE);
+        Serial.print(buf);
+        display->print(buf);
+        if (i == pointer) display->setTextColor(WHITE, BLACK);
+
+        marker = (i==pos) ? '\x11' : ' ';
+        Serial.println(marker);
+        display->println(marker);
+    }
 }
 
+/*
+ * NamedOptionMenu: list of named numeric options
+ */
 NamedOptionMenu::NamedOptionMenu(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[])
 :ValueOptionMenu(description, value, default_val, count, values),
  names(names)
@@ -138,8 +174,9 @@ NamedOptionMenu::NamedOptionMenu(const char *description, volatile int *value, i
 }
 
 void NamedOptionMenu::render(DISPLAY_DEVICE display, int rows){
-    ValueOptionMenu::render(display, rows);
     int start = calc_start(rows);
+
+    Options::render(display, rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         char marker = (i==pos) ? '\x10' : ' ';
@@ -160,6 +197,9 @@ void NamedOptionMenu::render(DISPLAY_DEVICE display, int rows){
     }
 }
 
+/*
+ * Menu: this is a regular menu, nothing is set here.
+ */
 Menu::Menu(const char *description, int count, const union MenuItem *menus, const int *types)
 :Options(description, NULL, 0),
  menus(menus),

@@ -21,34 +21,44 @@ def main(menu_file):
         output.append('static const char %(name)s_desc[] PROGMEM = "%(description)s";' % menu_item)
         
         if "options" in menu_item:
-            menu_types.append("NamedOptionMenu::class_id")
-            for j, option in enumerate(menu_item["options"]):
-                try:
+            if isinstance(menu_item["options"][0], dict):
+                menu_types.append("NamedOptionMenu::class_id")
+                for j, option in enumerate(menu_item["options"]):
                     name, value = option.items()[0]
                     if menu_item["default"] == name:
                         default_val = value
-                except AttributeError:
-                    name, value = str(option) + menu_item.get("unit", ""), option
-                    if menu_item["default"] == value:
-                        default_val = value
-
-                var_name = "%s_name_%d" % (menu_name, j)
-                var_value = "%s_val_%d" % (menu_name, j)
-                output.append('static const char %s[] PROGMEM = "%s";' % (var_name, name))
-                output.append("static const int %s = %s;" % (var_value, value))
-                names.append(var_name)
-                values.append(var_value)
-
-            menu_item["default_val"] = default_val
-            menu_item["size"] = len(names)
-            menu_item["names"] = ", ".join(names)
-            menu_item["values"] = ", ".join(values)
-            output.append(
-"""
+    
+                    var_name = "%s_name_%d" % (menu_name, j)
+                    var_value = "%s_val_%d" % (menu_name, j)
+                    output.append('static const char %s[] PROGMEM = "%s";' % (var_name, name))
+                    output.append("static const int %s = %s;" % (var_value, value))
+                    names.append(var_name)
+                    values.append(var_value)
+                    
+                menu_item["names"] = ", ".join(names)
+                output_fmt = """
 static const char *%(name)s_names[%(size)d] = {%(names)s};
 static const int %(name)s_values[%(size)d] = {%(values)s};
 static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);
-""" % menu_item)
+"""
+            else:
+                menu_types.append("ValueOptionMenu::class_id")
+                for j, value in enumerate(menu_item["options"]):
+                    if menu_item["default"] == value:
+                        default_val = value
+    
+                    var_value = "%s_val_%d" % (menu_name, j)
+                    output.append("static const int %s = %s;" % (var_value, value))
+                    values.append(var_value)
+
+                output_fmt = """
+static const int %(name)s_values[%(size)d] = {%(values)s};
+static ValueOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_values);
+"""
+            menu_item["default_val"] = default_val
+            menu_item["size"] = len(values)
+            menu_item["values"] = ", ".join(values)
+            output.append(output_fmt % menu_item)
         
         elif "step" in menu_item:
             menu_types.append("NumericSelection::class_id")
