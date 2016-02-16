@@ -70,8 +70,47 @@ NumericSelection::NumericSelection(const char *description, volatile int *value,
 
 };
 
+void NumericSelection::cancel(void){
+    pointer = pos;
+}
+
+void NumericSelection::open(void){
+    pointer = pos;
+}
+
+void NumericSelection::next(void){
+    if (pointer > min_val){
+        pointer -= step;
+    }
+}
+void NumericSelection::prev(void){
+    if (pointer < max_val){
+        pointer += step;
+    }
+}
+void NumericSelection::select(void){
+    pos = pointer;
+    *value = pointer;
+}
+
 void NumericSelection::render(DISPLAY_DEVICE display, int rows){
     Options::render(display, rows);
+    const char *marker;
+
+    marker = (pointer < max_val) ? " \x1e": "";
+    Serial.println(marker);
+    display->println(marker);
+
+    if (pointer == pos) display->setTextColor(BLACK, WHITE);
+
+    Serial.println(pointer);
+    display->println(pointer);
+
+    if (pointer == pos) display->setTextColor(WHITE, BLACK);
+
+    marker = (pointer > min_val) ? " \x1f": "";
+    Serial.println(marker);
+    display->println(marker);
 }
 
 ValueOptionMenu::ValueOptionMenu(const char *description, volatile int *value, int default_val, int count, const int values[])
@@ -103,7 +142,7 @@ void NamedOptionMenu::render(DISPLAY_DEVICE display, int rows){
     int start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        char marker = (i==pos) ? '*' : ' ';
+        char marker = (i==pos) ? '\x10' : ' ';
 
         Serial.print((i==pointer) ? F(">") : F(" "));
 
@@ -115,6 +154,7 @@ void NamedOptionMenu::render(DISPLAY_DEVICE display, int rows){
         display->print(names[i]);
         if (i == pointer) display->setTextColor(WHITE, BLACK);
 
+        marker = (i==pos) ? '\x11' : ' ';
         Serial.println(marker);
         display->println(marker);
     }
@@ -165,7 +205,6 @@ void Menu::select(void){
 }
 void Menu::render(DISPLAY_DEVICE display, int rows){
     int start = calc_start(rows);
-    Serial.println(drilldown);
 
     if (drilldown){
         invoke_method(render, display, rows);

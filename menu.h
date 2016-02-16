@@ -41,6 +41,11 @@ public:
     static const ClassID class_id = CLASS_NUMERIC;
     int min_val, max_val, step;
     NumericSelection(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step);
+    void open(void);
+    void cancel(void);
+    void next(void);
+    void prev(void);
+    void select(void);
     void render(DISPLAY_DEVICE display, int rows);
 };
 

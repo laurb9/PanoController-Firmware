@@ -20,9 +20,6 @@ def main(menu_file):
         default_val = 0
         output.append('static const char %(name)s_desc[] PROGMEM = "%(description)s";' % menu_item)
         
-        if "step" in menu_item:
-            menu_item["options"] = range(menu_item["min"], menu_item["max"], menu_item["step"])
-
         if "options" in menu_item:
             menu_types.append("NamedOptionMenu::class_id")
             for j, option in enumerate(menu_item["options"]):
@@ -42,19 +39,27 @@ def main(menu_file):
                 names.append(var_name)
                 values.append(var_value)
 
-        menu_item["default_val"] = default_val
-        menu_item["size"] = len(names)
-        menu_item["names"] = ", ".join(names)
-        menu_item["values"] = ", ".join(values)
-        
-        menus.append(menu_name)
-        
-        output.append(
+            menu_item["default_val"] = default_val
+            menu_item["size"] = len(names)
+            menu_item["names"] = ", ".join(names)
+            menu_item["values"] = ", ".join(values)
+            output.append(
 """
 static const char *%(name)s_names[%(size)d] = {%(names)s};
 static const int %(name)s_values[%(size)d] = {%(values)s};
 static NamedOptionMenu %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);
 """ % menu_item)
+        
+        elif "step" in menu_item:
+            menu_types.append("NumericSelection::class_id")
+            output.append(
+"""
+static NumericSelection %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(min)d, %(max)d, %(step)d);
+""" % menu_item)
+            
+        
+        menus.append(menu_name)
+        
 
     output.append(
 """

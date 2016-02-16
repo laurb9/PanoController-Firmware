@@ -128,7 +128,7 @@
     "max": 360, 
     "min": 10, 
     "step": 10, 
-    "unit": "deg",
+    "unit": "÷",
     "variable": "horiz"
   }, 
   {
@@ -137,7 +137,7 @@
     "max": 180, 
     "min": 10, 
     "step": 10, 
-    "unit": "deg",
+    "unit": "÷",
     "variable": "vert"
   }, 
   {
