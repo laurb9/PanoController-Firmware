@@ -18,6 +18,7 @@
 OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val)
 :description(description), value(value), default_val(default_val)
 {
+    active = false;
     pos = default_val;
     if (value){
         *value = default_val;
@@ -33,10 +34,12 @@ void OptionSelector::render(DISPLAY_DEVICE display, int rows){
 
 void OptionSelector::cancel(void){
     pointer = pos;
+    active = false;
 }
 
 void OptionSelector::open(void){
     pointer = pos;
+    active = true;
 }
 
 void OptionSelector::next(void){
@@ -76,14 +79,6 @@ RangeSelector::RangeSelector(const char *description, volatile int *value, int d
 
 };
 
-void RangeSelector::cancel(void){
-    pointer = pos;
-}
-
-void RangeSelector::open(void){
-    pointer = pos;
-}
-
 void RangeSelector::next(void){
     if (pointer > min_val){
         pointer -= step;
@@ -95,6 +90,7 @@ void RangeSelector::prev(void){
     }
 }
 void RangeSelector::select(void){
+    OptionSelector::select();
     pos = pointer;
     *value = pointer;
 }
@@ -135,6 +131,12 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
     }
     pointer = pos;
 };
+
+void ListSelector::select(void){
+    OptionSelector::select();
+    pos = pointer;
+    *value = values[pos];
+}
 
 void ListSelector::render(DISPLAY_DEVICE display, int rows){
     char buf[16];
@@ -210,13 +212,18 @@ Menu::Menu(const char *description, int count, const union MenuItem *menus, cons
 }
 
 void Menu::open(void){
+    OptionSelector::open();
     drilldown = false;
 }
 
 void Menu::cancel(void){
     if (drilldown){
         invoke_method(cancel);
-        drilldown = false;
+        if (types[pos] != Menu::class_id || !menus[pos].menu->active){
+            drilldown = false;
+        }
+    } else {
+        OptionSelector::cancel();
     }
 }
 void Menu::next(void){

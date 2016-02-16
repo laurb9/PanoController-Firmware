@@ -26,6 +26,7 @@ public:
     volatile int *value;
     int default_val;
     int count = 0;
+    bool active = false;      // flag indicating the option selector is active
     OptionSelector(const char *description, volatile int *value, int default_val);
     void cancel(void);
     void open(void);
@@ -40,8 +41,6 @@ public:
     static const ClassID class_id = CLASS_RANGE;
     int min_val, max_val, step;
     RangeSelector(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step);
-    void open(void);
-    void cancel(void);
     void next(void);
     void prev(void);
     void select(void);
@@ -53,6 +52,7 @@ public:
     static const ClassID class_id = CLASS_LIST;
     const int *values;
     ListSelector(const char *description, volatile int *value, int default_val, int count, const int values[]);
+    void select(void);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
@@ -66,7 +66,7 @@ public:
 
 class Menu : public OptionSelector {
 protected:
-    bool drilldown = false;
+    bool drilldown = false;   // flag indicating that selected menu option is active
 public:
     static const ClassID class_id = CLASS_MENU;
     const union MenuItem *menus;
@@ -102,5 +102,6 @@ default: break; \
         }
 
 extern Menu menu;
+extern volatile int focal, horiz, vert, shutter, pre_shutter, running;
 
 #endif /* MENU_H_ */
