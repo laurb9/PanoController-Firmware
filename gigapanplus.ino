@@ -80,19 +80,21 @@ void handleEvent(int event) {
 
 void loop() {
     int event = joystick.read();
-    if (event){
+    if (event && !running){
         handleEvent(event);
+        Serial.println(focal);
+        if (running){   // pano was just started via Menu
+            display.clearDisplay();
+            display.setCursor(0,0);
+            display.print(F("Start "));
+            display.display();
+            pano.setFocalLength(focal);
+            pano.setFOV(horiz, vert);
+            pano.setShutter(shutter, pre_shutter);
+            pano.start();
+        }
     }
-/*
-    display.clearDisplay();
-    display.setCursor(0,0);
-    display.print(F("Start "));
-    display.display();
-    pano.setFocalLength(50);
-    pano.setFOV(180, 90);
-    pano.setShutter(500, 250);
-    pano.start();
-    do {
+    if (running){ // pano is in process
         display.clearDisplay();
         display.setCursor(0,0);
         display.println(F("running\n"));
@@ -104,10 +106,14 @@ void loop() {
         display.print(F("vert = "));
         display.println(pano.vert_position);
         display.display();
-    } while(pano.next());
-    pano.end();
-    display.println(F("end"));
-    display.display();
-    delay(10000);
-*/
+        running = pano.next();
+        if (!running){
+            pano.end();
+            display.println(F("end"));
+            display.display();
+            delay(5000);
+            menu.open();
+            handleEvent(EVENT_NONE);
+        }
+    }
 }
