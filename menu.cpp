@@ -55,6 +55,8 @@ void OptionSelector::prev(void){
 void OptionSelector::select(void){
     pos = pointer;
 }
+void OptionSelector::sync(void){
+}
 
 int OptionSelector::calc_start(int rows){
     int start = 0;
@@ -93,6 +95,10 @@ void RangeSelector::select(void){
     OptionSelector::select();
     pos = pointer;
     *value = pointer;
+}
+void RangeSelector::sync(void){
+    pointer = *value;
+    pos = pointer;
 }
 
 void RangeSelector::render(DISPLAY_DEVICE display, int rows){
@@ -136,6 +142,15 @@ void ListSelector::select(void){
     OptionSelector::select();
     pos = pointer;
     *value = values[pos];
+}
+void ListSelector::sync(void){
+    // find the position corresponding to the default value
+    for (pos=count-1; pos > 0; pos--){
+        if (values[pos] == *value){
+            break;
+        }
+    }
+    pointer = pos;
 }
 
 void ListSelector::render(DISPLAY_DEVICE display, int rows){
@@ -218,7 +233,7 @@ void Menu::open(void){
 
 void Menu::cancel(void){
     if (drilldown){
-        invoke_method(cancel);
+        invoke_method(pos, cancel);
         if (types[pos] != Menu::class_id || !menus[pos].menu->active){
             drilldown = false;
         }
@@ -228,32 +243,37 @@ void Menu::cancel(void){
 }
 void Menu::next(void){
     if (drilldown){
-        invoke_method(next);
+        invoke_method(pos, next);
     } else {
         OptionSelector::next();
     }
 }
 void Menu::prev(void){
     if (drilldown){
-        invoke_method(prev);
+        invoke_method(pos, prev);
     } else {
         OptionSelector::prev();
     }
 }
 void Menu::select(void){
     if (drilldown){
-        invoke_method(select);
+        invoke_method(pos, select);
     } else {
         OptionSelector::select();
         drilldown = true;
-        invoke_method(open);
+        invoke_method(pos, open);
+    }
+}
+void Menu::sync(void){
+    for (int i=0; i<count; i++){
+        invoke_method(i, sync);
     }
 }
 void Menu::render(DISPLAY_DEVICE display, int rows){
     int start = calc_start(rows);
 
     if (drilldown){
-        invoke_method(render, display, rows);
+        invoke_method(pos, render, display, rows);
         return;
     }
 

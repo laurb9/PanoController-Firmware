@@ -33,6 +33,7 @@ public:
     void next(void);
     void prev(void);
     void select(void);
+    void sync(void);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
@@ -44,6 +45,7 @@ public:
     void next(void);
     void prev(void);
     void select(void);
+    void sync(void);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
@@ -53,6 +55,7 @@ public:
     const int *values;
     ListSelector(const char *description, volatile int *value, int default_val, int count, const int values[]);
     void select(void);
+    void sync(void);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
@@ -77,6 +80,7 @@ public:
     void next(void);
     void prev(void);
     void select(void);
+    void sync(void);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
@@ -91,7 +95,7 @@ union MenuItem {
 /*
  * Macro to cast a MenuItem to the correct pointer type and invoke the requested method
  */
-#define invoke_method(method, ...) \
+#define invoke_method(pos, method, ...) \
 switch(types[pos]){ \
 case Menu::class_id: menus[pos].menu->method(__VA_ARGS__); break; \
 case NamedListSelector::class_id: menus[pos].names->method(__VA_ARGS__); break; \
