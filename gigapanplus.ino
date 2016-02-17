@@ -44,6 +44,14 @@ static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
+// these variables are modified by the menu
+volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, aspect, shots, motors_enable;
+volatile int stop_running = false;
+
+void button_click(){
+    stop_running = true;
+}
+
 const int rows = 6;
 
 void setup() {
@@ -79,22 +87,40 @@ void handleEvent(int event) {
 }
 
 void loop() {
-    int event = joystick.read();
-    if (event && !running){
-        handleEvent(event);
-        Serial.println(focal);
-        if (running){   // pano was just started via Menu
-            display.clearDisplay();
-            display.setCursor(0,0);
-            display.print(F("Start "));
-            display.display();
-            pano.setFocalLength(focal);
-            pano.setFOV(horiz, vert);
-            pano.setShutter(shutter, pre_shutter);
-            pano.start();
+    if (!running){
+        int event = joystick.read();
+        if (event){
+            handleEvent(event);
+            delay(100);
+
+            if (motors_enable){
+                pano.motorsOn();
+            } else {
+                pano.motorsOff();
+            }
+
+            if (running){   // pano was just started via Menu
+                menu.cancel(); // go back to main menu to avoid re-triggering
+                motors_enable = true;
+                menu.sync();
+
+                display.clearDisplay();
+                display.setCursor(0,0);
+                display.print(F("Start "));
+                display.display();
+
+                pano.setFocalLength(focal);
+                pano.setFOV(horiz, vert);
+                pano.setShutter(shutter, pre_shutter);
+                pano.setShots(shots);
+
+                stop_running = false;
+                attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
+
+                pano.start();
+            }
         }
-    }
-    if (running){ // pano is in process
+    } else {   // pano is in progress
         display.clearDisplay();
         display.setCursor(0,0);
         display.println(F("running\n"));
@@ -106,12 +132,19 @@ void loop() {
         display.print(F("vert = "));
         display.println(pano.vert_position);
         display.display();
+
         running = pano.next();
-        if (!running){
+        if (stop_running || !running){
+            detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
+            running = false;
+            menu.sync();
+
             pano.end();
-            display.println(F("end"));
+
+            display.println((stop_running) ? F("canceled") : F("finished"));
             display.display();
-            delay(5000);
+            delay(1000);
+
             menu.open();
             handleEvent(EVENT_NONE);
         }
