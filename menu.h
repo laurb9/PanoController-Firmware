@@ -106,6 +106,5 @@ default: break; \
         }
 
 extern Menu menu;
-extern volatile int focal, horiz, vert, shutter, pre_shutter, running;
 
 #endif /* MENU_H_ */

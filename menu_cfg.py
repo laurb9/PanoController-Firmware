@@ -14,7 +14,7 @@ def main(menu_file):
         menu_name = "menu_" + re.sub(r"[^\w]", "_", menu_item["description"].lower())
         menu_item["name"] = menu_name
         output.append("// %(description)s" % menu_item)
-        output.append("volatile int %(variable)s;" % menu_item);
+        output.append("extern volatile int %(variable)s;" % menu_item);
         names = []
         values = []
         default_val = 0
