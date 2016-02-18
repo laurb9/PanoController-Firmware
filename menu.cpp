@@ -28,8 +28,8 @@ OptionSelector::OptionSelector(const char *description, volatile int *value, int
 void OptionSelector::render(DISPLAY_DEVICE display, int rows){
     Serial.println(description);
     Serial.println("---------------------");
-    display->println(description);
-    display->print("---------------------");
+    display.println(description);
+    display.print("---------------------");
 }
 
 void OptionSelector::cancel(void){
@@ -107,18 +107,18 @@ void RangeSelector::render(DISPLAY_DEVICE display, int rows){
 
     marker = (pointer < max_val) ? " \x1e": "";
     Serial.println(marker);
-    display->println(marker);
+    display.println(marker);
 
-    if (pointer == pos) display->setTextColor(BLACK, WHITE);
+    if (pointer == pos) display.setTextColor(BLACK, WHITE);
 
     Serial.println(pointer);
-    display->println(pointer);
+    display.println(pointer);
 
-    if (pointer == pos) display->setTextColor(WHITE, BLACK);
+    if (pointer == pos) display.setTextColor(WHITE, BLACK);
 
     marker = (pointer > min_val) ? " \x1f": "";
     Serial.println(marker);
-    display->println(marker);
+    display.println(marker);
 }
 
 /*
@@ -167,16 +167,16 @@ void ListSelector::render(DISPLAY_DEVICE display, int rows){
         Serial.print((i==pointer) ? F(">") : F(" "));
 
         Serial.print(marker);
-        display->print(marker);
+        display.print(marker);
 
-        if (i == pointer) display->setTextColor(BLACK, WHITE);
+        if (i == pointer) display.setTextColor(BLACK, WHITE);
         Serial.print(buf);
-        display->print(buf);
-        if (i == pointer) display->setTextColor(WHITE, BLACK);
+        display.print(buf);
+        if (i == pointer) display.setTextColor(WHITE, BLACK);
 
         marker = (i==pos) ? '\x11' : ' ';
         Serial.println(marker);
-        display->println(marker);
+        display.println(marker);
     }
 }
 
@@ -200,16 +200,16 @@ void NamedListSelector::render(DISPLAY_DEVICE display, int rows){
         Serial.print((i==pointer) ? F(">") : F(" "));
 
         Serial.print(marker);
-        display->print(marker);
+        display.print(marker);
 
-        if (i == pointer) display->setTextColor(BLACK, WHITE);
+        if (i == pointer) display.setTextColor(BLACK, WHITE);
         Serial.print(names[i]);
-        display->print(names[i]);
-        if (i == pointer) display->setTextColor(WHITE, BLACK);
+        display.print(names[i]);
+        if (i == pointer) display.setTextColor(WHITE, BLACK);
 
         marker = (i==pos) ? '\x11' : ' ';
         Serial.println(marker);
-        display->println(marker);
+        display.println(marker);
     }
 }
 
@@ -282,12 +282,12 @@ void Menu::render(DISPLAY_DEVICE display, int rows){
     for (int i=start; i<start+rows && i<count; i++){
         if (i == pointer){
             Serial.print(F(">"));
-            display->setTextColor(BLACK, WHITE);
+            display.setTextColor(BLACK, WHITE);
         }
         Serial.println(menus[i].option->description);
-        display->println(menus[i].option->description);
+        display.println(menus[i].option->description);
         if (i == pointer){
-            display->setTextColor(WHITE, BLACK);
+            display.setTextColor(WHITE, BLACK);
         }
     }
 }

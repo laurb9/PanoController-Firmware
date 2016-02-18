@@ -46,7 +46,7 @@ static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
 // these variables are modified by the menu
 volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, aspect, shots, motors_enable;
-volatile int stop_running = false;
+volatile static int stop_running = false;
 
 void button_click(){
     stop_running = true;
@@ -66,7 +66,7 @@ void setup() {
     display.setTextSize(1);
     Serial.println(F("Ready\n"));
     menu.open();
-    menu.render(&display, rows);
+    menu.render(display, rows);
     display.display();
 }
 
@@ -81,7 +81,7 @@ void handleEvent(int event) {
     display.clearDisplay();
     display.setCursor(0,0);
 
-    menu.render(&display, rows);
+    menu.render(display, rows);
     display.display();
 }
 
@@ -115,25 +115,8 @@ void loop() {
 
                 display.clearDisplay();
                 display.setCursor(0,0);
-                display.print(F("Focal Length "));
-                display.print(focal);
-                display.println(F("mm"));
-                display.print(F("Lens FOV "));
-                display.print(camera.getHorizFOV());
-                display.print(F(" x "));
-                display.println(camera.getVertFOV());
-                display.print(F("Pano FOV "));
-                display.print(horiz);
-                display.print(F(" x "));
-                display.println(vert);
-                display.print(F("Grid "));
-                display.print(pano.getHorizShots());
-                display.print(F(" x "));
-                display.println(pano.getVertShots());
 
                 display.display();
-
-                delay(10000);
 
                 stop_running = false;
                 attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
@@ -144,12 +127,29 @@ void loop() {
     } else {   // pano is in progress
         display.clearDisplay();
         display.setCursor(0,0);
-        display.println(F("running\n"));
-        display.print(F("pos = "));
-        display.println(pano.position);
-        display.print(F("horiz = "));
-        display.println(pano.horiz_position);
-        display.print(F("vert = "));
+        display.print(F("Focal Length "));
+        display.print(focal);
+        display.println(F("mm"));
+        display.print(F("Lens FOV "));
+        display.print(camera.getHorizFOV());
+        display.print(F(" x "));
+        display.println(camera.getVertFOV());
+        display.print(F("Pano FOV "));
+        display.print(horiz);
+        display.print(F(" x "));
+        display.println(vert);
+        display.print(F("Grid "));
+        display.print(pano.getHorizShots());
+        display.print(F(" x "));
+        display.println(pano.getVertShots());
+        display.println();
+        display.print(F("Position = "));
+        display.print(pano.position+1);
+        display.print(F(" / "));
+        display.println(pano.getHorizShots()*pano.getVertShots());
+        display.print(F("Bearing "));
+        display.print(pano.horiz_position);
+        display.print(F(" x "));
         display.println(pano.vert_position);
         display.display();
 
@@ -163,13 +163,13 @@ void loop() {
 
             display.println((stop_running) ? F("canceled") : F("finished"));
             display.display();
-            delay(1000);
+            delay(4000);
 
             menu.open();
 
             display.clearDisplay();
             display.setCursor(0,0);
-            menu.render(&display, rows);
+            menu.render(display, rows);
             display.display();
         }
     }

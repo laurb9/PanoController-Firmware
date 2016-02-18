@@ -9,7 +9,7 @@
 
 #include "pano.h"
 
-Pano::Pano(Motor horiz_motor, Motor vert_motor, Camera camera,
+Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera,
            int horiz_motor_enable_pin, int vert_motor_enable_pin)
 :horiz_motor(horiz_motor),
  vert_motor(vert_motor),
@@ -19,7 +19,7 @@ Pano::Pano(Motor horiz_motor, Motor vert_motor, Camera camera,
 {
     pinMode(horiz_motor_enable_pin, OUTPUT);
     pinMode(vert_motor_enable_pin, OUTPUT);
-    motorsOn();
+    motorsOff();
 
     horiz_motor.setMicrostep(1);
     horiz_motor.setRPM(180);
@@ -51,10 +51,10 @@ void Pano::setMode(unsigned mode){
 
 }
 unsigned Pano::getHorizShots(void){
-    return horiz_fov/camera.getHorizFOV();
+    return (horiz_fov+camera.getHorizFOV()-1)/camera.getHorizFOV();
 }
 unsigned Pano::getVertShots(void){
-    return vert_fov/camera.getVertFOV();
+    return (vert_fov+camera.getVertFOV()-1)/camera.getVertFOV();
 }
 void Pano::start(void){
     motorsOn();

@@ -11,7 +11,7 @@
 
 #include <Adafruit_GFX.h>
 
-#define DISPLAY_DEVICE Adafruit_GFX*
+#define DISPLAY_DEVICE Adafruit_GFX&
 
 enum ClassID { CLASS_OPTIONS, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
 
