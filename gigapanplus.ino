@@ -72,17 +72,16 @@ void setup() {
 
 void handleEvent(int event) {
 
-    if (isEventLeft(event)) menu.cancel();
-    else if (isEventRight(event) || isEventClick(event)) menu.select();
-    else if (isEventDown(event)) menu.next();
-    else if (isEventUp(event)) menu.prev();
+    if (Joystick::isEventLeft(event)) menu.cancel();
+    else if (Joystick::isEventRight(event) || Joystick::isEventClick(event)) menu.select();
+    else if (Joystick::isEventDown(event)) menu.next();
+    else if (Joystick::isEventUp(event)) menu.prev();
 
     Serial.println();
     display.clearDisplay();
     display.setCursor(0,0);
 
     menu.render(&display, rows);
-
     display.display();
 }
 
@@ -124,7 +123,6 @@ void loop() {
         display.clearDisplay();
         display.setCursor(0,0);
         display.println(F("running\n"));
-        display.display();
         display.print(F("pos = "));
         display.println(pano.position);
         display.print(F("horiz = "));
@@ -146,7 +144,11 @@ void loop() {
             delay(1000);
 
             menu.open();
-            handleEvent(EVENT_NONE);
+
+            display.clearDisplay();
+            display.setCursor(0,0);
+            menu.render(&display, rows);
+            display.display();
         }
     }
 }

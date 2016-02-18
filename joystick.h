@@ -9,30 +9,40 @@
 #ifndef JOYSTICK_H_
 #define JOYSTICK_H_
 
-#define EVENT_NONE  0
-#define EVENT_UP    0b00001
-#define EVENT_DOWN  0b00010
-#define EVENT_LEFT  0b00100
-#define EVENT_RIGHT 0b01000
-#define EVENT_CLICK 0b10000
-
-#define isEventUp(event) (event & EVENT_UP)
-#define isEventDown(event) (event & EVENT_DOWN)
-#define isEventLeft(event) (event & EVENT_LEFT)
-#define isEventRight(event) (event & EVENT_RIGHT)
-#define isEventClick(event) (event & EVENT_CLICK)
-
 class Joystick {
 private:
+    enum Event {
+        EVENT_NONE  = 0,
+        EVENT_UP    = 0b00001,
+        EVENT_DOWN  = 0b00010,
+        EVENT_LEFT  = 0b00100,
+        EVENT_RIGHT = 0b01000,
+        EVENT_CLICK = 0b10000,
+    };
     static const int sensitivity = 8; // lower is higher :)
     static const int mid_level = 512 >> 8;
 protected:
     int sw_pin, x_pin, y_pin;
-    int sw_state = 0, x_state, y_state;
+    int sw_state = 0, x_state = mid_level, y_state = mid_level;
     int last_read;
 public:
     Joystick(int sw_pin, int x_pin, int y_pin);
     unsigned read(void);
+    static bool isEventUp(unsigned event){
+        return (event & EVENT_UP);
+    };
+    static bool isEventDown(unsigned event){
+        return (event & EVENT_DOWN);
+    };
+    static bool isEventLeft(unsigned event){
+        return (event & EVENT_LEFT);
+    };
+    static bool isEventRight(unsigned event){
+        return (event & EVENT_RIGHT);
+    };
+    static bool isEventClick(unsigned event){
+        return (event & EVENT_CLICK);
+    };
 };
 
 #endif /* JOYSTICK_H_ */
