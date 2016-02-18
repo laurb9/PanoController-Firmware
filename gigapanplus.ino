@@ -113,6 +113,28 @@ void loop() {
                 pano.setShutter(shutter, pre_shutter);
                 pano.setShots(shots);
 
+                display.clearDisplay();
+                display.setCursor(0,0);
+                display.print(F("Focal Length "));
+                display.print(focal);
+                display.println(F("mm"));
+                display.print(F("Lens FOV "));
+                display.print(camera.getHorizFOV());
+                display.print(F(" x "));
+                display.println(camera.getVertFOV());
+                display.print(F("Pano FOV "));
+                display.print(horiz);
+                display.print(F(" x "));
+                display.println(vert);
+                display.print(F("Grid "));
+                display.print(pano.getHorizShots());
+                display.print(F(" x "));
+                display.println(pano.getVertShots());
+
+                display.display();
+
+                delay(10000);
+
                 stop_running = false;
                 attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
 
