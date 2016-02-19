@@ -19,11 +19,10 @@ private:
         EVENT_RIGHT = 0b01000,
         EVENT_CLICK = 0b10000,
     };
-    static const int sensitivity = 8; // lower is higher :)
-    static const int mid_level = 512 >> 8;
+    static const int sensitivity = 7; // lower is higher :)
 protected:
     int sw_pin, x_pin, y_pin;
-    int sw_state = 0, x_state = mid_level, y_state = mid_level;
+    int sw_state = 0, x_state = 0, y_state = 0;
     int last_read;
 public:
     Joystick(int sw_pin, int x_pin, int y_pin);
@@ -43,6 +42,9 @@ public:
     static bool isEventClick(unsigned event){
         return (event & EVENT_CLICK);
     };
+    int getPositionX(void);
+    int getPositionY(void);
+    bool getButtonState(void);
 };
 
 #endif /* JOYSTICK_H_ */

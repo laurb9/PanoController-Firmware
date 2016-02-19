@@ -19,8 +19,8 @@ Joystick::Joystick(int sw_pin, int x_pin, int y_pin)
     //pinMode(x_pin, INPUT);
     //pinMode(y_pin, INPUT);
     sw_state = HIGH;
-    x_state = mid_level;
-    y_state = mid_level;
+    x_state = 0;
+    y_state = 0;
     read();
 }
 
@@ -43,23 +43,35 @@ unsigned Joystick::read(void){
     }
 
     // read X position
-    current_state = (analogRead(x_pin)+(1<<(sensitivity-1))) >> sensitivity;
-    if (current_state > x_state && current_state > mid_level){
+    current_state = getPositionX();
+    if (current_state > x_state && current_state > 0){
         event |= EVENT_RIGHT;
-    } else if (current_state < x_state && current_state < mid_level){
+    } else if (current_state < x_state && current_state < 0){
         event |= EVENT_LEFT;
     }
     x_state = current_state;
 
     // read Y position
-    current_state = (analogRead(y_pin)+(1<<(sensitivity-1))) >> sensitivity;
-    if (current_state > y_state && current_state > mid_level){
+    current_state = getPositionY();
+    if (current_state > y_state && current_state > 0){
         event |= EVENT_DOWN;
-    } else if (current_state < y_state && current_state < mid_level){
+    } else if (current_state < y_state && current_state < 0){
         event |= EVENT_UP;
     }
     y_state = current_state;
 
     last_read = millis();
     return event;
+}
+
+int Joystick::getPositionX(void){
+    return (analogRead(x_pin)-512+(1<<(sensitivity-1))) >> sensitivity;
+}
+
+int Joystick::getPositionY(void){
+    return (analogRead(y_pin)-512+(1<<(sensitivity-1))) >> sensitivity;
+}
+
+bool Joystick::getButtonState(void){
+    return digitalRead(sw_pin) == LOW;
 }
