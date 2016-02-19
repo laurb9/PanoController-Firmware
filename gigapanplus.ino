@@ -115,6 +115,26 @@ void handleEvent(int event) {
     display.display();
 }
 
+void positionCamera(void){
+    int pos_x, pos_y;
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.println("  \x1e  \n"
+                    "\x11 x \x10\n"
+                    "  \x1f");
+    display.display();
+    while (!Joystick::isEventClick(joystick.read())){
+        pos_x = joystick.getPositionX();
+        pos_y = joystick.getPositionY();
+        if (pos_x){
+            horiz_motor.move(4*pos_x);
+        }
+        if (pos_y){
+            vert_motor.move(4*pos_y);
+        }
+    }
+}
+
 void loop() {
     if (!running){
         int event = joystick.read();
@@ -137,6 +157,8 @@ void loop() {
                 pano.setFOV(horiz, vert);
                 pano.setShutter(shutter, pre_shutter);
                 pano.setShots(shots);
+
+                positionCamera();
 
                 stop_running = false;
                 attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
