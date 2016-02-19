@@ -70,6 +70,36 @@ void setup() {
     display.display();
 }
 
+void displayPanoStatus(void){
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.print(F("Focal Length "));
+    display.print(focal);
+    display.println(F("mm"));
+    display.print(F("Lens FOV "));
+    display.print(camera.getHorizFOV());
+    display.print(F(" x "));
+    display.println(camera.getVertFOV());
+    display.print(F("Pano FOV "));
+    display.print(horiz);
+    display.print(F(" x "));
+    display.println(vert);
+    display.print(F("Grid "));
+    display.print(pano.getHorizShots());
+    display.print(F(" x "));
+    display.println(pano.getVertShots());
+    display.println();
+    display.print(F("Position = "));
+    display.print(pano.position+1);
+    display.print(F(" / "));
+    display.println(pano.getHorizShots()*pano.getVertShots());
+    display.print(F("Bearing "));
+    display.print(pano.horiz_position);
+    display.print(F(" x "));
+    display.println(pano.vert_position);
+    display.display();
+}
+
 void handleEvent(int event) {
 
     if (Joystick::isEventLeft(event)) menu.cancel();
@@ -103,20 +133,10 @@ void loop() {
                 motors_enable = true;
                 menu.sync();
 
-                display.clearDisplay();
-                display.setCursor(0,0);
-                display.print(F("Start "));
-                display.display();
-
                 pano.setFocalLength(focal);
                 pano.setFOV(horiz, vert);
                 pano.setShutter(shutter, pre_shutter);
                 pano.setShots(shots);
-
-                display.clearDisplay();
-                display.setCursor(0,0);
-
-                display.display();
 
                 stop_running = false;
                 attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
@@ -125,34 +145,7 @@ void loop() {
             }
         }
     } else {   // pano is in progress
-        display.clearDisplay();
-        display.setCursor(0,0);
-        display.print(F("Focal Length "));
-        display.print(focal);
-        display.println(F("mm"));
-        display.print(F("Lens FOV "));
-        display.print(camera.getHorizFOV());
-        display.print(F(" x "));
-        display.println(camera.getVertFOV());
-        display.print(F("Pano FOV "));
-        display.print(horiz);
-        display.print(F(" x "));
-        display.println(vert);
-        display.print(F("Grid "));
-        display.print(pano.getHorizShots());
-        display.print(F(" x "));
-        display.println(pano.getVertShots());
-        display.println();
-        display.print(F("Position = "));
-        display.print(pano.position+1);
-        display.print(F(" / "));
-        display.println(pano.getHorizShots()*pano.getVertShots());
-        display.print(F("Bearing "));
-        display.print(pano.horiz_position);
-        display.print(F(" x "));
-        display.println(pano.vert_position);
-        display.display();
-
+        displayPanoStatus();
         running = pano.next();
         if (stop_running || !running){
             detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
