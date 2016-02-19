@@ -162,20 +162,18 @@ void ListSelector::render(DISPLAY_DEVICE display, int rows){
     for (int i=start; i<start+rows && i<count; i++){
         snprintf(buf, sizeof(buf), "%d", values[i]);
 
-        char marker = (i==pos) ? '\x10' : ' ';
+        char marker = (i==pointer) ? '\x10' : ' ';
 
         Serial.print((i==pointer) ? F(">") : F(" "));
 
-        Serial.print(marker);
         display.print(marker);
 
-        if (i == pointer) display.setTextColor(BLACK, WHITE);
+        if (i == pos) display.setTextColor(BLACK, WHITE);
         Serial.print(buf);
         display.print(buf);
-        if (i == pointer) display.setTextColor(WHITE, BLACK);
+        if (i == pos) display.setTextColor(WHITE, BLACK);
 
-        marker = (i==pos) ? '\x11' : ' ';
-        Serial.println(marker);
+        marker = (i==pointer) ? '\x11' : ' ';
         display.println(marker);
     }
 }
@@ -195,20 +193,18 @@ void NamedListSelector::render(DISPLAY_DEVICE display, int rows){
     OptionSelector::render(display, rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        char marker = (i==pos) ? '\x10' : ' ';
+        char marker = (i==pointer) ? '\x10' : ' ';
 
         Serial.print((i==pointer) ? F(">") : F(" "));
 
-        Serial.print(marker);
         display.print(marker);
 
-        if (i == pointer) display.setTextColor(BLACK, WHITE);
+        if (i == pos) display.setTextColor(BLACK, WHITE);
         Serial.print(names[i]);
         display.print(names[i]);
-        if (i == pointer) display.setTextColor(WHITE, BLACK);
+        if (i == pos) display.setTextColor(WHITE, BLACK);
 
-        marker = (i==pos) ? '\x11' : ' ';
-        Serial.println(marker);
+        marker = (i==pointer) ? '\x11' : ' ';
         display.println(marker);
     }
 }
