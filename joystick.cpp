@@ -39,6 +39,9 @@ unsigned Joystick::read(void){
         sw_state = current_state;
         if (sw_state == LOW){
             event |= EVENT_CLICK;
+            for (int i=50; i && digitalRead(sw_pin) == LOW; i--){
+                delay(10);
+            };
         }
     }
 
