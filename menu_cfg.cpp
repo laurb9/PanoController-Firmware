@@ -9,28 +9,20 @@ static const char *menu_start_names[2] = {menu_start_name_0, menu_start_name_1};
 static const int menu_start_values[2] = {1, 0};
 static NamedListSelector menu_start(menu_start_desc, &running, 0, 2, menu_start_names, menu_start_values);
 
-// Camera Orientation
-extern volatile int orientation;
-static const char menu_camera_orientation_desc[] PROGMEM = "Camera Orientation";
-static const char menu_camera_orientation_name_0[] PROGMEM = "portrait";
-static const char menu_camera_orientation_name_1[] PROGMEM = "landscape";
-static const char menu_camera_orientation_name_2[] PROGMEM = "square";
-
-static const char *menu_camera_orientation_names[3] = {menu_camera_orientation_name_0, menu_camera_orientation_name_1, menu_camera_orientation_name_2};
-static const int menu_camera_orientation_values[3] = {0, 1, 2};
-static NamedListSelector menu_camera_orientation(menu_camera_orientation_desc, &orientation, 0, 3, menu_camera_orientation_names, menu_camera_orientation_values);
-
 // Aspect Ratio
 extern volatile int aspect;
 static const char menu_aspect_ratio_desc[] PROGMEM = "Aspect Ratio";
-static const char menu_aspect_ratio_name_0[] PROGMEM = "3:2";
-static const char menu_aspect_ratio_name_1[] PROGMEM = "16:9";
-static const char menu_aspect_ratio_name_2[] PROGMEM = "4:3";
+static const char menu_aspect_ratio_name_0[] PROGMEM = "2:3 (portrait)";
+static const char menu_aspect_ratio_name_1[] PROGMEM = "9:16 (portrait)";
+static const char menu_aspect_ratio_name_2[] PROGMEM = "3:4 (portrait)";
 static const char menu_aspect_ratio_name_3[] PROGMEM = "1:1";
+static const char menu_aspect_ratio_name_4[] PROGMEM = "3:2 (landscape)";
+static const char menu_aspect_ratio_name_5[] PROGMEM = "16:9 (landscape)";
+static const char menu_aspect_ratio_name_6[] PROGMEM = "4:3 (landscape)";
 
-static const char *menu_aspect_ratio_names[4] = {menu_aspect_ratio_name_0, menu_aspect_ratio_name_1, menu_aspect_ratio_name_2, menu_aspect_ratio_name_3};
-static const int menu_aspect_ratio_values[4] = {0, 1, 2, 3};
-static NamedListSelector menu_aspect_ratio(menu_aspect_ratio_desc, &aspect, 0, 4, menu_aspect_ratio_names, menu_aspect_ratio_values);
+static const char *menu_aspect_ratio_names[7] = {menu_aspect_ratio_name_0, menu_aspect_ratio_name_1, menu_aspect_ratio_name_2, menu_aspect_ratio_name_3, menu_aspect_ratio_name_4, menu_aspect_ratio_name_5, menu_aspect_ratio_name_6};
+static const int menu_aspect_ratio_values[7] = {23, 916, 34, 11, 32, 169, 43};
+static NamedListSelector menu_aspect_ratio(menu_aspect_ratio_desc, &aspect, 23, 7, menu_aspect_ratio_names, menu_aspect_ratio_values);
 
 // Focal Length
 extern volatile int focal;
@@ -98,7 +90,7 @@ static const int menu_motor_control_values[2] = {1, 0};
 static NamedListSelector menu_motor_control(menu_motor_control_desc, &motors_enable, 1, 2, menu_motor_control_names, menu_motor_control_values);
 
 
-static union MenuItem menus[10] = {&menu_start, &menu_camera_orientation, &menu_aspect_ratio, &menu_focal_length, &menu_shutter_speed, &menu_pre_shutter_delay, &menu_shots_per_position, &menu_horizontal_fov, &menu_vertical_fov, &menu_motor_control};
-static const int menu_types[10] = {NamedListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id};
-Menu menu("Main Menu", 10, menus, menu_types);
+static union MenuItem menus[9] = {&menu_start, &menu_aspect_ratio, &menu_focal_length, &menu_shutter_speed, &menu_pre_shutter_delay, &menu_shots_per_position, &menu_horizontal_fov, &menu_vertical_fov, &menu_motor_control};
+static const int menu_types[9] = {NamedListSelector::class_id,NamedListSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id};
+Menu menu("Main Menu", 9, menus, menu_types);
 
