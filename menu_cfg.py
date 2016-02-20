@@ -18,7 +18,7 @@ def main(menu_file):
         names = []
         values = []
         default_val = 0
-        output.append('static const char %(name)s_desc[] PROGMEM = "%(description)s";' % menu_item)
+        output.append('static const PROGMEM char %(name)s_desc[] = "%(description)s";' % menu_item)
         
         if "options" in menu_item:
             if isinstance(menu_item["options"][0], dict):
@@ -29,14 +29,14 @@ def main(menu_file):
                         default_val = value
     
                     var_name = "%s_name_%d" % (menu_name, j)
-                    output.append('static const char %s[] PROGMEM = "%s";' % (var_name, name))
+                    output.append('static const PROGMEM char %s[] = "%s";' % (var_name, name))
                     names.append(var_name)
                     values.append(str(value))
                     
                 menu_item["names"] = ", ".join(names)
                 output_fmt = """
-static const char *%(name)s_names[%(size)d] = {%(names)s};
-static const int %(name)s_values[%(size)d] = {%(values)s};
+static const PROGMEM char * const %(name)s_names[%(size)d] = {%(names)s};
+static const PROGMEM int %(name)s_values[%(size)d] = {%(values)s};
 static NamedListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_names, %(name)s_values);
 """
             else:
@@ -48,7 +48,7 @@ static NamedListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d,
                     values.append(str(value))
 
                 output_fmt = """
-static const int %(name)s_values[%(size)d] = {%(values)s};
+static const PROGMEM int %(name)s_values[%(size)d] = {%(values)s};
 static ListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(size)d, %(name)s_values);
 """
             menu_item["default_val"] = default_val
@@ -69,9 +69,10 @@ static RangeSelector %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(min)d
 
     output.append(
 """
-static union MenuItem menus[%d] = {&%s};
-static const int menu_types[%d] = {%s};
-Menu menu("Main Menu", %d, menus, menu_types);
+static const PROGMEM union MenuItem menus[%d] = {&%s};
+static const PROGMEM int menu_types[%d] = {%s};
+static const PROGMEM char menu_desc[] = "Main Menu";
+Menu menu(menu_desc, %d, menus, menu_types);
 """ % (len(menus), ", &".join(menus), 
        len(menus), ",".join(menu_types), 
        len(menus)))

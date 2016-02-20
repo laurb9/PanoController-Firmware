@@ -8,8 +8,10 @@
  */
 #ifndef MENU_H_
 #define MENU_H_
-
+#include <avr/pgmspace.h>
 #include <Adafruit_GFX.h>
+
+#define FLASH_STRING (const __FlashStringHelper *)
 
 #define DISPLAY_DEVICE Adafruit_GFX&
 
@@ -62,8 +64,8 @@ public:
 class NamedListSelector : public ListSelector {
 public:
     static const ClassID class_id = CLASS_NAMES;
-    const char* *names;
-    NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[]);
+    const char* const *names;
+    NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char * const names[], const int values[]);
     void render(DISPLAY_DEVICE display, int rows);
 };
 
@@ -74,7 +76,7 @@ public:
     static const ClassID class_id = CLASS_MENU;
     const union MenuItem *menus;
     const int *types;
-    Menu(const char *description, int count, const union MenuItem *menus, const int *types);
+    Menu(const char *description, int count, const union MenuItem * const menus, const int *types);
     void open(void);
     void cancel(void);
     void next(void);

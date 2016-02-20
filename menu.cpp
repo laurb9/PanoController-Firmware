@@ -26,9 +26,9 @@ OptionSelector::OptionSelector(const char *description, volatile int *value, int
 }
 
 void OptionSelector::render(DISPLAY_DEVICE display, int rows){
-    Serial.println(description);
+    Serial.println(FLASH_STRING description);
     Serial.println("---------------------");
-    display.println(description);
+    display.println(FLASH_STRING description);
     display.print("---------------------");
 }
 
@@ -181,7 +181,7 @@ void ListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * NamedListSelector: list of named numeric options
  */
-NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char *names[], const int values[])
+NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char * const names[], const int values[])
 :ListSelector(description, value, default_val, count, values),
  names(names)
 {
@@ -212,7 +212,7 @@ void NamedListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * Menu: this is a regular menu, nothing is set here.
  */
-Menu::Menu(const char *description, int count, const union MenuItem *menus, const int *types)
+Menu::Menu(const char *description, int count, const union MenuItem * const menus, const int *types)
 :OptionSelector(description, NULL, 0),
  menus(menus),
  types(types)
@@ -280,8 +280,8 @@ void Menu::render(DISPLAY_DEVICE display, int rows){
             Serial.print(F(">"));
             display.setTextColor(BLACK, WHITE);
         }
-        Serial.println(menus[i].option->description);
-        display.println(menus[i].option->description);
+        Serial.println(FLASH_STRING menus[i].option->description);
+        display.println(FLASH_STRING menus[i].option->description);
         if (i == pointer){
             display.setTextColor(WHITE, BLACK);
         }
