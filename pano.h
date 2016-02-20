@@ -21,8 +21,8 @@ protected:
     Camera& camera;
     int horiz_motor_enable_pin;
     int vert_motor_enable_pin;
-    int horiz_gear_ratio = 8;
-    int vert_gear_ratio = 32;
+    int horiz_gear_ratio = 5; // 1:5
+    int vert_gear_ratio = 15; // 1:15
     int horiz_fov;
     int vert_fov;
     unsigned shots_per_position = 1;
