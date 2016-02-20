@@ -1,154 +1,95 @@
-[
-  {
-    "description": "Start",
-    "default": "No",
-    "variable": "running",
-    "options": [
-                {"On": 1}, 
-                {"Off": 0}
-               ]
-  },
-  {
-    "default": "2:3 (portrait)", 
-    "description": "Aspect Ratio", 
-    "options": [
-      {
-        "2:3 (portrait)": 23
-      }, 
-      {
-        "9:16 (portrait)": 916
-      }, 
-      {
-        "3:4 (portrait)": 34
-      }, 
-      {
-        "1:1": 11
-      },
-      {
-        "3:2 (landscape)": 32
-      }, 
-      {
-        "16:9 (landscape)": 169
-      }, 
-      {
-        "4:3 (landscape)": 43
-      }
-    ], 
-    "variable": "aspect"
-  }, 
-  {
-    "default": 35, 
-    "description": "Focal Length", 
-    "unit": "mm",
-    "options": [
-      12, 
-      14, 
-      16, 
-      20, 
-      24, 
-      35, 
-      50, 
-      70, 
-      105, 
-      200, 
-      300, 
-      400
-    ], 
-    "variable": "focal"
-  }, 
-  {
-    "default": "1/100", 
-    "description": "Shutter Speed", 
-    "options": [
-      {
-        "1/100": 10
-      }, 
-      {
-        "1/20": 50
-      }, 
-      {
-        "1/10": 100
-      }, 
-      {
-        "1/4": 250
-      }, 
-      {
-        "0.5s": 500
-      }, 
-      {
-        "1s": 1000
-      }, 
-      {
-        "2s": 2000
-      }, 
-      {
-        "4s": 4000
-      }, 
-      {
-        "8s": 8000
-      }
-    ], 
-    "variable": "shutter"
-  }, 
-  {
-    "default": "0.1s", 
-    "description": "Pre-Shutter Delay", 
-    "options": [
-      {
-        "0.1s": 100
-      }, 
-      {
-        "0.5s": 500
-      }, 
-      {
-        "1s": 1000
-      }, 
-      {
-        "2s": 2000
-      }, 
-      {
-        "4s": 4000
-      }
-    ], 
-    "variable": "pre_shutter"
-  }, 
-  {
-    "default": 1, 
-    "description": "Shots per position", 
-    "min": 1,
-    "max": 5,
-    "step": 1,
-    "variable": "shots"
-  }, 
-  {
-    "default": 120, 
-    "description": "Horizontal FOV", 
-    "max": 360, 
-    "min": 10, 
-    "step": 10, 
-    "unit": "÷",
-    "variable": "horiz"
-  }, 
-  {
-    "default": 90, 
-    "description": "Vertical FOV", 
-    "max": 180, 
-    "min": 10, 
-    "step": 10, 
-    "unit": "÷",
-    "variable": "vert"
-  }, 
-  {
-    "default": "On",
-    "description": "Motor Control", 
-    "options": [
-      {
-        "On": 1
-      }, 
-      {
-        "Off": 0
-      }
-    ], 
-    "variable": "motors_enable"
-  }
+[ 
+    {
+        "description": "Start",
+        "default": "Off",
+        "options": [
+            {"On": 1},
+            {"Off": 0}
+        ],
+        "variable": "running"
+    },
+    {
+        "description": "Aspect Ratio",
+        "default": "2:3 (portrait)",
+        "options": [
+            {"2:3 (portrait)": 23},
+            {"9:16 (portrait)": 916},
+            {"3:4 (portrait)": 34},
+            {"1:1": 11},
+            {"3:2 (landscape)": 32},
+            {"16:9 (landscape)": 169},
+            {"4:3 (landscape)": 43}
+        ],
+        "variable": "aspect"
+    },
+    {
+        "description": "Focal Length",
+        "default": 35,
+        "options": [12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400],
+        "unit": "mm",
+        "variable": "focal"
+    },
+    {
+        "description": "Shutter Speed",
+        "default": "1/100",
+        "options": [
+            {"1/100": 10},
+            {"1/20": 50},
+            {"1/10": 100},
+            {"1/4": 250},
+            {"0.5s": 500},
+            {"1s": 1000},
+            {"2s": 2000},
+            {"4s": 4000},
+            {"8s": 8000}
+        ],
+        "variable": "shutter"
+    },
+    {
+        "description": "Pre-Shutter Delay",
+        "default": "0.1s",
+        "options": [
+            {"0.1s": 100},
+            {"0.5s": 500},
+            {"1s": 1000},
+            {"2s": 2000},
+            {"4s": 4000}
+        ],
+        "variable": "pre_shutter"
+    },
+    {
+        "description": "Shots per position",
+        "default": 1,
+        "min": 1,
+        "max": 5,
+        "step": 1,
+        "variable": "shots"
+    },
+    {
+        "description": "Horizontal FOV",
+        "default": 120,
+        "min": 10,
+        "max": 360,
+        "step": 10,
+        "unit": "÷",
+        "variable": "horiz"
+    },
+    {
+        "description": "Vertical FOV",
+        "default": 90,
+        "min": 10,
+        "max": 180,
+        "step": 10,
+        "unit": "÷",
+        "variable": "vert"
+    },
+    {
+        "description": "Motor Control",
+        "default": "On",
+        "options": [
+            {"On": 1},
+            {"Off": 0}
+        ],
+        "variable": "motors_enable"
+    }
 ]
