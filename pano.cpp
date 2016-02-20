@@ -58,6 +58,8 @@ unsigned Pano::getVertShots(void){
 }
 void Pano::start(void){
     motorsOn();
+    horiz_motor.setRPM(180);
+    vert_motor.setRPM(60);
     // move to start position
     horiz_position = 0;
     vert_position = 0;

@@ -127,9 +127,11 @@ void positionCamera(void){
         pos_x = joystick.getPositionX();
         pos_y = joystick.getPositionY();
         if (pos_x){
+            horiz_motor.setRPM(300*abs(pos_x)/joystick.range);
             horiz_motor.move(4*pos_x);
         }
         if (pos_y){
+            vert_motor.setRPM(300*abs(pos_y)/joystick.range);
             vert_motor.move(4*pos_y);
         }
     }
