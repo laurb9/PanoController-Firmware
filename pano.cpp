@@ -46,10 +46,10 @@ void Pano::setMode(unsigned mode){
 
 }
 unsigned Pano::getHorizShots(void){
-    return horiz_move ? horiz_fov / horiz_move : 0;
+    return (horiz_move && horiz_fov > camera.getHorizFOV()) ? 1 + (horiz_fov-camera.getHorizFOV()) / horiz_move : 1;
 }
 unsigned Pano::getVertShots(void){
-    return vert_move ? vert_fov / vert_move : 0;
+    return (vert_move && vert_fov > camera.getVertFOV()) ? 1 + (vert_fov-camera.getVertFOV()) / vert_move : 1;
 }
 /*
  * Helper to calculate grid fit with overlap
