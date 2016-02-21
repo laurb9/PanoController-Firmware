@@ -47,11 +47,6 @@ static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
 // these variables are modified by the menu
 volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, aspect, shots, motors_enable, display_invert;
-volatile static int stop_running = false;
-
-void button_click(){
-    stop_running = true;
-}
 
 void setup() {
     Serial.begin(38400);
@@ -64,9 +59,6 @@ void setup() {
     display.setTextColor(WHITE);
     display.setTextSize(1);
     Serial.println(F("Ready\n"));
-    menu.open();
-    menu.render(display, DISPLAY_ROWS);
-    display.display();
 }
 
 void displayPanoStatus(void){
@@ -129,70 +121,91 @@ void positionCamera(void){
         pos_x = joystick.getPositionX();
         pos_y = joystick.getPositionY();
         if (pos_x){
-            horiz_motor.setRPM(300*abs(pos_x)/joystick.range);
-            horiz_motor.move(4*pos_x);
+            horiz_motor.setRPM(240*abs(pos_x)/joystick.range);
+            horiz_motor.move(8*pos_x);
         }
         if (pos_y){
-            vert_motor.setRPM(300*abs(pos_y)/joystick.range);
-            vert_motor.move(4*pos_y);
+            vert_motor.setRPM(240*abs(pos_y)/joystick.range);
+            vert_motor.move(8*pos_y);
         }
     }
 }
 
-void loop() {
-    if (!running){
+/*
+ * Display and navigate main menu
+ * Only way to exit is by starting the panorama which sets running=true
+ */
+void displayMenu(void){
+    int event;
+
+    menu.open();
+    display.clearDisplay();
+    display.setCursor(0,0);
+    menu.render(display, DISPLAY_ROWS);
+    display.display();
+
+    while (!running){
+        event = joystick.read();
+        if (!event) continue;
+
+        handleEvent(event);
+        delay(100);
+
         display.invertDisplay(display_invert);
-        int event = joystick.read();
-        if (event){
-            handleEvent(event);
-            delay(100);
 
-            if (motors_enable){
-                pano.motorsOn();
-            } else {
-                pano.motorsOff();
-            }
-
-            if (running){   // pano was just started via Menu
-                menu.cancel(); // go back to main menu to avoid re-triggering
-                motors_enable = true;
-                menu.sync();
-
-                pano.setFocalLength(focal);
-                pano.setFOV(horiz, vert);
-                pano.setShutter(shutter, pre_shutter);
-                pano.setShots(shots);
-
-                positionCamera();
-
-                stop_running = false;
-                while (joystick.getButtonState()) delay(20);
-                attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
-
-                pano.start();
-            }
-        }
-    } else {   // pano is in progress
-        displayPanoStatus();
-        running = pano.next();
-        if (stop_running || !running){
-            detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
-            running = false;
-            menu.sync();
-
-            pano.end();
-
-            Serial.println((stop_running) ? F("Canceled") : F("Finished"));
-            display.println((stop_running) ? F("Canceled") : F("Finished"));
-            display.display();
-            while (!joystick.read()) delay(20);
-
-            menu.open();
-
-            display.clearDisplay();
-            display.setCursor(0,0);
-            menu.render(display, DISPLAY_ROWS);
-            display.display();
+        if (motors_enable){
+            pano.motorsOn();
+        } else {
+            pano.motorsOff();
         }
     }
+    menu.cancel(); // go back to main menu to avoid re-triggering
+}
+
+/*
+ * Interrupt handler triggered by button click
+ */
+volatile static int stop_running = false;
+void button_click(){
+    stop_running = true;
+}
+/*
+ * Execute panorama from start to finish.
+ * Button click interrupts.
+ */
+void executePano(void){
+    pano.setFocalLength(focal);
+    pano.setFOV(horiz, vert);
+    pano.setShutter(shutter, pre_shutter);
+    pano.setShots(shots);
+
+    stop_running = false;
+    while (joystick.getButtonState()) delay(20);
+    pano.start();
+    attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
+
+    while (running && !stop_running){
+        displayPanoStatus();
+        running = pano.next();
+    };
+
+    // clean up
+    detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
+    running = false;
+    menu.sync();
+
+    pano.end();
+
+    Serial.println((stop_running) ? F("Canceled") : F("Finished"));
+    display.println((stop_running) ? F("Canceled") : F("Finished"));
+    display.display();
+    while (!joystick.read()) delay(20);
+}
+
+void loop() {
+    displayMenu();
+
+    positionCamera();
+
+    executePano();
 }
