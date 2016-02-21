@@ -239,7 +239,8 @@ void Menu::open(void){
 void Menu::cancel(void){
     if (drilldown){
         invoke_method(pos, cancel);
-        if (types[pos] != Menu::class_id || !menus[pos].menu->active){
+        if (FLASH_READ_INT(types, pos) != Menu::class_id
+            || ! FLASH_CAST_PTR(Menu, menus, pos)->active){
             drilldown = false;
         }
     } else {
