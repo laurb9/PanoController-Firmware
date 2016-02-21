@@ -46,31 +46,32 @@ void Pano::setMode(unsigned mode){
 
 }
 unsigned Pano::getHorizShots(void){
-    return (horiz_move && horiz_fov > camera.getHorizFOV()) ? 1 + (horiz_fov-camera.getHorizFOV()) / horiz_move : 1;
+    return horiz_count;
 }
 unsigned Pano::getVertShots(void){
-    return (vert_move && vert_fov > camera.getVertFOV()) ? 1 + (vert_fov-camera.getVertFOV()) / vert_move : 1;
+    return vert_count;
 }
 /*
  * Helper to calculate grid fit with overlap
  * @param total_size: entire grid size
- * @param block_size: max block size
  * @param overlap: min required overlap in percent (1-99)
- * @returns: new block size (<= block_size) to fit with minimum overlap
+ * @param block_size: ref to initial block size (will be updated)
+ * @param count: ref to image count (will be updated)
  */
-int Pano::gridFit(int total_size, int block_size, int overlap){
+void Pano::gridFit(int total_size, int overlap, int& block_size, int& count){
     Serial.print("total_size="); Serial.println(total_size);
     Serial.print("block size="); Serial.println(block_size);
 
     if (block_size <= total_size){
-        int count;
         count = (100*total_size - overlap*block_size - 1) / ((100 - overlap)*block_size);
         block_size = (total_size - block_size + count - 1) / count;
-        Serial.print("count="); Serial.println(count);
+        count++;
+    } else {
+        count = 1;
     }
 
+    Serial.print("count="); Serial.println(count);
     Serial.print("new block_size="); Serial.println(block_size);
-    return block_size;
 }
 /*
  * Calculate shot-to-shot horizontal/vertical head movement,
@@ -78,8 +79,10 @@ int Pano::gridFit(int total_size, int block_size, int overlap){
  * Must be called every time focal distance or panorama dimensions change.
  */
 void Pano::computeGrid(void){
-    horiz_move = gridFit(horiz_fov, camera.getHorizFOV(), MIN_OVERLAP);
-    vert_move = gridFit(vert_fov, camera.getVertFOV(), MIN_OVERLAP);
+    horiz_move = camera.getHorizFOV();
+    gridFit(horiz_fov, MIN_OVERLAP, horiz_move, horiz_count);
+    vert_move = camera.getVertFOV();
+    gridFit(vert_fov, MIN_OVERLAP, vert_move, vert_count);
 }
 void Pano::start(void){
     computeGrid();

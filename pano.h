@@ -29,10 +29,12 @@ protected:
     int vert_fov;
     int horiz_move;
     int vert_move;
+    int horiz_count;
+    int vert_count;
     unsigned shots_per_position = 1;
     unsigned shutter_delay = 1000/250;
     unsigned pre_shutter_delay = 0;
-    int gridFit(int total_size, int block_size, int overlap);
+    void gridFit(int total_size, int overlap, int& block_size, int& count);
     void computeGrid(void);
     // state information
 public:
