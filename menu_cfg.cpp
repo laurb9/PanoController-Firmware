@@ -9,20 +9,17 @@ static const PROGMEM char * const menu_start_names[2] = {menu_start_name_0, menu
 static const PROGMEM int menu_start_values[2] = {1, 0};
 static NamedListSelector menu_start(menu_start_desc, &running, 0, 2, menu_start_names, menu_start_values);
 
-// Aspect
-extern volatile int aspect;
-static const PROGMEM char menu_aspect_desc[] = "Aspect";
-static const PROGMEM char menu_aspect_name_0[] = "2:3 (portrait)";
-static const PROGMEM char menu_aspect_name_1[] = "9:16 (portrait)";
-static const PROGMEM char menu_aspect_name_2[] = "3:4 (portrait)";
-static const PROGMEM char menu_aspect_name_3[] = "1:1";
-static const PROGMEM char menu_aspect_name_4[] = "3:2 (landscape)";
-static const PROGMEM char menu_aspect_name_5[] = "16:9 (landscape)";
-static const PROGMEM char menu_aspect_name_6[] = "4:3 (landscape)";
+// Horiz FOV
+extern volatile int horiz;
+static const PROGMEM char menu_horiz_fov_desc[] = "Horiz FOV";
 
-static const PROGMEM char * const menu_aspect_names[7] = {menu_aspect_name_0, menu_aspect_name_1, menu_aspect_name_2, menu_aspect_name_3, menu_aspect_name_4, menu_aspect_name_5, menu_aspect_name_6};
-static const PROGMEM int menu_aspect_values[7] = {23, 916, 34, 11, 32, 169, 43};
-static NamedListSelector menu_aspect(menu_aspect_desc, &aspect, 23, 7, menu_aspect_names, menu_aspect_values);
+static RangeSelector menu_horiz_fov(menu_horiz_fov_desc, &horiz, 120, 10, 360, 10);
+
+// Vert FOV
+extern volatile int vert;
+static const PROGMEM char menu_vert_fov_desc[] = "Vert FOV";
+
+static RangeSelector menu_vert_fov(menu_vert_fov_desc, &vert, 90, 10, 180, 10);
 
 // Focal Length
 extern volatile int focal;
@@ -67,17 +64,20 @@ static const PROGMEM char menu___of_shots_desc[] = "# of Shots";
 
 static RangeSelector menu___of_shots(menu___of_shots_desc, &shots, 1, 1, 5, 1);
 
-// Horiz FOV
-extern volatile int horiz;
-static const PROGMEM char menu_horiz_fov_desc[] = "Horiz FOV";
+// Aspect
+extern volatile int aspect;
+static const PROGMEM char menu_aspect_desc[] = "Aspect";
+static const PROGMEM char menu_aspect_name_0[] = "2:3 (portrait)";
+static const PROGMEM char menu_aspect_name_1[] = "9:16 (portrait)";
+static const PROGMEM char menu_aspect_name_2[] = "3:4 (portrait)";
+static const PROGMEM char menu_aspect_name_3[] = "1:1";
+static const PROGMEM char menu_aspect_name_4[] = "3:2 (landscape)";
+static const PROGMEM char menu_aspect_name_5[] = "16:9 (landscape)";
+static const PROGMEM char menu_aspect_name_6[] = "4:3 (landscape)";
 
-static RangeSelector menu_horiz_fov(menu_horiz_fov_desc, &horiz, 120, 10, 360, 10);
-
-// Vert FOV
-extern volatile int vert;
-static const PROGMEM char menu_vert_fov_desc[] = "Vert FOV";
-
-static RangeSelector menu_vert_fov(menu_vert_fov_desc, &vert, 90, 10, 180, 10);
+static const PROGMEM char * const menu_aspect_names[7] = {menu_aspect_name_0, menu_aspect_name_1, menu_aspect_name_2, menu_aspect_name_3, menu_aspect_name_4, menu_aspect_name_5, menu_aspect_name_6};
+static const PROGMEM int menu_aspect_values[7] = {23, 916, 34, 11, 32, 169, 43};
+static NamedListSelector menu_aspect(menu_aspect_desc, &aspect, 23, 7, menu_aspect_names, menu_aspect_values);
 
 // Motors
 extern volatile int motors_enable;
@@ -100,8 +100,8 @@ static const PROGMEM int menu_display_values[2] = {0, 1};
 static NamedListSelector menu_display(menu_display_desc, &display_invert, 0, 2, menu_display_names, menu_display_values);
 
 
-static const PROGMEM union MenuItem menus[10] = {&menu_start, &menu_aspect, &menu_focal_length, &menu_shutter, &menu_pre_shutter, &menu___of_shots, &menu_horiz_fov, &menu_vert_fov, &menu_motors, &menu_display};
-static const PROGMEM int menu_types[10] = {NamedListSelector::class_id,NamedListSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id};
+static const PROGMEM union MenuItem menus[10] = {&menu_start, &menu_horiz_fov, &menu_vert_fov, &menu_focal_length, &menu_shutter, &menu_pre_shutter, &menu___of_shots, &menu_aspect, &menu_motors, &menu_display};
+static const PROGMEM int menu_types[10] = {NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id};
 static const PROGMEM char menu_desc[] = "Main Menu";
 Menu menu(menu_desc, 10, menus, menu_types);
 

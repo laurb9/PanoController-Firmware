@@ -9,18 +9,22 @@
         "variable": "running"
     },
     {
-        "description": "Aspect",
-        "default": "2:3 (portrait)",
-        "options": [
-            {"2:3 (portrait)": 23},
-            {"9:16 (portrait)": 916},
-            {"3:4 (portrait)": 34},
-            {"1:1": 11},
-            {"3:2 (landscape)": 32},
-            {"16:9 (landscape)": 169},
-            {"4:3 (landscape)": 43}
-        ],
-        "variable": "aspect"
+        "description": "Horiz FOV",
+        "default": 120,
+        "min": 10,
+        "max": 360,
+        "step": 10,
+        "unit": "÷",
+        "variable": "horiz"
+    },
+    {
+        "description": "Vert FOV",
+        "default": 90,
+        "min": 10,
+        "max": 180,
+        "step": 10,
+        "unit": "÷",
+        "variable": "vert"
     },
     {
         "description": "Focal Length",
@@ -66,22 +70,18 @@
         "variable": "shots"
     },
     {
-        "description": "Horiz FOV",
-        "default": 120,
-        "min": 10,
-        "max": 360,
-        "step": 10,
-        "unit": "÷",
-        "variable": "horiz"
-    },
-    {
-        "description": "Vert FOV",
-        "default": 90,
-        "min": 10,
-        "max": 180,
-        "step": 10,
-        "unit": "÷",
-        "variable": "vert"
+        "description": "Aspect",
+        "default": "2:3 (portrait)",
+        "options": [
+            {"2:3 (portrait)": 23},
+            {"9:16 (portrait)": 916},
+            {"3:4 (portrait)": 34},
+            {"1:1": 11},
+            {"3:2 (landscape)": 32},
+            {"16:9 (landscape)": 169},
+            {"4:3 (landscape)": 43}
+        ],
+        "variable": "aspect"
     },
     {
         "description": "Motors",

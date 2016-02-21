@@ -73,11 +73,11 @@ void displayPanoStatus(void){
     display.clearDisplay();
     display.setCursor(0,0);
 
-    display.print(F("Position = "));
+    display.print(F("Photo "));
     display.print(pano.position+1);
-    display.print(F(" / "));
+    display.print(F(" of "));
     display.println(pano.getHorizShots()*pano.getVertShots());
-    display.print(F("Bearing "));
+    display.print(F("At "));
     display.print(pano.horiz_position);
     display.print(F(" x "));
     display.println(pano.vert_position);
@@ -182,10 +182,10 @@ void loop() {
 
             pano.end();
 
-            Serial.println((stop_running) ? F("canceled") : F("finished"));
-            display.println((stop_running) ? F("canceled") : F("finished"));
+            Serial.println((stop_running) ? F("Canceled") : F("Finished"));
+            display.println((stop_running) ? F("Canceled") : F("Finished"));
             display.display();
-            delay(4000);
+            while (!joystick.read()) delay(20);
 
             menu.open();
 
