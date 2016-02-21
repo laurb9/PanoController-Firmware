@@ -89,9 +89,19 @@ static const PROGMEM char * const menu_motors_names[2] = {menu_motors_name_0, me
 static const PROGMEM int menu_motors_values[2] = {1, 0};
 static NamedListSelector menu_motors(menu_motors_desc, &motors_enable, 1, 2, menu_motors_names, menu_motors_values);
 
+// Display
+extern volatile int display_invert;
+static const PROGMEM char menu_display_desc[] = "Display";
+static const PROGMEM char menu_display_name_0[] = "Dark";
+static const PROGMEM char menu_display_name_1[] = "Bright";
 
-static const PROGMEM union MenuItem menus[9] = {&menu_start, &menu_aspect, &menu_focal_length, &menu_shutter, &menu_pre_shutter, &menu___of_shots, &menu_horiz_fov, &menu_vert_fov, &menu_motors};
-static const PROGMEM int menu_types[9] = {NamedListSelector::class_id,NamedListSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id};
+static const PROGMEM char * const menu_display_names[2] = {menu_display_name_0, menu_display_name_1};
+static const PROGMEM int menu_display_values[2] = {0, 1};
+static NamedListSelector menu_display(menu_display_desc, &display_invert, 1, 2, menu_display_names, menu_display_values);
+
+
+static const PROGMEM union MenuItem menus[10] = {&menu_start, &menu_aspect, &menu_focal_length, &menu_shutter, &menu_pre_shutter, &menu___of_shots, &menu_horiz_fov, &menu_vert_fov, &menu_motors, &menu_display};
+static const PROGMEM int menu_types[10] = {NamedListSelector::class_id,NamedListSelector::class_id,ListSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,RangeSelector::class_id,NamedListSelector::class_id,NamedListSelector::class_id};
 static const PROGMEM char menu_desc[] = "Main Menu";
-Menu menu(menu_desc, 9, menus, menu_types);
+Menu menu(menu_desc, 10, menus, menu_types);
 

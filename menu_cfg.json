@@ -91,5 +91,15 @@
             {"Off": 0}
         ],
         "variable": "motors_enable"
+    },
+    {
+        "description": "Display",
+        "default": "Bright",
+        "options": [
+            {"Dark": 0},
+            {"Bright": 1}
+        ],
+        "variable": "display_invert"
     }
+    
 ]
