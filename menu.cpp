@@ -6,6 +6,7 @@
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
+#include <EEPROM.h>
 #include "menu.h"
 
 #define BLACK 0
@@ -15,13 +16,21 @@
 /*
  * OptionSelector: share functionality among the other menu classes
  */
-OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val)
-:description(description), value(value), default_val(default_val)
+OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val, int eeprom)
+:description(description),
+ value(value),
+ eeprom(eeprom)
 {
     active = false;
-    pos = default_val;
+    // override default with eeprom value, if set
+    if (eeprom){
+        EEPROM.get(eeprom, this->default_val);
+    }
+    if (this->default_val <= 0){
+        this->default_val = default_val;
+    }
     if (value){
-        *value = default_val;
+        *value = this->default_val;
     }
 }
 
@@ -57,8 +66,13 @@ void OptionSelector::prev(void){
 }
 void OptionSelector::select(void){
     pos = pointer;
+    OptionSelector::sync();
 }
 void OptionSelector::sync(void){
+    if (eeprom){
+        EEPROM.put(eeprom, *value);
+        Serial.print("EEPROM save "); Serial.print(*value); Serial.print(" for "); Serial.println(description);
+    }
 }
 
 int OptionSelector::calc_start(int rows){
@@ -77,11 +91,13 @@ int OptionSelector::calc_start(int rows){
  * RangeSelector: a number with up/down controls
  */
 
-RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int min_val, int max_val, int step)
-:OptionSelector(description, value, default_val),
+RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int eeprom,
+                             int min_val, int max_val, int step)
+:OptionSelector(description, value, default_val, eeprom),
  min_val(min_val), max_val(max_val), step(step)
 {
-
+    pointer = this->default_val;
+    pos = pointer;
 };
 
 void RangeSelector::next(void){
@@ -95,13 +111,12 @@ void RangeSelector::prev(void){
     }
 }
 void RangeSelector::select(void){
-    OptionSelector::select();
-    pos = pointer;
     *value = pointer;
+    OptionSelector::select();
 }
 void RangeSelector::sync(void){
     pointer = *value;
-    pos = pointer;
+    OptionSelector::select();
 }
 
 int RangeSelector::render(DISPLAY_DEVICE display, int rows){
@@ -128,14 +143,15 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * ListSelector: list of numeric options
  */
-ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int count, const int values[])
-:OptionSelector(description, value, default_val),
+ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int eeprom,
+                           int count, const int values[])
+:OptionSelector(description, value, default_val, eeprom),
  values(values)
 {
     this->count = count;
     // find the position corresponding to the default value
     for (pos=count-1; pos > 0; pos--){
-        if (FLASH_READ_INT(values, pos) == default_val){
+        if (FLASH_READ_INT(values, pos) == this->default_val){
             break;
         }
     }
@@ -143,9 +159,8 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
 };
 
 void ListSelector::select(void){
+    *value = FLASH_READ_INT(values, pointer);
     OptionSelector::select();
-    pos = pointer;
-    *value = FLASH_READ_INT(values, pos);
 }
 void ListSelector::sync(void){
     // find the position corresponding to the default value
@@ -155,6 +170,7 @@ void ListSelector::sync(void){
         }
     }
     pointer = pos;
+    OptionSelector::sync();
 }
 
 int ListSelector::render(DISPLAY_DEVICE display, int rows){
@@ -188,8 +204,9 @@ int ListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * NamedListSelector: list of named numeric options
  */
-NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char * const names[], const int values[])
-:ListSelector(description, value, default_val, count, values),
+NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom,
+                                     int count, const char * const names[], const int values[])
+:ListSelector(description, value, default_val, eeprom, count, values),
  names(names)
 {
 }
@@ -222,7 +239,7 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
  * Menu: this is a regular menu, nothing is set here.
  */
 Menu::Menu(const char *description, int count, const union MenuItem * const menus, const int *types)
-:OptionSelector(description, NULL, 0),
+:OptionSelector(description, NULL, 0, 0),
  menus(menus),
  types(types)
 {

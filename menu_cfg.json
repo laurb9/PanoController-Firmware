@@ -6,7 +6,8 @@
             {"On": 1},
             {"Off": 0}
         ],
-        "variable": "running"
+        "variable": "running",
+        "eeprom": false
     },
     {
         "description": "Horiz FOV",
@@ -15,7 +16,8 @@
         "max": 360,
         "step": 10,
         "unit": "÷",
-        "variable": "horiz"
+        "variable": "horiz",
+        "eeprom": true
     },
     {
         "description": "Vert FOV",
@@ -24,14 +26,16 @@
         "max": 180,
         "step": 10,
         "unit": "÷",
-        "variable": "vert"
+        "variable": "vert",
+        "eeprom": true
     },
     {
         "description": "Focal Length",
         "default": 35,
         "options": [12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400],
         "unit": "mm",
-        "variable": "focal"
+        "variable": "focal",
+        "eeprom": true
     },
     {
         "description": "Shutter",
@@ -47,7 +51,8 @@
             {"4s": 4000},
             {"8s": 8000}
         ],
-        "variable": "shutter"
+        "variable": "shutter",
+        "eeprom": true
     },
     {
         "description": "Pre-Shutter",
@@ -59,7 +64,8 @@
             {"2s": 2000},
             {"4s": 4000}
         ],
-        "variable": "pre_shutter"
+        "variable": "pre_shutter",
+        "eeprom": true
     },
     {
         "description": "# of Shots",
@@ -67,7 +73,8 @@
         "min": 1,
         "max": 5,
         "step": 1,
-        "variable": "shots"
+        "variable": "shots",
+        "eeprom": true
     },
     {
         "description": "Aspect",
@@ -81,7 +88,8 @@
             {"16:9 (landscape)": 169},
             {"4:3 (landscape)": 43}
         ],
-        "variable": "aspect"
+        "variable": "aspect",
+        "eeprom": true
     },
     {
         "description": "Motors",
@@ -90,7 +98,8 @@
             {"On": 1},
             {"Off": 0}
         ],
-        "variable": "motors_enable"
+        "variable": "motors_enable",
+        "eeprom": false
     },
     {
         "description": "Display",
@@ -99,7 +108,7 @@
             {"Dark": 0},
             {"Bright": 1}
         ],
-        "variable": "display_invert"
+        "variable": "display_invert",
+        "eeprom": false
     }
-    
 ]
