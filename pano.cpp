@@ -59,17 +59,17 @@ unsigned Pano::getVertShots(void){
  * @returns: new block size (<= block_size) to fit with minimum overlap
  */
 int Pano::gridFit(int total_size, int block_size, int overlap){
-    int count = 1;
     Serial.print("total_size="); Serial.println(total_size);
     Serial.print("block size="); Serial.println(block_size);
 
     if (block_size <= total_size){
-        count = (total_size * 100/block_size + overlap + 99) / 100;
-        block_size = (total_size - block_size + count - 2) / (count - 1);
+        int count;
+        count = (100*total_size - overlap*block_size - 1) / ((100 - overlap)*block_size);
+        block_size = (total_size - block_size + count - 1) / count;
+        Serial.print("count="); Serial.println(count);
     }
 
     Serial.print("new block_size="); Serial.println(block_size);
-    Serial.print("count="); Serial.println(count);
     return block_size;
 }
 /*
