@@ -19,6 +19,7 @@
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
 #define DISPLAY_I2C_ADDRESS 0x3C
 #define OLED_RESET 4
+#define DISPLAY_ROWS SSD1306_LCDHEIGHT/8
 
 #define JOYSTICK_X A2
 #define JOYSTICK_Y A3
@@ -45,14 +46,12 @@ static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
 // these variables are modified by the menu
-volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, aspect, shots, motors_enable;
+volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, aspect, shots, motors_enable, display_invert;
 volatile static int stop_running = false;
 
 void button_click(){
     stop_running = true;
 }
-
-const int rows = 3;
 
 void setup() {
     Serial.begin(38400);
@@ -66,7 +65,7 @@ void setup() {
     display.setTextSize(1);
     Serial.println(F("Ready\n"));
     menu.open();
-    menu.render(display, rows);
+    menu.render(display, DISPLAY_ROWS);
     display.display();
 }
 
@@ -113,7 +112,7 @@ void handleEvent(int event) {
     display.clearDisplay();
     display.setCursor(0,0);
 
-    menu.render(display, rows);
+    menu.render(display, DISPLAY_ROWS);
     display.display();
 }
 
@@ -142,6 +141,7 @@ void positionCamera(void){
 
 void loop() {
     if (!running){
+        display.invertDisplay(display_invert);
         int event = joystick.read();
         if (event){
             handleEvent(event);
@@ -191,7 +191,7 @@ void loop() {
 
             display.clearDisplay();
             display.setCursor(0,0);
-            menu.render(display, rows);
+            menu.render(display, DISPLAY_ROWS);
             display.display();
         }
     }
