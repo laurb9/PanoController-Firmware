@@ -94,7 +94,7 @@
     },
     {
         "description": "Display",
-        "default": "Bright",
+        "default": "Dark",
         "options": [
             {"Dark": 0},
             {"Bright": 1}

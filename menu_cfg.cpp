@@ -97,7 +97,7 @@ static const PROGMEM char menu_display_name_1[] = "Bright";
 
 static const PROGMEM char * const menu_display_names[2] = {menu_display_name_0, menu_display_name_1};
 static const PROGMEM int menu_display_values[2] = {0, 1};
-static NamedListSelector menu_display(menu_display_desc, &display_invert, 1, 2, menu_display_names, menu_display_values);
+static NamedListSelector menu_display(menu_display_desc, &display_invert, 0, 2, menu_display_names, menu_display_values);
 
 
 static const PROGMEM union MenuItem menus[10] = {&menu_start, &menu_aspect, &menu_focal_length, &menu_shutter, &menu_pre_shutter, &menu___of_shots, &menu_horiz_fov, &menu_vert_fov, &menu_motors, &menu_display};
