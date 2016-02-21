@@ -11,8 +11,6 @@
 #include <avr/pgmspace.h>
 #include <Adafruit_GFX.h>
 
-#define FLASH_STRING (const __FlashStringHelper *)
-
 #define DISPLAY_DEVICE Adafruit_GFX&
 
 enum ClassID { CLASS_OPTIONS, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
@@ -94,16 +92,26 @@ union MenuItem {
     Menu *menu;
 };
 
+#if defined(__AVR__)
+    #define FLASH_STRING (const __FlashStringHelper *)
+    #define FLASH_READ_INT(ptr, idx) pgm_read_word_near(&(ptr[idx]))
+    #define FLASH_CAST_PTR(cls, ptr, idx) ((cls*)FLASH_READ_INT(ptr, idx))
+#else
+    #define FLASH_STRING
+    #define FLAST_READ_INT(ptr, idx) ptr[idx]
+    #define FLAST_CAST_PTR(cls, ptr, idx) ((cls*)(&ptr[idx]))
+#endif /* __AVR__ */
+
 /*
  * Macro to cast a MenuItem to the correct pointer type and invoke the requested method
  */
 #define invoke_method(pos, method, ...) \
-switch(types[pos]){ \
-case Menu::class_id: menus[pos].menu->method(__VA_ARGS__); break; \
-case NamedListSelector::class_id: menus[pos].names->method(__VA_ARGS__); break; \
-case ListSelector::class_id: menus[pos].values->method(__VA_ARGS__); break; \
-case RangeSelector::class_id: menus[pos].slider->method(__VA_ARGS__); break; \
-case OptionSelector::class_id: menus[pos].option->method(__VA_ARGS__); break; \
+switch(FLASH_READ_INT(types, pos)){ \
+case Menu::class_id: FLASH_CAST_PTR(Menu, menus, pos)->method(__VA_ARGS__); break; \
+case NamedListSelector::class_id: FLASH_CAST_PTR(NamedListSelector, menus, pos)->method(__VA_ARGS__); break; \
+case ListSelector::class_id: FLASH_CAST_PTR(ListSelector, menus, pos)->method(__VA_ARGS__); break; \
+case RangeSelector::class_id: FLASH_CAST_PTR(RangeSelector, menus, pos)->method(__VA_ARGS__); break; \
+case OptionSelector::class_id: FLASH_CAST_PTR(OptionSelector, menus, pos)->method(__VA_ARGS__); break; \
 default: break; \
         }
 

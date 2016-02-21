@@ -29,7 +29,9 @@ void OptionSelector::render(DISPLAY_DEVICE display, int rows){
     Serial.println(FLASH_STRING description);
     Serial.println("---------------------");
     display.println(FLASH_STRING description);
-    display.print("---------------------");
+    if (rows > 4){
+        display.print("---------------------");
+    }
 }
 
 void OptionSelector::cancel(void){
@@ -131,7 +133,7 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
     this->count = count;
     // find the position corresponding to the default value
     for (pos=count-1; pos > 0; pos--){
-        if (values[pos] == default_val){
+        if (FLASH_READ_INT(values, pos) == default_val){
             break;
         }
     }
@@ -141,12 +143,12 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
 void ListSelector::select(void){
     OptionSelector::select();
     pos = pointer;
-    *value = values[pos];
+    *value = FLASH_READ_INT(values, pos);
 }
 void ListSelector::sync(void){
     // find the position corresponding to the default value
     for (pos=count-1; pos > 0; pos--){
-        if (values[pos] == *value){
+        if (FLASH_READ_INT(values,pos) == *value){
             break;
         }
     }
@@ -160,7 +162,7 @@ void ListSelector::render(DISPLAY_DEVICE display, int rows){
     OptionSelector::render(display, rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        snprintf(buf, sizeof(buf), "%d", values[i]);
+        snprintf(buf, sizeof(buf), "%d", FLASH_READ_INT(values, i));
 
         char marker = (i==pointer) ? '\x10' : ' ';
 
@@ -175,6 +177,7 @@ void ListSelector::render(DISPLAY_DEVICE display, int rows){
 
         marker = (i==pointer) ? '\x11' : ' ';
         display.println(marker);
+        Serial.println("");
     }
 }
 
@@ -200,8 +203,8 @@ void NamedListSelector::render(DISPLAY_DEVICE display, int rows){
         display.print(marker);
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
-        Serial.print(names[i]);
-        display.print(names[i]);
+        Serial.println(FLASH_STRING FLASH_READ_INT(names, i));
+        display.print(FLASH_STRING FLASH_READ_INT(names, i));
         if (i == pos) display.setTextColor(WHITE, BLACK);
 
         marker = (i==pointer) ? '\x11' : ' ';
@@ -257,6 +260,7 @@ void Menu::select(void){
     } else {
         OptionSelector::select();
         drilldown = true;
+        Serial.println("SELECT");
         invoke_method(pos, open);
     }
 }
@@ -280,8 +284,8 @@ void Menu::render(DISPLAY_DEVICE display, int rows){
             Serial.print(F(">"));
             display.setTextColor(BLACK, WHITE);
         }
-        Serial.println(FLASH_STRING menus[i].option->description);
-        display.println(FLASH_STRING menus[i].option->description);
+        Serial.println(FLASH_STRING FLASH_CAST_PTR(OptionSelector, menus, i)->description);
+        display.println(FLASH_STRING FLASH_CAST_PTR(OptionSelector, menus, i)->description);
         if (i == pointer){
             display.setTextColor(WHITE, BLACK);
         }

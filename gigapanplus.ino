@@ -52,7 +52,7 @@ void button_click(){
     stop_running = true;
 }
 
-const int rows = 6;
+const int rows = 3;
 
 void setup() {
     Serial.begin(38400);
@@ -73,6 +73,16 @@ void setup() {
 void displayPanoStatus(void){
     display.clearDisplay();
     display.setCursor(0,0);
+
+    display.print(F("Position = "));
+    display.print(pano.position+1);
+    display.print(F(" / "));
+    display.println(pano.getHorizShots()*pano.getVertShots());
+    display.print(F("Bearing "));
+    display.print(pano.horiz_position);
+    display.print(F(" x "));
+    display.println(pano.vert_position);
+
     display.print(F("Focal Length "));
     display.print(focal);
     display.println(F("mm"));
@@ -89,14 +99,6 @@ void displayPanoStatus(void){
     display.print(F(" x "));
     display.println(pano.getVertShots());
     display.println();
-    display.print(F("Position = "));
-    display.print(pano.position+1);
-    display.print(F(" / "));
-    display.println(pano.getHorizShots()*pano.getVertShots());
-    display.print(F("Bearing "));
-    display.print(pano.horiz_position);
-    display.print(F(" x "));
-    display.println(pano.vert_position);
     display.display();
 }
 
@@ -119,9 +121,10 @@ void positionCamera(void){
     int pos_x, pos_y;
     display.clearDisplay();
     display.setCursor(0,0);
-    display.println("  \x1e  \n"
-                    "\x11 x \x10\n"
-                    "  \x1f");
+    display.println(F("Move to top left"));
+    display.println(F("  \x1e  \n"
+                      "\x11 x \x10\n"
+                      "  \x1f"));
     display.display();
     while (!Joystick::isEventClick(joystick.read())){
         pos_x = joystick.getPositionX();
@@ -163,6 +166,7 @@ void loop() {
                 positionCamera();
 
                 stop_running = false;
+                while (joystick.getButtonState()) delay(20);
                 attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
 
                 pano.start();
@@ -178,6 +182,7 @@ void loop() {
 
             pano.end();
 
+            Serial.println((stop_running) ? F("canceled") : F("finished"));
             display.println((stop_running) ? F("canceled") : F("finished"));
             display.display();
             delay(4000);
