@@ -34,7 +34,7 @@ public:
     void prev(void);
     void select(void);
     void sync(void);
-    void render(DISPLAY_DEVICE display, int rows);
+    int render(DISPLAY_DEVICE display, int rows);
 };
 
 class RangeSelector : public OptionSelector {
@@ -46,7 +46,7 @@ public:
     void prev(void);
     void select(void);
     void sync(void);
-    void render(DISPLAY_DEVICE display, int rows);
+    int render(DISPLAY_DEVICE display, int rows);
 };
 
 class ListSelector : public OptionSelector {
@@ -56,7 +56,7 @@ public:
     ListSelector(const char *description, volatile int *value, int default_val, int count, const int values[]);
     void select(void);
     void sync(void);
-    void render(DISPLAY_DEVICE display, int rows);
+    int render(DISPLAY_DEVICE display, int rows);
 };
 
 class NamedListSelector : public ListSelector {
@@ -64,7 +64,7 @@ public:
     static const ClassID class_id = CLASS_NAMES;
     const char* const *names;
     NamedListSelector(const char *description, volatile int *value, int default_val, int count, const char * const names[], const int values[]);
-    void render(DISPLAY_DEVICE display, int rows);
+    int render(DISPLAY_DEVICE display, int rows);
 };
 
 class Menu : public OptionSelector {
@@ -81,7 +81,7 @@ public:
     void prev(void);
     void select(void);
     void sync(void);
-    void render(DISPLAY_DEVICE display, int rows);
+    int render(DISPLAY_DEVICE display, int rows);
 };
 
 union MenuItem {
@@ -92,28 +92,34 @@ union MenuItem {
     Menu *menu;
 };
 
+/* ugliest code ever follows */
+
 #if defined(__AVR__)
     #define FLASH_STRING (const __FlashStringHelper *)
     #define FLASH_READ_INT(ptr, idx) pgm_read_word_near(&(ptr[idx]))
     #define FLASH_CAST_PTR(cls, ptr, idx) ((cls*)FLASH_READ_INT(ptr, idx))
+    #define FLASH_READ_STR(ptr, idx) FLASH_STRING FLASH_READ_INT(ptr, idx)
 #else
     #define FLASH_STRING
-    #define FLAST_READ_INT(ptr, idx) ptr[idx]
-    #define FLAST_CAST_PTR(cls, ptr, idx) ((cls*)(&ptr[idx]))
+    #define FLASH_READ_INT(ptr, idx) ptr[idx]
+    #define FLASH_CAST_PTR(cls, ptr, idx) (((cls**)ptr)[idx])
+    #define FLASH_READ_STR(ptr, idx) FLASH_CAST_PTR(char, ptr, idx)
 #endif /* __AVR__ */
 
 /*
- * Macro to cast a MenuItem to the correct pointer type and invoke the requested method
+ * Hack to cast a MenuItem to the correct pointer type and invoke the requested method
  */
 #define invoke_method(pos, method, ...) \
-switch(FLASH_READ_INT(types, pos)){ \
-case Menu::class_id: FLASH_CAST_PTR(Menu, menus, pos)->method(__VA_ARGS__); break; \
-case NamedListSelector::class_id: FLASH_CAST_PTR(NamedListSelector, menus, pos)->method(__VA_ARGS__); break; \
-case ListSelector::class_id: FLASH_CAST_PTR(ListSelector, menus, pos)->method(__VA_ARGS__); break; \
-case RangeSelector::class_id: FLASH_CAST_PTR(RangeSelector, menus, pos)->method(__VA_ARGS__); break; \
-case OptionSelector::class_id: FLASH_CAST_PTR(OptionSelector, menus, pos)->method(__VA_ARGS__); break; \
-default: break; \
-        }
+(FLASH_READ_INT(types, pos) == Menu::class_id) ? \
+    FLASH_CAST_PTR(Menu, menus, pos)->method(__VA_ARGS__) : (\
+(FLASH_READ_INT(types, pos) == NamedListSelector::class_id) ? \
+    FLASH_CAST_PTR(NamedListSelector, menus, pos)->method(__VA_ARGS__) : (\
+(FLASH_READ_INT(types, pos) == ListSelector::class_id) ? \
+    FLASH_CAST_PTR(ListSelector, menus, pos)->method(__VA_ARGS__) : (\
+(FLASH_READ_INT(types, pos) == RangeSelector::class_id) ? \
+    FLASH_CAST_PTR(RangeSelector, menus, pos)->method(__VA_ARGS__) : \
+    FLASH_CAST_PTR(OptionSelector, menus, pos)->method(__VA_ARGS__))));
+
 
 extern Menu menu;
 

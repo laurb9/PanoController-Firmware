@@ -25,13 +25,14 @@ OptionSelector::OptionSelector(const char *description, volatile int *value, int
     }
 }
 
-void OptionSelector::render(DISPLAY_DEVICE display, int rows){
+int OptionSelector::render(DISPLAY_DEVICE display, int rows){
     Serial.println(FLASH_STRING description);
     Serial.println("---------------------");
-    display.println(FLASH_STRING description);
+    display.println(FLASH_STRING description); rows--;
     if (rows > 4){
-        display.print("---------------------");
+        display.print("---------------------"); rows--;
     }
+    return rows;
 }
 
 void OptionSelector::cancel(void){
@@ -103,24 +104,25 @@ void RangeSelector::sync(void){
     pos = pointer;
 }
 
-void RangeSelector::render(DISPLAY_DEVICE display, int rows){
-    OptionSelector::render(display, rows);
+int RangeSelector::render(DISPLAY_DEVICE display, int rows){
     const char *marker;
+    rows = OptionSelector::render(display, rows);
 
     marker = (pointer < max_val) ? " \x1e": "";
     Serial.println(marker);
-    display.println(marker);
+    display.println(marker); rows--;
 
     if (pointer == pos) display.setTextColor(BLACK, WHITE);
 
     Serial.println(pointer);
-    display.println(pointer);
+    display.println(pointer); rows--;
 
     if (pointer == pos) display.setTextColor(WHITE, BLACK);
 
     marker = (pointer > min_val) ? " \x1f": "";
     Serial.println(marker);
-    display.println(marker);
+    display.println(marker); rows--;
+    return rows;
 }
 
 /*
@@ -155,11 +157,12 @@ void ListSelector::sync(void){
     pointer = pos;
 }
 
-void ListSelector::render(DISPLAY_DEVICE display, int rows){
+int ListSelector::render(DISPLAY_DEVICE display, int rows){
     char buf[16];
-    int start = calc_start(rows);
+    int start;
 
-    OptionSelector::render(display, rows);
+    rows = OptionSelector::render(display, rows);
+    start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         snprintf(buf, sizeof(buf), "%d", FLASH_READ_INT(values, i));
@@ -179,6 +182,7 @@ void ListSelector::render(DISPLAY_DEVICE display, int rows){
         display.println(marker);
         Serial.println("");
     }
+    return 0;
 }
 
 /*
@@ -190,10 +194,11 @@ NamedListSelector::NamedListSelector(const char *description, volatile int *valu
 {
 }
 
-void NamedListSelector::render(DISPLAY_DEVICE display, int rows){
-    int start = calc_start(rows);
+int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
+    int start;
 
-    OptionSelector::render(display, rows);
+    rows = OptionSelector::render(display, rows);
+    start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         char marker = (i==pointer) ? '\x10' : ' ';
@@ -203,13 +208,14 @@ void NamedListSelector::render(DISPLAY_DEVICE display, int rows){
         display.print(marker);
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
-        Serial.println(FLASH_STRING FLASH_READ_INT(names, i));
-        display.print(FLASH_STRING FLASH_READ_INT(names, i));
+        Serial.println(FLASH_READ_STR(names, i));
+        display.print(FLASH_READ_STR(names, i));
         if (i == pos) display.setTextColor(WHITE, BLACK);
 
         marker = (i==pointer) ? '\x11' : ' ';
         display.println(marker);
     }
+    return 0;
 }
 
 /*
@@ -260,7 +266,6 @@ void Menu::select(void){
     } else {
         OptionSelector::select();
         drilldown = true;
-        Serial.println("SELECT");
         invoke_method(pos, open);
     }
 }
@@ -269,15 +274,16 @@ void Menu::sync(void){
         invoke_method(i, sync);
     }
 }
-void Menu::render(DISPLAY_DEVICE display, int rows){
-    int start = calc_start(rows);
+int Menu::render(DISPLAY_DEVICE display, int rows){
+    int start;
 
     if (drilldown){
-        invoke_method(pos, render, display, rows);
-        return;
+        rows = invoke_method(pos, render, display, rows);
+        return rows;
     }
 
-    OptionSelector::render(display, rows);
+    rows = OptionSelector::render(display, rows);
+    start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         if (i == pointer){
@@ -290,4 +296,5 @@ void Menu::render(DISPLAY_DEVICE display, int rows){
             display.setTextColor(WHITE, BLACK);
         }
     }
+    return 0;
 }
