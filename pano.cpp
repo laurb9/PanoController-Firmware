@@ -22,12 +22,7 @@ Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera,
     motorsOff();
 
     horiz_motor.setMicrostep(1);
-    horiz_motor.setRPM(180);
     vert_motor.setMicrostep(1);
-    vert_motor.setRPM(60);
-
-    horiz_gear_ratio = 8;
-    vert_gear_ratio = 32;
 
     setFOV(360,180);
 }
@@ -51,15 +46,46 @@ void Pano::setMode(unsigned mode){
 
 }
 unsigned Pano::getHorizShots(void){
-    return (horiz_fov+camera.getHorizFOV()-1)/camera.getHorizFOV();
+    return horiz_move ? horiz_fov / horiz_move : 0;
 }
 unsigned Pano::getVertShots(void){
-    return (vert_fov+camera.getVertFOV()-1)/camera.getVertFOV();
+    return vert_move ? vert_fov / vert_move : 0;
+}
+/*
+ * Helper to calculate grid fit with overlap
+ * @param total_size: entire grid size
+ * @param block_size: max block size
+ * @param overlap: min required overlap in percent (1-99)
+ * @returns: new block size (<= block_size) to fit with minimum overlap
+ */
+int Pano::gridFit(int total_size, int block_size, int overlap){
+    int count = 1;
+    Serial.print("total_size="); Serial.println(total_size);
+    Serial.print("block size="); Serial.println(block_size);
+
+    if (block_size <= total_size){
+        count = (total_size * 100/block_size + overlap + 99) / 100;
+        block_size = (total_size - block_size + count - 2) / (count - 1);
+    }
+
+    Serial.print("new block_size="); Serial.println(block_size);
+    Serial.print("count="); Serial.println(count);
+    return block_size;
+}
+/*
+ * Calculate shot-to-shot horizontal/vertical head movement,
+ * taking overlap into account
+ * Must be called every time focal distance or panorama dimensions change.
+ */
+void Pano::computeGrid(void){
+    horiz_move = gridFit(horiz_fov, camera.getHorizFOV(), MIN_OVERLAP);
+    vert_move = gridFit(vert_fov, camera.getVertFOV(), MIN_OVERLAP);
 }
 void Pano::start(void){
+    computeGrid();
     motorsOn();
     horiz_motor.setRPM(180);
-    vert_motor.setRPM(60);
+    vert_motor.setRPM(180);
     // move to start position
     horiz_position = 0;
     vert_position = 0;
@@ -74,19 +100,26 @@ bool Pano::next(void){
     motorsOn(); // temporary
     ++position;
 
-    horiz_position += camera.getHorizFOV();
-    if (horiz_position < horiz_fov){
-        horiz_motor.rotate((int)camera.getHorizFOV()*horiz_gear_ratio);
+    Serial.print(F("at ")); Serial.print(position);
+    Serial.print(F("  horiz_pos=")); Serial.print(horiz_position);
+    Serial.print(F("  vert_pos=")); Serial.print(vert_position);
+    if (horiz_fov - horiz_position > camera.getHorizFOV()){
+        horiz_position += horiz_move;
+        Serial.println(F("  H-->"));
+        Serial.println(horiz_move*horiz_gear_ratio);
+        horiz_motor.rotate(horiz_move*horiz_gear_ratio);
     } else {
+        Serial.println(F("  <--H"));
         // move to next row, reset column
-        horiz_motor.rotate(horiz_gear_ratio*((int)camera.getHorizFOV()-horiz_position));
+        horiz_motor.rotate(-horiz_position*horiz_gear_ratio);
         horiz_position = 0;
-        vert_position += camera.getVertFOV();
-        if (vert_position >= vert_fov){
-            vert_motor.rotate(vert_gear_ratio*((int)camera.getVertFOV()-vert_position));
+        if (vert_fov - vert_position <= camera.getVertFOV()){
+            vert_motor.rotate(-vert_position*vert_gear_ratio);
             return false;
         }
-        vert_motor.rotate((int)camera.getVertFOV()*vert_gear_ratio);
+        Serial.println(F("  V-->"));
+        vert_position += vert_move;
+        vert_motor.rotate(vert_move*vert_gear_ratio);
     }
     motorsOff(); // temporary
     return true;

@@ -14,6 +14,8 @@
 
 #define Motor BasicStepperDriver
 
+#define MIN_OVERLAP 20
+
 class Pano {
 protected:
     Motor& horiz_motor;
@@ -25,9 +27,13 @@ protected:
     int vert_gear_ratio = 15; // 1:15
     int horiz_fov;
     int vert_fov;
+    int horiz_move;
+    int vert_move;
     unsigned shots_per_position = 1;
     unsigned shutter_delay = 1000/250;
     unsigned pre_shutter_delay = 0;
+    int gridFit(int total_size, int block_size, int overlap);
+    void computeGrid(void);
     // state information
 public:
     int horiz_position = 0;
