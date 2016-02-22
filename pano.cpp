@@ -87,7 +87,7 @@ void Pano::computeGrid(void){
 void Pano::start(void){
     computeGrid();
     motorsOn();
-    horiz_motor.setRPM(180);
+    horiz_motor.setRPM(60);
     vert_motor.setRPM(180);
     // move to start position
     position = 0;
@@ -116,10 +116,10 @@ bool Pano::next(void){
         if (position / horiz_count < vert_count){
             // still within pano, change row, reset column
             Serial.println(F("  V-->"));
-            vert_motor.rotate(vert_move*vert_gear_ratio);
+            vert_motor.rotate(-vert_move*vert_gear_ratio);
         } else {
             Serial.println(F("  <--V"));
-            vert_motor.rotate((1-vert_count)*vert_move*vert_gear_ratio);
+            vert_motor.rotate((vert_count-1)*vert_move*vert_gear_ratio);
             return false;
         }
     }

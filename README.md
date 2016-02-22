@@ -17,12 +17,15 @@ ESP-12 has 11 pins (0,2,4,5,12,13,14,15,16,RXD,TXD,ADC)
 We want to control the motors at the same multistep level so we can share M0, M1
 2x(STEP, DIR) + shared(M0, M1) + shared(EN) or 2xEN if we want to disable i.e. horiz separately
 
-/*
- * Vref0 = 2V +- 0.1V
- * Pololu schematic shows Risense = 0.1 ohm
- *        Itrip = Vref/(5*Risense)
- * So set Vref = Itrip/2
- */
+Setting DRV8834 reference
+
+ Vref0 = 2V +- 0.1V
+ Pololu schematic shows Risense = 0.1 ohm
+        Itrip = Vref/(5*Risense)
+ So set Vref = Itrip/2
+
+Gigapan motor is 1A, so 0.5V. But at full step the current limit is 0.7Itrip, so
+we have to set Itrip to 1.4 and Vref to 0.7V.
 
 Pin allocation (Pro Mini-based)
 
