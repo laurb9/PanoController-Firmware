@@ -70,9 +70,9 @@ void displayPanoStatus(void){
     display.print(F(" of "));
     display.println(pano.getHorizShots()*pano.getVertShots());
     display.print(F("At "));
-    display.print(1+pano.position % pano.getHorizShots());
+    display.print(1+pano.position / pano.getHorizShots());
     display.print(F(" x "));
-    display.println(1+pano.position / pano.getHorizShots());
+    display.println(1+pano.position % pano.getHorizShots());
 
     display.print(F("Focal Length "));
     display.print(focal);
@@ -86,9 +86,9 @@ void displayPanoStatus(void){
     display.print(F(" x "));
     display.println(vert);
     display.print(F("Grid "));
-    display.print(pano.getHorizShots());
+    display.print(pano.getVertShots());
     display.print(F(" x "));
-    display.println(pano.getVertShots());
+    display.print(pano.getHorizShots());
     display.println();
     display.display();
 }
