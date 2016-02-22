@@ -21,9 +21,6 @@ Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera,
     pinMode(vert_motor_enable_pin, OUTPUT);
     motorsOff();
 
-    horiz_motor.setMicrostep(1);
-    vert_motor.setMicrostep(1);
-
     setFOV(360,180);
 }
 void Pano::setFOV(int horiz_angle, int vert_angle){
@@ -87,8 +84,8 @@ void Pano::computeGrid(void){
 void Pano::start(void){
     computeGrid();
     motorsOn();
-    horiz_motor.setRPM(60);
-    vert_motor.setRPM(180);
+    horiz_motor.setRPM(20); // 60 @ 0.8A, 20 @ 0.3A & 1:16
+    vert_motor.setRPM(60); // 180 @ 0.8A. 60 @ 0.3A & 1:16
     // move to start position
     position = 0;
 }

@@ -50,6 +50,8 @@ volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, asp
 
 void setup() {
     Serial.begin(38400);
+    horiz_motor.setMicrostep(16);
+    vert_motor.setMicrostep(16);
     delay(1000); // wait for serial
     delay(100);  // give time for display to init; if display blank increase delay
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
