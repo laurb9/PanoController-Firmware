@@ -38,8 +38,6 @@ protected:
     void computeGrid(void);
     // state information
 public:
-    int horiz_position = 0;
-    int vert_position = 0;
     unsigned position;
     volatile unsigned active;
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int, int);
@@ -54,6 +52,7 @@ public:
     bool next(void);
     void end(void);
     void run(void);
+    void shutter(void);
     void motorsOn(void);
     void motorsOff(void);
 

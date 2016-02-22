@@ -70,9 +70,9 @@ void displayPanoStatus(void){
     display.print(F(" of "));
     display.println(pano.getHorizShots()*pano.getVertShots());
     display.print(F("At "));
-    display.print(pano.horiz_position);
+    display.print(1+pano.position % pano.getHorizShots());
     display.print(F(" x "));
-    display.println(pano.vert_position);
+    display.println(1+pano.position / pano.getHorizShots());
 
     display.print(F("Focal Length "));
     display.print(focal);
@@ -117,6 +117,7 @@ void positionCamera(void){
                       "\x11 x \x10\n"
                       "  \x1f"));
     display.display();
+    pano.motorsOn();
     while (!Joystick::isEventClick(joystick.read())){
         pos_x = joystick.getPositionX();
         pos_y = joystick.getPositionY();
@@ -186,6 +187,7 @@ void executePano(void){
 
     while (running && !stop_running){
         displayPanoStatus();
+        pano.shutter();
         running = pano.next();
     };
 

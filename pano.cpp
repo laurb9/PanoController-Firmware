@@ -90,39 +90,38 @@ void Pano::start(void){
     horiz_motor.setRPM(180);
     vert_motor.setRPM(180);
     // move to start position
-    horiz_position = 0;
-    vert_position = 0;
     position = 0;
 }
-bool Pano::next(void){
-    motorsOff(); // temporary
+void Pano::shutter(void){
     delay(pre_shutter_delay);
     for (unsigned i=shots_per_position; i; i--){
         camera.shutter(shutter_delay);
     }
+}
+bool Pano::next(void){
     motorsOn(); // temporary
+
     ++position;
 
-    Serial.print(F("at ")); Serial.print(position);
-    Serial.print(F("  horiz_pos=")); Serial.print(horiz_position);
-    Serial.print(F("  vert_pos=")); Serial.print(vert_position);
-    if (horiz_fov - horiz_position > camera.getHorizFOV()){
-        horiz_position += horiz_move;
+    Serial.print(F("at ")); Serial.println(position);
+
+    if (position % horiz_count){
+        // still within current row
         Serial.println(F("  H-->"));
-        Serial.println(horiz_move*horiz_gear_ratio);
         horiz_motor.rotate(horiz_move*horiz_gear_ratio);
     } else {
+        // end of row. reset column
         Serial.println(F("  <--H"));
-        // move to next row, reset column
-        horiz_motor.rotate(-horiz_position*horiz_gear_ratio);
-        horiz_position = 0;
-        if (vert_fov - vert_position <= camera.getVertFOV()){
-            vert_motor.rotate(-vert_position*vert_gear_ratio);
+        horiz_motor.rotate((1-horiz_count)*horiz_move*horiz_gear_ratio);
+        if (position / horiz_count < vert_count){
+            // still within pano, change row, reset column
+            Serial.println(F("  V-->"));
+            vert_motor.rotate(vert_move*vert_gear_ratio);
+        } else {
+            Serial.println(F("  <--V"));
+            vert_motor.rotate((1-vert_count)*vert_move*vert_gear_ratio);
             return false;
         }
-        Serial.println(F("  V-->"));
-        vert_position += vert_move;
-        vert_motor.rotate(vert_move*vert_gear_ratio);
     }
     motorsOff(); // temporary
     return true;
@@ -131,9 +130,14 @@ void Pano::end(void){
     // move to home position
     motorsOff();
 }
+/*
+ * Execute a full pano run.
+ */
 void Pano::run(void){
     start();
-    while(next());
+    do {
+        shutter();
+    } while(next());
     end();
 }
 void Pano::motorsOn(void){
