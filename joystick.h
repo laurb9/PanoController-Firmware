@@ -25,7 +25,7 @@ protected:
     int sw_state = 0, x_state = 0, y_state = 0;
     int last_read;
 public:
-    static const int range = 1024 >> sensitivity;
+    static const int range = (1024/2) >> sensitivity;
     int autorepeat_delay;
     int autorepeat_repeat;
     Joystick(int sw_pin, int x_pin, int y_pin);
