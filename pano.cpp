@@ -112,8 +112,7 @@ bool Pano::moveTo(int new_row, int new_col){
     int cur_row = position / horiz_count;
     int cur_col = position % horiz_count;
 
-    if (cur_row >= vert_count || new_row >= vert_count ||
-        cur_col >= horiz_count || new_col >= horiz_count){
+    if (cur_row >= vert_count || new_row >= vert_count || new_col >= horiz_count){
         // beyond last row or column, cannot move there.
         return false;
     }
