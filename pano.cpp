@@ -76,10 +76,10 @@ void Pano::gridFit(int total_size, int overlap, int& block_size, int& count){
  * Must be called every time focal distance or panorama dimensions change.
  */
 void Pano::computeGrid(void){
-    horiz_move = camera.getHorizFOV();
-    gridFit(horiz_fov, MIN_OVERLAP, horiz_move, horiz_count);
-    vert_move = camera.getVertFOV();
-    gridFit(vert_fov, MIN_OVERLAP, vert_move, vert_count);
+    horiz_move = camera.getHorizFOV() * horiz_gear_ratio;
+    gridFit(horiz_fov * horiz_gear_ratio, MIN_OVERLAP, horiz_move, horiz_count);
+    vert_move = camera.getVertFOV() * vert_gear_ratio;
+    gridFit(vert_fov * vert_gear_ratio, MIN_OVERLAP, vert_move, vert_count);
 }
 void Pano::start(void){
     computeGrid();
@@ -120,11 +120,11 @@ bool Pano::moveTo(int new_row, int new_col){
     motorsOn(); // temporary
     if (cur_col != new_col){
         // horizontal adjustment needed
-        horiz_motor.rotate((new_col-cur_col)*horiz_move*horiz_gear_ratio);
+        horiz_motor.rotate((new_col-cur_col)*horiz_move);
     }
     if (cur_row != new_row){
         // vertical adjustment needed
-        vert_motor.rotate(-(new_row-cur_row)*vert_move*vert_gear_ratio);
+        vert_motor.rotate(-(new_row-cur_row)*vert_move);
     }
     motorsOff(); // temporary
 
