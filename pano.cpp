@@ -117,6 +117,7 @@ bool Pano::next(void){
         } else {
             Serial.println(F("  <--V"));
             vert_motor.rotate((vert_count-1)*vert_move*vert_gear_ratio);
+            motorsOff(); // temporary
             return false;
         }
     }
