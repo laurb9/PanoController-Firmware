@@ -48,8 +48,11 @@ public:
     void setMode(unsigned mode);
     unsigned getHorizShots(void);
     unsigned getVertShots(void);
+    bool moveTo(int new_position);
+    bool moveTo(int new_row, int new_col);
     void start(void);
     bool next(void);
+    bool prev(void);
     void end(void);
     void run(void);
     void shutter(void);

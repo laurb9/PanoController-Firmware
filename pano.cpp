@@ -95,38 +95,52 @@ void Pano::shutter(void){
         camera.shutter(shutter_delay);
     }
 }
-bool Pano::next(void){
+/*
+ * Move to grid position by photo index (0-number of photos)
+ */
+bool Pano::moveTo(int new_position){
+    int new_row = new_position / horiz_count;
+    int new_col = new_position % horiz_count;
+    return moveTo(new_row, new_col);
+}
+/*
+ * Move to specified grid position
+ * @param new_row: requested row position [0 - vert_count)
+ * @param new_col: requested col position [0 - horiz_count)
+ */
+bool Pano::moveTo(int new_row, int new_col){
+    int cur_row = position / horiz_count;
+    int cur_col = position % horiz_count;
+
+    if (cur_row >= vert_count || new_row >= vert_count ||
+        cur_col >= horiz_count || new_col >= horiz_count){
+        // beyond last row or column, cannot move there.
+        return false;
+    }
+
     motorsOn(); // temporary
-
-    ++position;
-
-    Serial.print(F("at ")); Serial.println(position);
-
-    if (position % horiz_count){
-        // still within current row
-        Serial.println(F("  H-->"));
-        horiz_motor.rotate(horiz_move*horiz_gear_ratio);
-    } else {
-        // end of row. reset column
-        Serial.println(F("  <--H"));
-        horiz_motor.rotate((1-horiz_count)*horiz_move*horiz_gear_ratio);
-        if (position / horiz_count < vert_count){
-            // still within pano, change row, reset column
-            Serial.println(F("  V-->"));
-            vert_motor.rotate(-vert_move*vert_gear_ratio);
-        } else {
-            Serial.println(F("  <--V"));
-            vert_motor.rotate((vert_count-1)*vert_move*vert_gear_ratio);
-            motorsOff(); // temporary
-            return false;
-        }
+    if (cur_col != new_col){
+        // horizontal adjustment needed
+        horiz_motor.rotate((new_col-cur_col)*horiz_move*horiz_gear_ratio);
+    }
+    if (cur_row != new_row){
+        // vertical adjustment needed
+        vert_motor.rotate(-(new_row-cur_row)*vert_move*vert_gear_ratio);
     }
     motorsOff(); // temporary
+
+    position = new_row * horiz_count + new_col;
     return true;
+}
+bool Pano::next(void){
+    return moveTo(position+1);
+}
+bool Pano::prev(void){
+    return (position > 0) ? moveTo(position-1) : false;
 }
 void Pano::end(void){
     // move to home position
-    motorsOff();
+    moveTo(0, 0);
 }
 /*
  * Execute a full pano run.
