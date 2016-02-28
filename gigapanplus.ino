@@ -171,9 +171,9 @@ void displayMenu(void){
 /*
  * Interrupt handler triggered by button click
  */
-volatile static int stop_running = false;
+volatile static int button_clicked = false;
 void button_click(){
-    stop_running = true;
+    button_clicked = true;
 }
 /*
  * Execute panorama from start to finish.
@@ -187,7 +187,7 @@ void executePano(void){
     pano.setShutter(shutter, pre_shutter);
     pano.setShots(shots);
 
-    stop_running = false;
+    button_clicked = false;
     while (joystick.getButtonState()) delay(20);
     pano.start();
     attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
@@ -197,7 +197,7 @@ void executePano(void){
         pano.shutter();
         running = pano.next();
 
-        if (stop_running){
+        if (button_clicked){
             // button was clicked mid-pano, go in manual mode
             int event;
             while (running){
@@ -209,7 +209,7 @@ void executePano(void){
                 display.println("\x11 [ok] \x10\n");
                 display.display();
             }
-            stop_running = false;
+            button_clicked = false;
         }
     };
 
@@ -219,8 +219,8 @@ void executePano(void){
 
     pano.end();
 
-    Serial.println((stop_running) ? F("Canceled") : F("Finished"));
-    display.println((stop_running) ? F("Canceled") : F("Finished"));
+    Serial.println((button_clicked) ? F("Canceled") : F("Finished"));
+    display.println((button_clicked) ? F("Canceled") : F("Finished"));
     display.display();
     while (!joystick.read()) delay(20);
 }
@@ -229,11 +229,11 @@ void executePano(void){
  * This is a callback invoked by selecting "Start"
  */
 int onStart(int start){
-    if (start){
-        positionCamera();
-        executePano();
-    }
-    return start;
+    running = true;
+    display.display();
+    positionCamera();
+    executePano();
+    menu.cancel();
 }
 
 void loop() {

@@ -1,12 +1,8 @@
 [
     {
         "description": "Start",
-        "default": "Off",
+        "default": false,
         "onselect": "onStart",
-        "options": [
-            {"On": 1},
-            {"Off": 0}
-        ],
         "variable": "running",
         "eeprom": false
     },

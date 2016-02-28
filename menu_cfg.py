@@ -74,7 +74,12 @@ static ListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(ee
 """
 static RangeSelector %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(onselect)s, %(min)d, %(max)d, %(step)d);
 """ % menu_item)
-            
+        else:
+            menu_types.append("OptionSelector::class_id")
+            output.append(
+"""
+static OptionSelector %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(onselect)s);
+""" % menu_item)
         
         menus.append(menu_name)
         

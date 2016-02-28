@@ -3,12 +3,8 @@
 extern volatile int running;
 int onStart(int);
 static const PROGMEM char menu_start_desc[] = "Start";
-static const PROGMEM char menu_start_name_0[] = "On";
-static const PROGMEM char menu_start_name_1[] = "Off";
 
-static const PROGMEM char * const menu_start_names[2] = {menu_start_name_0, menu_start_name_1};
-static const PROGMEM int menu_start_values[2] = {1, 0};
-static NamedListSelector menu_start(menu_start_desc, &running, 0, 0 * sizeof(int), onStart, 2, menu_start_names, menu_start_values);
+static OptionSelector menu_start(menu_start_desc, &running, 0, 0 * sizeof(int), onStart);
 
 // Horiz FOV
 extern volatile int horiz;
@@ -102,7 +98,7 @@ static NamedListSelector menu_display(menu_display_desc, &display_invert, 0, 0 *
 
 
 static const PROGMEM union MenuItem menus[] = {&menu_start, &menu_horiz_fov, &menu_vert_fov, &menu_focal_len, &menu_shutter, &menu_delay, &menu_shots__, &menu_aspect, &menu_motors, &menu_display};
-static const PROGMEM int menu_types[] = {NamedListSelector::class_id, RangeSelector::class_id, RangeSelector::class_id, ListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, RangeSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id};
+static const PROGMEM int menu_types[] = {OptionSelector::class_id, RangeSelector::class_id, RangeSelector::class_id, ListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, RangeSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id};
 static const PROGMEM char menu_desc[] = "Main Menu";
 Menu menu(menu_desc, 10, menus, menu_types);
 

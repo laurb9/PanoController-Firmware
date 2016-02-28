@@ -289,7 +289,12 @@ void Menu::select(void){
     } else {
         OptionSelector::select();
         drilldown = true;
-        invoke_method(pos, open);
+        if (FLASH_READ_INT(types, pos) != OptionSelector::class_id){
+            invoke_method(pos, open);
+        } else {
+            // OptionSelector does not have any options to show
+            invoke_method(pos, select);
+        }
     }
 }
 void Menu::sync(void){
