@@ -29,9 +29,6 @@ void Pano::setFOV(int horiz_angle, int vert_angle){
         vert_fov = vert_angle;
     }
 }
-void Pano::setFocalLength(unsigned focal_length){
-    focal_length = camera.setFocalLength(focal_length);
-}
 void Pano::setShutter(unsigned speed, unsigned pre_delay){
     shutter_delay = speed;
     pre_shutter_delay = pre_delay;

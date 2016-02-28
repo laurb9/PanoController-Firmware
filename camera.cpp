@@ -48,9 +48,41 @@ unsigned Camera::setFocalLength(unsigned focal_length){
 }
 
 unsigned Camera::getHorizFOV(void){
-    return horiz_degrees[lens_idx];
+    unsigned fov;
+    switch (aspect){
+    case 32:
+        fov = horiz_degrees[lens_idx];
+        break;
+    case 23:
+        fov = vert_degrees[lens_idx];
+        break;
+    default:
+        fov = 0;
+    }
+    return fov;
 }
 
 unsigned Camera::getVertFOV(void){
-    return vert_degrees[lens_idx];
+    unsigned fov;
+    switch (aspect){
+    case 32:
+        fov = vert_degrees[lens_idx];
+        break;
+    case 23:
+        fov = horiz_degrees[lens_idx];
+        break;
+    default:
+        fov = 0;
+    }
+    return fov;
+}
+
+/*
+ * Set image aspect ratio
+ *
+ * @param aspect: number indicating WH, for example 32 for 3:2
+ * allowable values are 32 (landscape) and 23 (portrait)
+ */
+void Camera::setAspect(int aspect){
+    this->aspect = aspect;
 }

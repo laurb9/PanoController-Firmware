@@ -42,7 +42,6 @@ public:
     volatile unsigned active;
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int, int);
     void setFOV(int horiz_angle, int vert_angle);
-    void setFocalLength(unsigned focal_length);
     void setShutter(unsigned shutter_delay, unsigned pre_delay);
     void setShots(unsigned shots);
     void setMode(unsigned mode);

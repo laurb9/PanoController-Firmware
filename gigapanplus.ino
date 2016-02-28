@@ -181,7 +181,8 @@ void button_click(){
  */
 void executePano(void){
 
-    pano.setFocalLength(focal);
+    camera.setAspect(aspect);
+    camera.setFocalLength(focal);
     pano.setFOV(horiz, vert);
     pano.setShutter(shutter, pre_shutter);
     pano.setShots(shots);
