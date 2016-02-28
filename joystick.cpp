@@ -57,9 +57,9 @@ unsigned Joystick::read(void){
     // read Y position
     current_state = getPositionY();
     if (current_state > y_state && current_state > 0){
-        event |= EVENT_DOWN;
-    } else if (current_state < y_state && current_state < 0){
         event |= EVENT_UP;
+    } else if (current_state < y_state && current_state < 0){
+        event |= EVENT_DOWN;
     }
     y_state = current_state;
 
