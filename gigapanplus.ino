@@ -19,7 +19,7 @@
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
 #define DISPLAY_I2C_ADDRESS 0x3C
 #define OLED_RESET 4
-#define TEXT_SIZE 2
+#define TEXT_SIZE 1
 #define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
 
 #define JOYSTICK_X A2
@@ -47,7 +47,10 @@ static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
 
 // these variables are modified by the menu
-volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, aspect, shots, motors_enable, display_invert;
+volatile int focal, fov, shutter, pre_shutter, orientation, aspect, shots, motors_enable, display_invert;
+volatile int running;
+int horiz, vert;
+
 
 void setup() {
     Serial.begin(38400);
@@ -64,6 +67,9 @@ void setup() {
     Serial.println(F("Ready\n"));
 }
 
+/*
+ * Display current panorama status (photo index, etc)
+ */
 void displayPanoStatus(void){
     display.clearDisplay();
     display.setCursor(0,0);
@@ -76,6 +82,7 @@ void displayPanoStatus(void){
     display.print(1+pano.position / pano.getHorizShots());
     display.print(F("x"));
     display.println(1+pano.position % pano.getHorizShots());
+    displayPanoSize();
 
 #if DISPLAY_ROWS > 4
     display.print(F("Focal Length "));
@@ -86,38 +93,38 @@ void displayPanoStatus(void){
     display.print(F("x"));
     display.println(camera.getVertFOV());
     display.print(F("Pano FOV "));
-    display.print(horiz);
+    display.print(pano.horiz_fov);
     display.print(F("x"));
-    display.println(vert);
+    display.println(pano.vert_fov);
 #endif
+    display.display();
+}
+
+/*
+ * Display the panorama grid size
+ */
+void displayPanoSize(){
     display.print(F("\xb0 "));
     display.print(pano.getVertShots());
     display.print(F("x"));
     display.print(pano.getHorizShots());
     display.println();
-    display.display();
 }
 
-void handleEvent(int event) {
-
-    if (Joystick::isEventLeft(event)) menu.cancel();
-    else if (Joystick::isEventRight(event) || Joystick::isEventClick(event)) menu.select();
-    else if (Joystick::isEventDown(event)) menu.next();
-    else if (Joystick::isEventUp(event)) menu.prev();
-
-    Serial.println();
-    display.clearDisplay();
-    display.setCursor(0,0);
-
-    menu.render(display, DISPLAY_ROWS);
-    display.display();
-}
-
-void positionCamera(void){
+/*
+ * Let user move the camera while optionally recording position
+ * @param msg:   title string
+ * @param horiz: pointer to store horizontal movement
+ * @param vert:  pointer to store vertical movement
+ */
+void positionCamera(const char *msg, int *horiz, int *vert){
     int pos_x, pos_y;
+    int h = 0, v = 0;
+    long when_to_display = millis();
+
     display.clearDisplay();
     display.setCursor(0,0);
-    display.println(F("Adj start"));
+    display.println(msg);
     display.println(F("  \x1e  \n"
                       "\x11 x \x10\n"
                       "  \x1f"));
@@ -128,12 +135,34 @@ void positionCamera(void){
         pos_y = joystick.getPositionY();
         if (pos_x){
             horiz_motor.setRPM(40*abs(pos_x)/joystick.range);
-            horiz_motor.move(4*pos_x/abs(pos_x));
+            horiz_motor.rotate(pos_x/abs(pos_x));
+            h += pos_x/abs(pos_x);
         }
         if (pos_y){
             vert_motor.setRPM(120*abs(pos_y)/joystick.range);
-            vert_motor.move(-4*pos_y/abs(pos_y));
+            vert_motor.rotate(pos_y/abs(pos_y));
+            v += -pos_y/abs(pos_y);
         }
+        if (millis() > when_to_display && h > 0 && v > 0){
+            display.clearDisplay();
+            display.setCursor(0,0);
+            pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
+                        v / pano.vert_gear_ratio + camera.getVertFOV());
+            pano.computeGrid();
+            displayPanoSize();
+            display.display();
+            when_to_display = millis() + 1000;
+        }
+    }
+    if (horiz){
+        *horiz = h / pano.horiz_gear_ratio + camera.getHorizFOV();
+        horiz_motor.setRPM(40);
+        horiz_motor.rotate(-h);
+    }
+    if (vert){
+        *vert = v / pano.vert_gear_ratio + camera.getVertFOV();
+        vert_motor.setRPM(120);
+        vert_motor.rotate(v);
     }
 }
 
@@ -154,7 +183,16 @@ void displayMenu(void){
         event = joystick.read();
         if (!event) continue;
 
-        handleEvent(event);
+        if (Joystick::isEventLeft(event)) menu.cancel();
+        else if (Joystick::isEventRight(event) || Joystick::isEventClick(event)) menu.select();
+        else if (Joystick::isEventDown(event)) menu.next();
+        else if (Joystick::isEventUp(event)) menu.prev();
+
+        Serial.println();
+        display.clearDisplay();
+        display.setCursor(0,0);
+        menu.render(display, DISPLAY_ROWS);
+        display.display();
         delay(100);
 
         display.invertDisplay(display_invert);
@@ -181,11 +219,6 @@ void button_click(){
  */
 void executePano(void){
 
-    camera.setAspect(aspect);
-    camera.setFocalLength(focal);
-    pano.setFOV(horiz, vert);
-    pano.setShutter(shutter, pre_shutter);
-    pano.setShots(shots);
 
     button_clicked = false;
     while (joystick.getButtonState()) delay(20);
@@ -228,12 +261,51 @@ void executePano(void){
 /*
  * This is a callback invoked by selecting "Start"
  */
-int onStart(int start){
-    running = true;
-    display.display();
-    positionCamera();
-    executePano();
+int onStart(int __){
     menu.cancel();
+    camera.setAspect(aspect);
+    camera.setFocalLength(focal);
+    pano.setShutter(shutter, pre_shutter);
+    pano.setShots(shots);
+    running = true;
+
+    // set panorama FOV
+    positionCamera("Top Left", NULL, NULL);
+    positionCamera("Bot Right", &horiz, &vert);
+    pano.setFOV(horiz, vert);
+    menu.sync();
+    positionCamera("Adj start", NULL, NULL);
+    executePano();
+}
+
+/*
+ * This is a callback invoked by selecting "Repeat"
+ */
+int onRepeat(int __){
+    menu.cancel();
+    camera.setAspect(aspect);
+    camera.setFocalLength(focal);
+    pano.setShutter(shutter, pre_shutter);
+    pano.setShots(shots);
+    running = true;
+    pano.setFOV(horiz, vert);
+    positionCamera("Adj start", NULL, NULL);
+    executePano();
+}
+
+/*
+ * This is a callback invoked by selecting "Repeat"
+ */
+int on360(int __){
+    menu.cancel();
+    camera.setAspect(aspect);
+    camera.setFocalLength(focal);
+    pano.setShutter(shutter, pre_shutter);
+    pano.setShots(shots);
+    running = true;
+    pano.setFOV(360, vert);
+    positionCamera("Adj start", NULL, NULL);
+    executePano();
 }
 
 void loop() {

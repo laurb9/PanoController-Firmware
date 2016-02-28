@@ -23,10 +23,6 @@ protected:
     Camera& camera;
     int horiz_motor_enable_pin;
     int vert_motor_enable_pin;
-    int horiz_gear_ratio = 5; // 1:5
-    int vert_gear_ratio = 15; // 1:15
-    int horiz_fov;
-    int vert_fov;
     int horiz_move;
     int vert_move;
     int horiz_count;
@@ -35,9 +31,12 @@ protected:
     unsigned shutter_delay = 1000/250;
     unsigned pre_shutter_delay = 0;
     void gridFit(int total_size, int overlap, int& block_size, int& count);
-    void computeGrid(void);
     // state information
 public:
+    const int horiz_gear_ratio = 5; // 1:5
+    const int vert_gear_ratio = 15; // 1:15
+    int horiz_fov;
+    int vert_fov;
     unsigned position;
     volatile unsigned active;
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int, int);
@@ -45,6 +44,7 @@ public:
     void setShutter(unsigned shutter_delay, unsigned pre_delay);
     void setShots(unsigned shots);
     void setMode(unsigned mode);
+    void computeGrid(void);
     unsigned getHorizShots(void);
     unsigned getVertShots(void);
     bool moveTo(int new_position);

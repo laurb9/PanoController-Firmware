@@ -1,10 +1,15 @@
 [
     {
         "description": "Start",
-        "default": false,
-        "onselect": "onStart",
-        "variable": "running",
-        "eeprom": false
+        "onselect": "onStart"
+    },
+    {
+        "description": "Repeat Last",
+        "onselect": "onRepeat"
+    },
+    {
+        "description": "360 Pano",
+        "onselect": "on360"
     },
     {
         "description": "Horiz FOV",
@@ -90,7 +95,7 @@
     },
     {
         "description": "Motors",
-        "default": "On",
+        "default": "Off",
         "options": [
             {"On": 1},
             {"Off": 0}
