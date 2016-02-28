@@ -55,8 +55,7 @@ public:
     void end(void);
     void run(void);
     void shutter(void);
-    void motorsOn(void);
-    void motorsOff(void);
+    void motorsEnable(bool on);
 
 };
 

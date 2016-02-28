@@ -19,7 +19,7 @@ Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera,
 {
     pinMode(horiz_motor_enable_pin, OUTPUT);
     pinMode(vert_motor_enable_pin, OUTPUT);
-    motorsOff();
+    motorsEnable(false);
 
     setFOV(360,180);
 }
@@ -80,7 +80,7 @@ void Pano::computeGrid(void){
 }
 void Pano::start(void){
     computeGrid();
-    motorsOn();
+    motorsEnable(true);
     horiz_motor.setRPM(20); // 60 @ 0.8A, 20 @ 0.3A & 1:16
     vert_motor.setRPM(60); // 180 @ 0.8A. 60 @ 0.3A & 1:16
     // move to start position
@@ -114,7 +114,7 @@ bool Pano::moveTo(int new_row, int new_col){
         return false;
     }
 
-    motorsOn(); // temporary
+    motorsEnable(true); // temporary
     if (cur_col != new_col){
         // horizontal adjustment needed
         horiz_motor.rotate((new_col-cur_col)*horiz_move);
@@ -123,7 +123,7 @@ bool Pano::moveTo(int new_row, int new_col){
         // vertical adjustment needed
         vert_motor.rotate(-(new_row-cur_row)*vert_move);
     }
-    motorsOff(); // temporary
+    motorsEnable(false); // temporary
 
     position = new_row * horiz_count + new_col;
     return true;
@@ -148,11 +148,7 @@ void Pano::run(void){
     } while(next());
     end();
 }
-void Pano::motorsOn(void){
-    digitalWrite(horiz_motor_enable_pin, LOW);
-    digitalWrite(vert_motor_enable_pin, LOW);
-}
-void Pano::motorsOff(void){
-    digitalWrite(horiz_motor_enable_pin, HIGH);
-    digitalWrite(vert_motor_enable_pin, HIGH);
+void Pano::motorsEnable(bool on){
+    digitalWrite(horiz_motor_enable_pin, (on) ? LOW : HIGH);
+    digitalWrite(vert_motor_enable_pin, (on) ? LOW : HIGH);
 }

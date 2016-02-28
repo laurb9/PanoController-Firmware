@@ -129,7 +129,7 @@ void positionCamera(const char *msg, int *horiz, int *vert){
                       "\x11 x \x10\n"
                       "  \x1f"));
     display.display();
-    pano.motorsOn();
+    pano.motorsEnable(true);
     while (!Joystick::isEventClick(joystick.read())){
         pos_x = joystick.getPositionX();
         pos_y = joystick.getPositionY();
@@ -197,11 +197,7 @@ void displayMenu(void){
 
         display.invertDisplay(display_invert);
 
-        if (motors_enable){
-            pano.motorsOn();
-        } else {
-            pano.motorsOff();
-        }
+        pano.motorsEnable(motors_enable);
     }
     menu.cancel(); // go back to main menu to avoid re-triggering
 }
