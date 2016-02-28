@@ -16,10 +16,11 @@
 /*
  * OptionSelector: share functionality among the other menu classes
  */
-OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val, int eeprom)
+OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
 :description(description),
  value(value),
- eeprom(eeprom)
+ eeprom(eeprom),
+ onselect(onselect)
 {
     active = false;
     // override default with eeprom value, if set
@@ -67,6 +68,9 @@ void OptionSelector::prev(void){
 void OptionSelector::select(void){
     pos = pointer;
     OptionSelector::sync();
+    if (onselect){
+        onselect(*value);
+    }
 }
 void OptionSelector::sync(void){
     if (eeprom){
@@ -91,9 +95,9 @@ int OptionSelector::calc_start(int rows){
  * RangeSelector: a number with up/down controls
  */
 
-RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int eeprom,
+RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                              int min_val, int max_val, int step)
-:OptionSelector(description, value, default_val, eeprom),
+:OptionSelector(description, value, default_val, eeprom, onselect),
  min_val(min_val), max_val(max_val), step(step)
 {
     pointer = this->default_val;
@@ -116,7 +120,8 @@ void RangeSelector::select(void){
 }
 void RangeSelector::sync(void){
     pointer = *value;
-    OptionSelector::select();
+    pos = pointer;
+    OptionSelector::sync();
 }
 
 int RangeSelector::render(DISPLAY_DEVICE display, int rows){
@@ -143,9 +148,9 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * ListSelector: list of numeric options
  */
-ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int eeprom,
+ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                            int count, const int values[])
-:OptionSelector(description, value, default_val, eeprom),
+:OptionSelector(description, value, default_val, eeprom, onselect),
  values(values)
 {
     this->count = count;
@@ -204,9 +209,9 @@ int ListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * NamedListSelector: list of named numeric options
  */
-NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom,
+NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                                      int count, const char * const names[], const int values[])
-:ListSelector(description, value, default_val, eeprom, count, values),
+:ListSelector(description, value, default_val, eeprom, onselect, count, values),
  names(names)
 {
 }
@@ -239,7 +244,7 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
  * Menu: this is a regular menu, nothing is set here.
  */
 Menu::Menu(const char *description, int count, const union MenuItem * const menus, const int *types)
-:OptionSelector(description, NULL, 0, 0),
+:OptionSelector(description, NULL, 0, 0, NULL),
  menus(menus),
  types(types)
 {

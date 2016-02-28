@@ -216,7 +216,6 @@ void executePano(void){
     // clean up
     detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
     running = false;
-    menu.sync();
 
     pano.end();
 
@@ -226,10 +225,18 @@ void executePano(void){
     while (!joystick.read()) delay(20);
 }
 
+/*
+ * This is a callback invoked by selecting "Start"
+ */
+int onStart(int start){
+    if (start){
+        positionCamera();
+        executePano();
+    }
+    return start;
+}
+
 void loop() {
     displayMenu();
-
-    positionCamera();
-
-    executePano();
+    menu.sync();
 }

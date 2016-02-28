@@ -16,7 +16,11 @@ def main(menu_file):
         menu_name = "menu_" + re.sub(r"[^\w]", "_", menu_item["description"].lower())
         menu_item["name"] = menu_name
         output.append("// %(description)s" % menu_item)
-        output.append("extern volatile int %(variable)s;" % menu_item);
+        output.append("extern volatile int %(variable)s;" % menu_item)
+        if "onselect" in menu_item:
+            output.append("int %s(int);" % menu_item["onselect"])
+        else:
+            menu_item["onselect"] = "NULL";
         if menu_item.get("eeprom"):
             eeprom_idx += 1;
             menu_item["eeprom"] = eeprom_idx
@@ -45,7 +49,7 @@ def main(menu_file):
                 output_fmt = """
 static const PROGMEM char * const %(name)s_names[%(size)d] = {%(names)s};
 static const PROGMEM int %(name)s_values[%(size)d] = {%(values)s};
-static NamedListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(size)d, %(name)s_names, %(name)s_values);
+static NamedListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(onselect)s, %(size)d, %(name)s_names, %(name)s_values);
 """
             else:
                 menu_types.append("ListSelector::class_id")
@@ -57,7 +61,7 @@ static NamedListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d,
 
                 output_fmt = """
 static const PROGMEM int %(name)s_values[%(size)d] = {%(values)s};
-static ListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(size)d, %(name)s_values);
+static ListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(onselect)s, %(size)d, %(name)s_values);
 """
             menu_item["default_val"] = default_val
             menu_item["size"] = len(values)
@@ -68,7 +72,7 @@ static ListSelector %(name)s(%(name)s_desc, &%(variable)s, %(default_val)d, %(ee
             menu_types.append("RangeSelector::class_id")
             output.append(
 """
-static RangeSelector %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(min)d, %(max)d, %(step)d);
+static RangeSelector %(name)s(%(name)s_desc, &%(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(onselect)s, %(min)d, %(max)d, %(step)d);
 """ % menu_item)
             
         

@@ -2,6 +2,7 @@
     {
         "description": "Start",
         "default": "Off",
+        "onselect": "onStart",
         "options": [
             {"On": 1},
             {"Off": 0}

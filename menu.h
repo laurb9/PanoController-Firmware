@@ -26,9 +26,10 @@ public:
     volatile int *value;
     int default_val;
     int eeprom = 0;
+    int (*onselect)(int);
     int count = 0;
     bool active = false;      // flag indicating the option selector is active
-    OptionSelector(const char *description, volatile int *value, int default_val, int eeprom);
+    OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
     void cancel(void);
     void open(void);
     void next(void);
@@ -42,7 +43,7 @@ class RangeSelector : public OptionSelector {
 public:
     static const ClassID class_id = CLASS_RANGE;
     int min_val, max_val, step;
-    RangeSelector(const char *description, volatile int *value, int default_val, int eeprom,
+    RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                   int min_val, int max_val, int step);
     void next(void);
     void prev(void);
@@ -55,7 +56,7 @@ class ListSelector : public OptionSelector {
 public:
     static const ClassID class_id = CLASS_LIST;
     const int *values;
-    ListSelector(const char *description, volatile int *value, int default_val, int eeprom,
+    ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                  int count, const int values[]);
     void select(void);
     void sync(void);
@@ -66,7 +67,7 @@ class NamedListSelector : public ListSelector {
 public:
     static const ClassID class_id = CLASS_NAMES;
     const char* const *names;
-    NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom,
+    NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                       int count, const char * const names[], const int values[]);
     int render(DISPLAY_DEVICE display, int rows);
 };
