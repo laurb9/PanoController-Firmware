@@ -1,20 +1,18 @@
 import json
 import re
+    
+eeprom_idx = 0
 
-def main(menu_file):
-    output = ['#include "menu.h"']
-
-    with open(menu_file) as f:
-        menu = json.load(f)
-
-    eeprom_idx = 0
+def buildMenu(menu, menu_name="menu", title="Main Menu"):
+    output = []
     menus = []
     menu_types = []
     eeprom_map = []
+    global eeprom_idx
 
     for i, menu_item in enumerate(menu):
-        menu_name = "menu_" + re.sub(r"[^\w]", "_", menu_item["description"].lower())
-        menu_item["name"] = menu_name
+        menu_item_name = "menu_" + re.sub(r"[^\w]", "_", menu_item["description"].lower())
+        menu_item["name"] = menu_item_name
         output.append("// %(description)s" % menu_item)
         if "variable" in menu_item:
             output.append("extern volatile int %(variable)s;" % menu_item)
@@ -38,7 +36,8 @@ def main(menu_file):
         names = []
         values = []
         default_val = 0
-        output.append('static const PROGMEM char %(name)s_desc[] = "%(description)s";' % menu_item)
+        if "menu" not in menu_item:
+            output.append('static const PROGMEM char %(name)s_desc[] = "%(description)s";' % menu_item)
         
         if "options" in menu_item:
             if isinstance(menu_item["options"][0], dict):
@@ -48,7 +47,7 @@ def main(menu_file):
                     if menu_item["default"] == name:
                         default_val = value
     
-                    var_name = "%s_name_%d" % (menu_name, j)
+                    var_name = "%s_name_%d" % (menu_item_name, j)
                     output.append('static const PROGMEM char %s[] = "%s";' % (var_name, name))
                     names.append(var_name)
                     values.append(str(value))
@@ -82,6 +81,11 @@ static ListSelector %(name)s(%(name)s_desc, %(variable)s, %(default_val)d, %(eep
 """
 static RangeSelector %(name)s(%(name)s_desc, %(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(onselect)s, %(min)d, %(max)d, %(step)d);
 """ % menu_item)
+            
+        elif "menu" in menu_item:
+            output += buildMenu(menu_item["menu"], menu_name=menu_item_name, title=menu_item["description"])
+            menu_types.append("Menu::class_id")
+            
         else:
             menu_types.append("OptionSelector::class_id")
             output.append(
@@ -89,21 +93,27 @@ static RangeSelector %(name)s(%(name)s_desc, %(variable)s, %(default)d, %(eeprom
 static OptionSelector %(name)s(%(name)s_desc, %(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(onselect)s);
 """ % menu_item)
         
-        menus.append(menu_name)
+        menus.append(menu_item_name)
         
 
     output.append(
 """
-static const PROGMEM union MenuItem menus[] = {&%s};
-static const PROGMEM int menu_types[] = {%s};
-static const PROGMEM char menu_desc[] = "Main Menu";
-Menu menu(menu_desc, %d, menus, menu_types);
-""" % (", &".join(menus), 
-       ", ".join(menu_types),
-       len(menus)))
+static const PROGMEM union MenuItem %s_opts[] = {&%s};
+static const PROGMEM int %s_types[] = {%s};
+static const PROGMEM char %s_desc[] = "%s";
+Menu %s(%s_desc, %d, %s_opts, %s_types);
+""" % (menu_name, ", &".join(menus), 
+       menu_name, ", ".join(menu_types),
+       menu_name, title, 
+       menu_name, menu_name, len(menus), menu_name, menu_name))
 
     return output
 
 if __name__ == "__main__":
-    output = main("menu_cfg.json")
+    output = ['#include "menu.h"']
+
+    with open("menu_cfg.json") as f:
+        menu = json.load(f)
+
+    output += buildMenu(menu, title="Main Menu")
     print "\n".join(output)

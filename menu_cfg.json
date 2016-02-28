@@ -1,35 +1,40 @@
 [
     {
-        "description": "Start",
-        "onselect": "onStart"
-    },
-    {
-        "description": "Repeat Last",
-        "onselect": "onRepeat"
-    },
-    {
-        "description": "360 Pano",
-        "onselect": "on360"
-    },
-    {
-        "description": "Horiz FOV",
-        "default": 120,
-        "min": 10,
-        "max": 360,
-        "step": 10,
-        "unit": "÷",
-        "variable": "horiz",
-        "eeprom": true
-    },
-    {
-        "description": "Vert FOV",
-        "default": 90,
-        "min": 10,
-        "max": 180,
-        "step": 10,
-        "unit": "÷",
-        "variable": "vert",
-        "eeprom": true
+        "description": "Start Pano",
+        "menu": [
+             {
+                 "description": "New Pano",
+                 "onselect": "onStart"
+             },
+             {
+                 "description": "Repeat Last",
+                 "onselect": "onRepeat"
+             },
+             {
+                 "description": "360 Pano",
+                 "onselect": "on360"
+             },
+             {
+                 "description": "Horiz FOV",
+                 "default": 120,
+                 "min": 10,
+                 "max": 360,
+                 "step": 10,
+                 "unit": "÷",
+                 "variable": "horiz",
+                 "eeprom": true
+             },
+             {
+                 "description": "Vert FOV",
+                 "default": 90,
+                 "min": 10,
+                 "max": 180,
+                 "step": 10,
+                 "unit": "÷",
+                 "variable": "vert",
+                 "eeprom": true
+             }
+         ]
     },
     {
         "description": "Focal Len",
