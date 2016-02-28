@@ -135,13 +135,17 @@ void positionCamera(const char *msg, int *horiz, int *vert){
         pos_y = joystick.getPositionY();
         if (pos_x){
             horiz_motor.setRPM(40*abs(pos_x)/joystick.range);
-            horiz_motor.rotate(pos_x/abs(pos_x));
-            h += pos_x/abs(pos_x);
+            if (!horiz || h + pos_x/abs(pos_x) > 0){
+                horiz_motor.rotate(pos_x/abs(pos_x));
+                h += pos_x/abs(pos_x);
+            }
         }
         if (pos_y){
             vert_motor.setRPM(120*abs(pos_y)/joystick.range);
-            vert_motor.rotate(pos_y/abs(pos_y));
-            v += -pos_y/abs(pos_y);
+            if (!vert || v - pos_y/abs(pos_y) > 0){
+                v += -pos_y/abs(pos_y);
+                vert_motor.rotate(pos_y/abs(pos_y));
+            }
         }
         if (millis() > when_to_display && h > 0 && v > 0){
             display.clearDisplay();
