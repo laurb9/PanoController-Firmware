@@ -30,7 +30,7 @@
         "eeprom": true
     },
     {
-        "description": "Focal Length",
+        "description": "Focal Len",
         "default": 35,
         "options": [12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400],
         "unit": "mm",
@@ -55,7 +55,7 @@
         "eeprom": true
     },
     {
-        "description": "Pre-Shutter",
+        "description": "Delay",
         "default": "0.1s",
         "options": [
             {"0.1s": 100},
@@ -68,7 +68,7 @@
         "eeprom": true
     },
     {
-        "description": "# of Shots",
+        "description": "Shots #",
         "default": 1,
         "min": 1,
         "max": 5,
@@ -78,15 +78,15 @@
     },
     {
         "description": "Aspect",
-        "default": "2:3 (portrait)",
+        "default": "P 2:3",
         "options": [
-            {"2:3 (portrait)": 23},
-            {"9:16 (portrait)": 916},
-            {"3:4 (portrait)": 34},
-            {"1:1": 11},
-            {"3:2 (landscape)": 32},
-            {"16:9 (landscape)": 169},
-            {"4:3 (landscape)": 43}
+            {"P 2:3": 23},
+            {"P 9:16": 916},
+            {"P 3:4": 34},
+            {"  1:1": 11},
+            {"L 3:2": 32},
+            {"L 16:9": 169},
+            {"L 4:3": 43}
         ],
         "variable": "aspect",
         "eeprom": true

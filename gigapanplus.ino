@@ -19,7 +19,8 @@
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
 #define DISPLAY_I2C_ADDRESS 0x3C
 #define OLED_RESET 4
-#define DISPLAY_ROWS SSD1306_LCDHEIGHT/8
+#define TEXT_SIZE 2
+#define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
 
 #define JOYSTICK_X A2
 #define JOYSTICK_Y A3
@@ -50,8 +51,8 @@ volatile int focal, horiz, vert, shutter, pre_shutter, running, orientation, asp
 
 void setup() {
     Serial.begin(38400);
-    horiz_motor.setMicrostep(16);
-    vert_motor.setMicrostep(16);
+    horiz_motor.setMicrostep(32);
+    vert_motor.setMicrostep(32);
     delay(1000); // wait for serial
     delay(100);  // give time for display to init; if display blank increase delay
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
@@ -59,7 +60,7 @@ void setup() {
     display.clearDisplay();
     display.setCursor(0,0);
     display.setTextColor(WHITE);
-    display.setTextSize(1);
+    display.setTextSize(TEXT_SIZE);
     Serial.println(F("Ready\n"));
 }
 
@@ -67,29 +68,31 @@ void displayPanoStatus(void){
     display.clearDisplay();
     display.setCursor(0,0);
 
-    display.print(F("Photo "));
+    display.print(F("# "));
     display.print(pano.position+1);
-    display.print(F(" of "));
+    display.print(F("/"));
     display.println(pano.getHorizShots()*pano.getVertShots());
-    display.print(F("At "));
+    display.print(F("@ "));
     display.print(1+pano.position / pano.getHorizShots());
-    display.print(F(" x "));
+    display.print(F("x"));
     display.println(1+pano.position % pano.getHorizShots());
 
+#if DISPLAY_ROWS > 4
     display.print(F("Focal Length "));
     display.print(focal);
     display.println(F("mm"));
     display.print(F("Lens FOV "));
     display.print(camera.getHorizFOV());
-    display.print(F(" x "));
+    display.print(F("x"));
     display.println(camera.getVertFOV());
     display.print(F("Pano FOV "));
     display.print(horiz);
-    display.print(F(" x "));
+    display.print(F("x"));
     display.println(vert);
-    display.print(F("Grid "));
+#endif
+    display.print(F("\xb0 "));
     display.print(pano.getVertShots());
-    display.print(F(" x "));
+    display.print(F("x"));
     display.print(pano.getHorizShots());
     display.println();
     display.display();
@@ -114,7 +117,7 @@ void positionCamera(void){
     int pos_x, pos_y;
     display.clearDisplay();
     display.setCursor(0,0);
-    display.println(F("Move to top left"));
+    display.println(F("Adj start"));
     display.println(F("  \x1e  \n"
                       "\x11 x \x10\n"
                       "  \x1f"));
@@ -177,6 +180,7 @@ void button_click(){
  * Button click interrupts.
  */
 void executePano(void){
+
     pano.setFocalLength(focal);
     pano.setFOV(horiz, vert);
     pano.setShutter(shutter, pre_shutter);
@@ -187,10 +191,25 @@ void executePano(void){
     pano.start();
     attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
 
-    while (running && !stop_running){
+    while (running){
         displayPanoStatus();
         pano.shutter();
         running = pano.next();
+
+        if (stop_running){
+            // button was clicked mid-pano, go in manual mode
+            int event;
+            while (running){
+                event=joystick.read();
+                if (Joystick::isEventLeft(event)) pano.prev();
+                else if (Joystick::isEventRight(event)) pano.next();
+                else if (Joystick::isEventClick(event)) break;
+                displayPanoStatus();
+                display.println("\x11 [ok] \x10\n");
+                display.display();
+            }
+            stop_running = false;
+        }
     };
 
     // clean up
