@@ -21,8 +21,7 @@ protected:
     Motor& horiz_motor;
     Motor& vert_motor;
     Camera& camera;
-    int horiz_motor_enable_pin;
-    int vert_motor_enable_pin;
+    int motors_pin;
     int horiz_move;
     int vert_move;
     int horiz_count;
@@ -39,7 +38,7 @@ public:
     int vert_fov;
     unsigned position;
     volatile unsigned active;
-    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int, int);
+    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int motors_pin);
     void setFOV(int horiz_angle, int vert_angle);
     void setShutter(unsigned shutter_delay, unsigned pre_delay);
     void setShots(unsigned shots);

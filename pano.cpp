@@ -9,16 +9,13 @@
 
 #include "pano.h"
 
-Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera,
-           int horiz_motor_enable_pin, int vert_motor_enable_pin)
+Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int motors_pin)
 :horiz_motor(horiz_motor),
  vert_motor(vert_motor),
  camera(camera),
- horiz_motor_enable_pin(horiz_motor_enable_pin),
- vert_motor_enable_pin(vert_motor_enable_pin)
+ motors_pin(motors_pin)
 {
-    pinMode(horiz_motor_enable_pin, OUTPUT);
-    pinMode(vert_motor_enable_pin, OUTPUT);
+    pinMode(motors_pin, OUTPUT);
     motorsEnable(false);
 
     setFOV(360,180);
@@ -121,6 +118,7 @@ bool Pano::moveTo(int new_row, int new_col){
     }
     if (cur_row != new_row){
         // vertical adjustment needed
+        // TODO: figure out shortest path around the circle
         vert_motor.rotate(-(new_row-cur_row)*vert_move);
     }
     motorsEnable(false); // temporary
@@ -149,6 +147,6 @@ void Pano::run(void){
     end();
 }
 void Pano::motorsEnable(bool on){
-    digitalWrite(horiz_motor_enable_pin, (on) ? LOW : HIGH);
-    digitalWrite(vert_motor_enable_pin, (on) ? LOW : HIGH);
+    digitalWrite(motors_pin, (on) ? HIGH : LOW);
+    delay(1);
 }
