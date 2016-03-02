@@ -1,5 +1,5 @@
 #include "menu.h"
-// Start Pano
+// Pano
 // New Pano
 int onStart(int);
 static const PROGMEM char menu_new_pano_desc[] = "New Pano";
@@ -31,11 +31,12 @@ static const PROGMEM char menu_vert_fov_desc[] = "Vert FOV";
 static RangeSelector menu_vert_fov(menu_vert_fov_desc, &vert, 90, 2 * sizeof(int), NULL, 10, 180, 10);
 
 
-static const PROGMEM union MenuItem menu_start_pano_opts[] = {&menu_new_pano, &menu_repeat_last, &menu_360_pano, &menu_horiz_fov, &menu_vert_fov};
-static const PROGMEM int menu_start_pano_types[] = {OptionSelector::class_id, OptionSelector::class_id, OptionSelector::class_id, RangeSelector::class_id, RangeSelector::class_id};
-static const PROGMEM char menu_start_pano_desc[] = "Start Pano";
-Menu menu_start_pano(menu_start_pano_desc, 5, menu_start_pano_opts, menu_start_pano_types);
+static const PROGMEM union MenuItem menu_pano_opts[] = {&menu_new_pano, &menu_repeat_last, &menu_360_pano, &menu_horiz_fov, &menu_vert_fov};
+static const PROGMEM int menu_pano_types[] = {OptionSelector::class_id, OptionSelector::class_id, OptionSelector::class_id, RangeSelector::class_id, RangeSelector::class_id};
+static const PROGMEM char menu_pano_desc[] = "Pano";
+Menu menu_pano(menu_pano_desc, 5, menu_pano_opts, menu_pano_types);
 
+// Camera
 // Focal Len
 extern volatile int focal;
 static const PROGMEM char menu_focal_len_desc[] = "Focal Len";
@@ -94,6 +95,12 @@ static const PROGMEM char * const menu_aspect_names[7] = {menu_aspect_name_0, me
 static const PROGMEM int menu_aspect_values[7] = {23, 916, 34, 11, 32, 169, 43};
 static NamedListSelector menu_aspect(menu_aspect_desc, &aspect, 23, 7 * sizeof(int), NULL, 7, menu_aspect_names, menu_aspect_values);
 
+
+static const PROGMEM union MenuItem menu_camera_opts[] = {&menu_focal_len, &menu_shutter, &menu_delay, &menu_shots__, &menu_aspect};
+static const PROGMEM int menu_camera_types[] = {ListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, RangeSelector::class_id, NamedListSelector::class_id};
+static const PROGMEM char menu_camera_desc[] = "Camera";
+Menu menu_camera(menu_camera_desc, 5, menu_camera_opts, menu_camera_types);
+
 // Motors
 extern volatile int motors_enable;
 static const PROGMEM char menu_motors_desc[] = "Motors";
@@ -115,8 +122,8 @@ static const PROGMEM int menu_display_values[2] = {0, 1};
 static NamedListSelector menu_display(menu_display_desc, &display_invert, 0, 0 * sizeof(int), NULL, 2, menu_display_names, menu_display_values);
 
 
-static const PROGMEM union MenuItem menu_opts[] = {&menu_start_pano, &menu_focal_len, &menu_shutter, &menu_delay, &menu_shots__, &menu_aspect, &menu_motors, &menu_display};
-static const PROGMEM int menu_types[] = {Menu::class_id, ListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, RangeSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id};
+static const PROGMEM union MenuItem menu_opts[] = {&menu_pano, &menu_camera, &menu_motors, &menu_display};
+static const PROGMEM int menu_types[] = {Menu::class_id, Menu::class_id, NamedListSelector::class_id, NamedListSelector::class_id};
 static const PROGMEM char menu_desc[] = "Main Menu";
-Menu menu(menu_desc, 8, menu_opts, menu_types);
+Menu menu(menu_desc, 4, menu_opts, menu_types);
 
