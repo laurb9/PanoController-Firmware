@@ -72,7 +72,7 @@ int Joystick::getPositionX(void){
 }
 
 int Joystick::getPositionY(void){
-    return (analogRead(y_pin)-512+(1<<(sensitivity-1))) >> sensitivity;
+    return (512-analogRead(y_pin)+(1<<(sensitivity-1))) >> sensitivity;
 }
 
 bool Joystick::getButtonState(void){
