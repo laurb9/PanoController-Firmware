@@ -7,24 +7,25 @@ Platform for high-resolution panoramic photography, initially intended as board 
 - A1
 - A2 - Joystick Vx
 - A3 - Joystick Vy
-- A4 - SDA - SSD1306, MPU6050, HMC6883L
-- A5 - SCL - SSD1306, MPU6050, HMC6883L
+- A4 - SDA - Display and other I2C devices
+- A5 - SCL - Display and other I2C devices
 - A6 (needs pin)
 - A7 (needs pin)
-- D0/RX
-- D1/TX
+- D0/RX - camera focus
+- D1/TX - camera shutter
 - D2(int) - Joystick SW
 - D3(int)
-- D4 - StepperV EN
-- D5 - StepperH EN
-- D6 - StepperV DIR
-- D7 - StepperV STEP
+- D4
+- D5 - StepperV DIR
+- D6 - StepperV STEP
+- D7
 - D8 - StepperH DIR
 - D9 - StepperH STEP
 - D10- M0
 - D11- M1
-- D12- camera focus
-- D13(led) - camera shutter
+- D12-
+- D13(led) - nSLEEP (to both steppers) - indicates motors are on
+
 
 ## Notes
 
@@ -35,9 +36,9 @@ Platform for high-resolution panoramic photography, initially intended as board 
   - if we ever want to use ESP-12, need to reduce pins. ESP-12 only has 11: 
     (0,2,4,5,12,13,14,15,16,RXD,TXD,ADC)
   - We control the motors at the same multistep level so we can share M0, M1
-  - (TBD) if we don't want to move both at the same time, we can share DIR/STEP as well
-    and multiplex via EN
-  - or if we don't need to individually disable, we can share EN
+  - Technically DIR is only sampled on STEP, so it could be shared
+  - Tie all ~EN together to ground
+  - Tie all ~SLEEP together to D13 (LED indicates motors are on)
 
 ## Setting DRV8834 reference
 

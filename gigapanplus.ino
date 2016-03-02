@@ -18,33 +18,33 @@
 // Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
 #define DISPLAY_I2C_ADDRESS 0x3C
-#define OLED_RESET 4
+#define OLED_RESET 12
 #define TEXT_SIZE 1
 #define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
 
-#define JOYSTICK_X A2
-#define JOYSTICK_Y A3
+#define CAMERA_FOCUS 0
+#define CAMERA_SHUTTER 1
+
+#define JOYSTICK_X A3
+#define JOYSTICK_Y A2
 #define JOYSTICK_SW 2
 
 #define MOTOR_STEPS 200
-#define VERT_EN 4
+#define MOTORS_ON 13
 #define VERT_DIR 5
 #define VERT_STEP 6
-#define HORIZ_EN 7
 #define HORIZ_DIR 8
 #define HORIZ_STEP 9
 
 #define DRV_M0 10
 #define DRV_M1 11
-#define CAMERA_FOCUS 12
-#define CAMERA_SHUTTER 13
 
 static DRV8834 horiz_motor(MOTOR_STEPS, HORIZ_DIR, HORIZ_STEP, DRV_M0, DRV_M1);
 static DRV8834 vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
 static Adafruit_SSD1306 display(OLED_RESET);
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
-static Pano pano(horiz_motor, vert_motor, camera, HORIZ_EN, VERT_EN);
+static Pano pano(horiz_motor, vert_motor, camera, MOTORS_ON);
 
 // these variables are modified by the menu
 volatile int focal, fov, shutter, pre_shutter, orientation, aspect, shots, motors_enable, display_invert;
@@ -54,12 +54,16 @@ int horiz, vert;
 
 void setup() {
     Serial.begin(38400);
+    // temporary turn on EN on both motors
+    pinMode(4, OUTPUT); digitalWrite(4, LOW);
+    pinMode(7, OUTPUT); digitalWrite(7, LOW);
+
     horiz_motor.setMicrostep(32);
     vert_motor.setMicrostep(32);
     delay(1000); // wait for serial
     delay(100);  // give time for display to init; if display blank increase delay
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
-    display.setRotation(0);
+    display.setRotation(2);
     display.clearDisplay();
     display.setCursor(0,0);
     display.setTextColor(WHITE);
@@ -147,12 +151,13 @@ void positionCamera(const char *msg, int *horiz, int *vert){
                 vert_motor.rotate(pos_y/abs(pos_y));
             }
         }
-        if (millis() > when_to_display && h > 0 && v > 0){
-            display.clearDisplay();
-            display.setCursor(0,0);
+        if (horiz && millis() > when_to_display && h > 0 && v > 0){
             pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
                         v / pano.vert_gear_ratio + camera.getVertFOV());
             pano.computeGrid();
+            display.setCursor(0,8*6);
+            display.print("          ");
+            display.setCursor(0,8*6);
             displayPanoSize();
             display.display();
             when_to_display = millis() + 1000;
