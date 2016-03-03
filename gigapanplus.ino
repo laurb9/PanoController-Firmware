@@ -124,7 +124,7 @@ void displayPanoSize(){
 void positionCamera(const char *msg, int *horiz, int *vert){
     int pos_x, pos_y;
     int h = 0, v = 0;
-    long when_to_display = millis();
+    int when_to_display = 0;
 
     display.clearDisplay();
     display.setCursor(0,0);
@@ -151,16 +151,18 @@ void positionCamera(const char *msg, int *horiz, int *vert){
                 vert_motor.rotate(pos_y/abs(pos_y));
             }
         }
-        if (horiz && millis() > when_to_display && h > 0 && v > 0){
+        if (horiz && h > 0 && v > 0){
             pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
                         v / pano.vert_gear_ratio + camera.getVertFOV());
             pano.computeGrid();
-            display.setCursor(0,8*6);
-            display.print("          ");
-            display.setCursor(0,8*6);
-            displayPanoSize();
-            display.display();
-            when_to_display = millis() + 1000;
+            if (pano.getVertShots()+pano.getHorizShots() != when_to_display){
+                display.setCursor(0,8*6);
+                display.print("          ");
+                display.setCursor(0,8*6);
+                displayPanoSize();
+                display.display();
+                when_to_display = pano.getVertShots() + pano.getHorizShots();
+            }
         }
     }
     if (horiz){
