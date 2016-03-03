@@ -111,17 +111,24 @@ bool Pano::moveTo(int new_row, int new_col){
         return false;
     }
 
-    motorsEnable(true); // temporary
     if (cur_col != new_col){
         // horizontal adjustment needed
-        horiz_motor.rotate((new_col-cur_col)*horiz_move);
+        // figure out shortest path around the circle
+        // good idea if on batteries, bad idea when power cable in use
+        int move = (new_col-cur_col)*horiz_move;
+        if (abs(move) > 180 * horiz_gear_ratio){
+            if (move < 0){
+                move = 360 * horiz_gear_ratio + move;
+            } else {
+                move = move - 360 * horiz_gear_ratio;
+            }
+        }
+        horiz_motor.rotate(move);
     }
     if (cur_row != new_row){
         // vertical adjustment needed
-        // TODO: figure out shortest path around the circle
         vert_motor.rotate(-(new_row-cur_row)*vert_move);
     }
-    motorsEnable(false); // temporary
 
     position = new_row * horiz_count + new_col;
     return true;
