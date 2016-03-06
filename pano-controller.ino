@@ -55,9 +55,6 @@ volatile int running;
 
 void setup() {
     Serial.begin(38400);
-    // temporary turn on EN on both motors
-    pinMode(4, OUTPUT); digitalWrite(4, LOW);
-    pinMode(7, OUTPUT); digitalWrite(7, LOW);
 
     horiz_motor.setMicrostep(32);
     vert_motor.setMicrostep(32);
@@ -253,6 +250,7 @@ void executePano(void){
 
     button_clicked = false;
     while (joystick.getButtonState()) delay(20);
+    delay(2000); // don't start moving while button is being pressed
     pano.start();
     attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
 
