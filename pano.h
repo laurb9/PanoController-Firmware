@@ -50,6 +50,8 @@ public:
     void computeGrid(void);
     unsigned getHorizShots(void);
     unsigned getVertShots(void);
+    int getCurRow(void);
+    int getCurCol(void);
     unsigned getTimeLeft(void);
     bool moveTo(int new_position);
     bool moveTo(int new_row, int new_col);

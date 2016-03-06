@@ -42,6 +42,12 @@ unsigned Pano::getHorizShots(void){
 unsigned Pano::getVertShots(void){
     return vert_count;
 }
+int Pano::getCurRow(void){
+    return position / horiz_count;
+}
+int Pano::getCurCol(void){
+    return position % horiz_count;
+}
 /*
  * Calculate time left to complete pano.
  */
@@ -114,11 +120,15 @@ bool Pano::moveTo(int new_position){
  * @param new_col: requested col position [0 - horiz_count)
  */
 bool Pano::moveTo(int new_row, int new_col){
-    int cur_row = position / horiz_count;
-    int cur_col = position % horiz_count;
+    int cur_row = getCurRow();
+    int cur_col = getCurCol();
 
-    if (cur_row >= vert_count || new_row >= vert_count || new_col >= horiz_count){
-        // beyond last row or column, cannot move there.
+    if (cur_row >= vert_count ||
+        new_row >= vert_count ||
+        new_col >= horiz_count ||
+        new_col < 0 ||
+        new_row < 0){
+        // beyond last/first row or column, cannot move there.
         return false;
     }
 

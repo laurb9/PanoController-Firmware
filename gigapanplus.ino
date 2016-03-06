@@ -84,9 +84,9 @@ void displayPanoStatus(void){
     display.print(F(" of "));
     display.println(pano.getHorizShots()*pano.getVertShots());
     display.print(F("At "));
-    display.print(1+pano.position / pano.getHorizShots());
+    display.print(1+pano.getCurRow());
     display.print(F(" x "));
-    display.println(1+pano.position % pano.getHorizShots());
+    display.println(1+pano.getCurCol());
     displayPanoSize();
     displayProgress();
     display.display();
@@ -264,19 +264,27 @@ void executePano(void){
         if (button_clicked){
             // button was clicked mid-pano, go in manual mode
             int event;
+            displayPanoStatus();
+            display.setCursor(0,3*8);
+            display.println(F("        \x1e"));
+            display.println(F("      \x11 X \x10"));
+            display.println(F("        \x1f"));
+            display.display();
             while (running){
                 if (event=joystick.read()){
                     if (Joystick::isEventLeft(event)) pano.prev();
                     else if (Joystick::isEventRight(event)) pano.next();
-                    else if (Joystick::isEventUp(event)) {
+                    else if (Joystick::isEventUp(event)) pano.moveTo(pano.getCurRow() - 1, pano.getCurCol());
+                    else if (Joystick::isEventDown(event)) pano.moveTo(pano.getCurRow() + 1, pano.getCurCol());
+                    else if (Joystick::isEventClick(event)){
                         running = false;
                         break;
                     }
-                    else if (Joystick::isEventClick(event)) break;
                     displayPanoStatus();
-                    display.setCursor(0,6*8);
-                    display.println(F("   \x1e cancel"));
-                    display.println(F("\x11 [ok] \x10"));
+                    display.setCursor(0,3*8);
+                    display.println(F("        \x1e"));
+                    display.println(F("      \x11 X \x10"));
+                    display.println(F("        \x1f"));
                     display.display();
                 }
             }
@@ -290,10 +298,12 @@ void executePano(void){
 
     pano.end();
 
+    display.setCursor(0, 7*8);
     Serial.println((button_clicked) ? F("Canceled") : F("Finished"));
     display.println((button_clicked) ? F("Canceled") : F("Finished"));
     display.display();
-    while (!joystick.read()) delay(20);
+    int wait = 8000/20;
+    while (wait-- && !joystick.read()) delay(20);
 }
 
 /*
