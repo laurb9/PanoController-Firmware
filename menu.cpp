@@ -119,7 +119,9 @@ void RangeSelector::select(void){
     OptionSelector::select();
 }
 void RangeSelector::sync(void){
-    pointer = *value;
+    pointer = *value % step;
+    if (pointer > max_val) pointer = max_val;
+    if (pointer < min_val) pointer = min_val;
     pos = pointer;
     OptionSelector::sync();
 }
