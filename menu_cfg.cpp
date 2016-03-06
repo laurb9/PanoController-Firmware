@@ -24,23 +24,29 @@ static const PROGMEM char menu_360_pano_desc[] = "360 Pano";
 
 static OptionSelector menu_360_pano(menu_360_pano_desc, NULL, 0, 0 * sizeof(int), on360);
 
-// Horiz FOV
+// Last Pano Info
+int onPanoInfo(int);
+static const PROGMEM char menu_last_pano_info_desc[] = "Last Pano Info";
+
+static OptionSelector menu_last_pano_info(menu_last_pano_info_desc, NULL, 0, 0 * sizeof(int), onPanoInfo);
+
+// Manual Horiz FOV
 extern volatile int horiz;
-static const PROGMEM char menu_horiz_fov_desc[] = "Horiz FOV";
+static const PROGMEM char menu_manual_horiz_fov_desc[] = "Manual Horiz FOV";
 
-static RangeSelector menu_horiz_fov(menu_horiz_fov_desc, &horiz, 120, 1 * sizeof(int), NULL, 10, 360, 10);
+static RangeSelector menu_manual_horiz_fov(menu_manual_horiz_fov_desc, &horiz, 120, 1 * sizeof(int), NULL, 10, 360, 10);
 
-// Vert FOV
+// Manual Vert FOV
 extern volatile int vert;
-static const PROGMEM char menu_vert_fov_desc[] = "Vert FOV";
+static const PROGMEM char menu_manual_vert_fov_desc[] = "Manual Vert FOV";
 
-static RangeSelector menu_vert_fov(menu_vert_fov_desc, &vert, 90, 2 * sizeof(int), NULL, 10, 180, 10);
+static RangeSelector menu_manual_vert_fov(menu_manual_vert_fov_desc, &vert, 90, 2 * sizeof(int), NULL, 10, 180, 10);
 
 
-static const PROGMEM union MenuItem menu_pano_opts[] = {&menu_new_pano, &menu_repeat_last, &menu_360_pano, &menu_horiz_fov, &menu_vert_fov};
-static const PROGMEM int menu_pano_types[] = {OptionSelector::class_id, OptionSelector::class_id, OptionSelector::class_id, RangeSelector::class_id, RangeSelector::class_id};
+static const PROGMEM union MenuItem menu_pano_opts[] = {&menu_new_pano, &menu_repeat_last, &menu_360_pano, &menu_last_pano_info, &menu_manual_horiz_fov, &menu_manual_vert_fov};
+static const PROGMEM int menu_pano_types[] = {OptionSelector::class_id, OptionSelector::class_id, OptionSelector::class_id, OptionSelector::class_id, RangeSelector::class_id, RangeSelector::class_id};
 static const PROGMEM char menu_pano_desc[] = "Pano";
-Menu menu_pano(menu_pano_desc, 5, menu_pano_opts, menu_pano_types);
+Menu menu_pano(menu_pano_desc, 6, menu_pano_opts, menu_pano_types);
 
 // Camera
 // Focal Len

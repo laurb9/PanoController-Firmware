@@ -15,7 +15,11 @@
                  "onselect": "on360"
              },
              {
-                 "description": "Horiz FOV",
+                 "description": "Last Pano Info",
+                 "onselect": "onPanoInfo"
+             },
+             {
+                 "description": "Manual Horiz FOV",
                  "default": 120,
                  "min": 10,
                  "max": 360,
@@ -25,7 +29,7 @@
                  "eeprom": true
              },
              {
-                 "description": "Vert FOV",
+                 "description": "Manual Vert FOV",
                  "default": 90,
                  "min": 10,
                  "max": 180,
