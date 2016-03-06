@@ -1,9 +1,9 @@
-# gigapanplus
-Platform for high-resolution panoramic photography, initially intended as board upgrade for Gigapan EPIC 100.
+# Summary
+Platform for high-resolution panoramic photography, initially intended as board upgrade for the Gigapan EPIC 100.
 
-## Wiring map (Teensy or Pro Mini)
+## Wiring map (Teensy or Pro Mini*)
 
-- A0
+- A0 - Battery Voltage monitor
 - A1
 - A2 - Joystick Vx
 - A3 - Joystick Vy
@@ -29,7 +29,7 @@ Platform for high-resolution panoramic photography, initially intended as board 
 
 ## Notes
 
-- Pro Mini (or any Atmega328-based mcu) no longer works, using too much memory due
+- *Pro Mini (or any Atmega328-based mcu) no longer works, using too much memory due
   to display and I don't want to spend time to find another library
 - Reducing wires
   - M0, M1 can be hardwired (M0=Vcc, M1 unconnected for 1:32 mode)
