@@ -21,6 +21,7 @@
 #define OLED_RESET 12
 #define TEXT_SIZE 1
 #define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
+#define DISPLAY_COLS SSD1306_LCDWIDTH/6/TEXT_SIZE
 
 #define CAMERA_FOCUS 0
 #define CAMERA_SHUTTER 1
@@ -87,7 +88,21 @@ void displayPanoStatus(void){
     display.print(F(" x "));
     display.println(1+pano.position % pano.getHorizShots());
     displayPanoSize();
+    displayProgress();
     display.display();
+}
+/*
+ * Display progress information (minutes / progress bar)
+ */
+void displayProgress(void){
+    int photos = pano.getHorizShots() * pano.getVertShots();
+    display.setCursor(0, 6*8);
+    display.print(pano.getTimeLeft()/60);
+    display.println(" minutes");
+    for (int i=pano.position * DISPLAY_COLS / photos; i > 0; i--){
+        display.print('\xda');
+    }
+    display.println();
 }
 /*
  * Display panorama information
@@ -106,13 +121,10 @@ void displayPanoInfo(void){
     display.print(pano.horiz_fov);
     display.print(F("x"));
     display.println(pano.vert_fov);
-    int photos = pano.getHorizShots()*pano.getVertShots();
     display.print(pano.getHorizShots()*pano.getVertShots());
     display.println(F(" photos"));
     displayPanoSize();
-    int minutes = photos * shots * (pre_shutter + shutter) / 1000 / 60;
-    display.print(minutes);
-    display.println(" est. minutes");
+    displayProgress();
     display.display();
 }
 
@@ -163,7 +175,7 @@ void positionCamera(const char *msg, int *horiz, int *vert){
                 vert_motor.rotate(pos_y/abs(pos_y));
             }
         }
-        if (horiz && h > 0 && v > 0){
+        if (vert && h >= 0 && v >= 0){
             pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
                         v / pano.vert_gear_ratio + camera.getVertFOV());
             pano.computeGrid();

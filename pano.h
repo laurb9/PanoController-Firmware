@@ -13,6 +13,10 @@
 #include "pano.h"
 
 #define Motor BasicStepperDriver
+// can do 60 @ 0.8A, 20 @ 0.3A & 1:16
+#define HORIZ_MOTOR_RPM 20
+// can do 180 @ 0.8A. 60 @ 0.3A & 1:16
+#define VERT_MOTOR_RPM 60
 
 #define MIN_OVERLAP 20
 
@@ -46,6 +50,7 @@ public:
     void computeGrid(void);
     unsigned getHorizShots(void);
     unsigned getVertShots(void);
+    unsigned getTimeLeft(void);
     bool moveTo(int new_position);
     bool moveTo(int new_row, int new_col);
     void start(void);

@@ -43,6 +43,17 @@ unsigned Pano::getVertShots(void){
     return vert_count;
 }
 /*
+ * Calculate time left to complete pano.
+ */
+unsigned Pano::getTimeLeft(void){
+    int photos = getHorizShots() * getVertShots() - position + 1;
+    int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay) / 1000 +
+        // time needed to move the platform
+        photos * camera.getHorizFOV() * horiz_gear_ratio * 60 / HORIZ_MOTOR_RPM / 360 +
+        photos / horiz_count * camera.getVertFOV() * vert_gear_ratio * 60 / VERT_MOTOR_RPM / 360;
+    return seconds;
+}
+/*
  * Helper to calculate grid fit with overlap
  * @param total_size: entire grid size
  * @param overlap: min required overlap in percent (1-99)
@@ -78,8 +89,8 @@ void Pano::computeGrid(void){
 void Pano::start(void){
     computeGrid();
     motorsEnable(true);
-    horiz_motor.setRPM(20); // 60 @ 0.8A, 20 @ 0.3A & 1:16
-    vert_motor.setRPM(60); // 180 @ 0.8A. 60 @ 0.3A & 1:16
+    horiz_motor.setRPM(HORIZ_MOTOR_RPM);
+    vert_motor.setRPM(VERT_MOTOR_RPM);
     // move to start position
     position = 0;
 }
