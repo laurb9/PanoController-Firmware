@@ -5,9 +5,9 @@
 ARDUINO := arduino --verbose --preserve-temp-files
 # Mac
 #ARDUINO := Arduino.app/Contents/MacOS/Arduino --verbose --preserve-temp-files
-TMPDIR := /tmp/gigapanplus-build
+TMPDIR := /tmp/pano-controller-build
 
-SOURCES := gigapanplus.ino *.cpp *.h
+SOURCES := pano-controller.ino *.cpp *.h
 
 #
 # Specify which of the below targets to build (default teensyLC)
