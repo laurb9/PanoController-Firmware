@@ -26,9 +26,15 @@
 #define CAMERA_FOCUS 0
 #define CAMERA_SHUTTER 1
 
+#define BATTERY A0
+
 #define JOYSTICK_X A3
 #define JOYSTICK_Y A2
 #define JOYSTICK_SW 2
+
+#define REMOTE_IN 3
+#define COMPASS_DRDY 4
+#define MPU_INT 7
 
 #define MOTOR_STEPS 200
 #define MOTORS_ON 13
@@ -52,9 +58,28 @@ volatile int focal, shutter, pre_shutter, orientation, aspect, shots, motors_ena
 int horiz, vert;
 volatile int running;
 
+// Battery measurement settings
+// R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vcc)
+// actual measured values will yield a more accurate voltage
+#define BATT_R1 9980
+#define BATT_R2 46500
+#if defined(__AVR__)
+#define VCC 5000
+#else
+#define VCC 3300
+#endif
+#define BATT_RANGE (VCC * (BATT_R1 + BATT_R2) / BATT_R1)
 
 void setup() {
     Serial.begin(38400);
+
+    pinMode(REMOTE_IN, INPUT_PULLUP);
+    pinMode(COMPASS_DRDY, INPUT_PULLUP);
+    pinMode(MPU_INT, INPUT_PULLUP);
+
+    pinMode(BATTERY, INPUT);
+    analogReadRes(10);
+    analogReadAveraging(32);
 
     horiz_motor.setMicrostep(32);
     vert_motor.setMicrostep(32);
@@ -67,6 +92,19 @@ void setup() {
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
     Serial.println(F("Ready\n"));
+}
+
+int readBattery(void){
+    return map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE);
+}
+
+void displayBatteryStatus(void){
+    int battmV = readBattery();
+    display.print(F("Battery "));
+    display.print(battmV/1000);
+    display.print('.');
+    display.print(battmV/10 % 100);
+    display.println('V');
 }
 
 /*
@@ -85,6 +123,7 @@ void displayPanoStatus(void){
     display.print(F(" x "));
     display.println(1+pano.getCurCol());
     displayPanoSize();
+    displayBatteryStatus();
     displayProgress();
     display.display();
 }
