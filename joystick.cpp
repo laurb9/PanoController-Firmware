@@ -16,8 +16,8 @@ Joystick::Joystick(int sw_pin, int x_pin, int y_pin)
  y_pin(y_pin)
 {
     pinMode(sw_pin, INPUT_PULLUP);
-    //pinMode(x_pin, INPUT);
-    //pinMode(y_pin, INPUT);
+    pinMode(x_pin, INPUT);
+    pinMode(y_pin, INPUT);
     sw_state = HIGH;
     x_state = 0;
     y_state = 0;
@@ -38,7 +38,7 @@ unsigned Joystick::read(void){
     if (current_state != sw_state){
         sw_state = current_state;
         if (sw_state == LOW){
-            event |= EVENT_CLICK;
+            event |= EVENT_OK;
             for (int i=50; i && digitalRead(sw_pin) == LOW; i--){
                 delay(10);
             };

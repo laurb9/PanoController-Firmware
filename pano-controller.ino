@@ -22,53 +22,58 @@
 #define TEXT_SIZE 1
 #define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
 #define DISPLAY_COLS SSD1306_LCDWIDTH/6/TEXT_SIZE
+static Adafruit_SSD1306 display(OLED_RESET);
 
+// Camera shutter controls
 #define CAMERA_FOCUS 0
 #define CAMERA_SHUTTER 1
+static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 
+// Battery measurement settings
+#if defined(__AVR__)
+#define VCC 5000
+#else
+#define VCC 3300
+#endif
+// R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vin)
+// measure resistors and enter actual values for a more accurate voltage
+#define BATT_R1 9980
+#define BATT_R2 46500
+#define BATT_RANGE (VCC * (BATT_R1 + BATT_R2) / BATT_R1)
 #define BATTERY A0
 
+// Joystick inputs
 #define JOYSTICK_X A3
 #define JOYSTICK_Y A2
 #define JOYSTICK_SW 2
+static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 
+// IR remote
 #define REMOTE_IN 3
+
+// Future devices
 #define COMPASS_DRDY 4
 #define MPU_INT 7
 
+// Stepper motors and drivers
 #define MOTOR_STEPS 200
-#define MOTORS_ON 13
 #define VERT_DIR 5
 #define VERT_STEP 6
 #define HORIZ_DIR 8
 #define HORIZ_STEP 9
-
 #define DRV_M0 10
 #define DRV_M1 11
-
 static DRV8834 horiz_motor(MOTOR_STEPS, HORIZ_DIR, HORIZ_STEP, DRV_M0, DRV_M1);
 static DRV8834 vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
-static Adafruit_SSD1306 display(OLED_RESET);
-static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
-static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
+
+// this should be hooked up to nSLEEP on both drivers
+#define MOTORS_ON 13
 static Pano pano(horiz_motor, vert_motor, camera, MOTORS_ON);
 
 // these variables are modified by the menu
 volatile int focal, shutter, pre_shutter, orientation, aspect, shots, motors_enable, display_invert;
 int horiz, vert;
 volatile int running;
-
-// Battery measurement settings
-// R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vcc)
-// actual measured values will yield a more accurate voltage
-#define BATT_R1 9980
-#define BATT_R2 46500
-#if defined(__AVR__)
-#define VCC 5000
-#else
-#define VCC 3300
-#endif
-#define BATT_RANGE (VCC * (BATT_R1 + BATT_R2) / BATT_R1)
 
 void setup() {
     Serial.begin(38400);
@@ -194,7 +199,7 @@ void positionCamera(const char *msg, int *horiz, int *vert){
                       "  \x1f"));
     display.display();
     pano.motorsEnable(true);
-    while (!Joystick::isEventClick(joystick.read())){
+    while (!Joystick::isEventOk(joystick.read())){
         pos_x = joystick.getPositionX();
         pos_y = joystick.getPositionY();
         if (pos_x){
@@ -255,7 +260,7 @@ void displayMenu(void){
         if (!event) continue;
 
         if (Joystick::isEventLeft(event)) menu.cancel();
-        else if (Joystick::isEventRight(event) || Joystick::isEventClick(event)) menu.select();
+        else if (Joystick::isEventRight(event) || Joystick::isEventOk(event)) menu.select();
         else if (Joystick::isEventDown(event)) menu.next();
         else if (Joystick::isEventUp(event)) menu.prev();
 
@@ -313,7 +318,7 @@ void executePano(void){
                     else if (Joystick::isEventRight(event)) pano.next();
                     else if (Joystick::isEventUp(event)) pano.moveTo(pano.getCurRow() - 1, pano.getCurCol());
                     else if (Joystick::isEventDown(event)) pano.moveTo(pano.getCurRow() + 1, pano.getCurCol());
-                    else if (Joystick::isEventClick(event)){
+                    else if (Joystick::isEventOk(event)){
                         running = false;
                         break;
                     }
