@@ -307,18 +307,20 @@ void executePano(void){
 
 
     button_clicked = false;
-    joystick.clear(4000);
-    remote.clear(4000);
-    delay(2000); // don't start moving while button is being pressed
+    joystick.clear(4000), remote.clear(4000);
     pano.start();
     attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
 
     while (running){
         displayPanoStatus();
+        if (!pano.position){
+            delay(2000);
+        }
         pano.shutter();
         running = pano.next();
 
-        if (button_clicked){
+        if (button_clicked || remote.read()){
+            joystick.clear(1000), remote.clear(1000);
             // button was clicked mid-pano, go in manual mode
             int event;
             displayPanoStatus();
