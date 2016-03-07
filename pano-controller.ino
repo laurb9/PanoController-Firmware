@@ -13,6 +13,7 @@
 #include "pano.h"
 #include "camera.h"
 #include "joystick.h"
+#include "remote.h"
 #include "menu.h"
 
 // Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
@@ -50,6 +51,7 @@ static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 
 // IR remote
 #define REMOTE_IN 3
+static Remote remote(REMOTE_IN);
 
 // Future devices
 #define COMPASS_DRDY 4
@@ -78,7 +80,6 @@ volatile int running;
 void setup() {
     Serial.begin(38400);
 
-    pinMode(REMOTE_IN, INPUT_PULLUP);
     pinMode(COMPASS_DRDY, INPUT_PULLUP);
     pinMode(MPU_INT, INPUT_PULLUP);
 
@@ -186,7 +187,7 @@ void displayPanoSize(){
  * @param horiz: pointer to store horizontal movement
  * @param vert:  pointer to store vertical movement
  */
-void positionCamera(const char *msg, int *horiz, int *vert){
+bool positionCamera(const char *msg, int *horiz, int *vert){
     int pos_x, pos_y;
     int h = 0, v = 0;
     int when_to_display = 0;
@@ -199,18 +200,30 @@ void positionCamera(const char *msg, int *horiz, int *vert){
                       "  \x1f"));
     display.display();
     pano.motorsEnable(true);
-    while (!Joystick::isEventOk(joystick.read())){
+    unsigned event;
+    while (true){
+        event = joystick.read() | remote.read();
+        if (HID::isEventOk(event) || HID::isEventCancel(event)) break;
+
         pos_x = joystick.getPositionX();
+        if (pos_x == 0){
+            if (HID::isEventRight(event)) pos_x = joystick.range;
+            if (HID::isEventLeft(event)) pos_x = -joystick.range;
+        }
         pos_y = joystick.getPositionY();
+        if (pos_y == 0){
+            if (HID::isEventUp(event)) pos_y = joystick.range;
+            if (HID::isEventDown(event)) pos_y = -joystick.range;
+        }
         if (pos_x){
-            horiz_motor.setRPM(40*abs(pos_x)/joystick.range);
+            horiz_motor.setRPM(30*abs(pos_x)/joystick.range);
             if (!horiz || h + pos_x/abs(pos_x) > 0){
                 horiz_motor.rotate(pos_x/abs(pos_x));
                 h += pos_x/abs(pos_x);
             }
         }
         if (pos_y){
-            vert_motor.setRPM(120*abs(pos_y)/joystick.range);
+            vert_motor.setRPM(90*abs(pos_y)/joystick.range);
             if (!vert || v - pos_y/abs(pos_y) > 0){
                 v += -pos_y/abs(pos_y);
                 vert_motor.rotate(pos_y/abs(pos_y));
@@ -240,6 +253,7 @@ void positionCamera(const char *msg, int *horiz, int *vert){
         vert_motor.setRPM(120);
         vert_motor.rotate(v);
     }
+    return (HID::isEventOk(event));
 }
 
 /*
@@ -256,13 +270,13 @@ void displayMenu(void){
     display.display();
 
     while (!running){
-        event = joystick.read();
+        event = joystick.read() | remote.read();
         if (!event) continue;
 
-        if (Joystick::isEventLeft(event)) menu.cancel();
-        else if (Joystick::isEventRight(event) || Joystick::isEventOk(event)) menu.select();
-        else if (Joystick::isEventDown(event)) menu.next();
-        else if (Joystick::isEventUp(event)) menu.prev();
+        if (HID::isEventLeft(event) || HID::isEventCancel(event)) menu.cancel();
+        else if (HID::isEventRight(event) || HID::isEventOk(event)) menu.select();
+        else if (HID::isEventDown(event)) menu.next();
+        else if (HID::isEventUp(event)) menu.prev();
 
         Serial.println();
         display.clearDisplay();
@@ -293,7 +307,8 @@ void executePano(void){
 
 
     button_clicked = false;
-    while (joystick.getButtonState()) delay(20);
+    joystick.clear(4000);
+    remote.clear(4000);
     delay(2000); // don't start moving while button is being pressed
     pano.start();
     attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
@@ -313,22 +328,23 @@ void executePano(void){
             display.println(F("        \x1f"));
             display.display();
             while (running){
-                if (event=joystick.read()){
-                    if (Joystick::isEventLeft(event)) pano.prev();
-                    else if (Joystick::isEventRight(event)) pano.next();
-                    else if (Joystick::isEventUp(event)) pano.moveTo(pano.getCurRow() - 1, pano.getCurCol());
-                    else if (Joystick::isEventDown(event)) pano.moveTo(pano.getCurRow() + 1, pano.getCurCol());
-                    else if (Joystick::isEventOk(event)){
-                        running = false;
-                        break;
-                    }
-                    displayPanoStatus();
-                    display.setCursor(0,3*8);
-                    display.println(F("        \x1e"));
-                    display.println(F("      \x11 X \x10"));
-                    display.println(F("        \x1f"));
-                    display.display();
+                event=joystick.read() | remote.read();
+                if (!event) continue;
+                if (HID::isEventLeft(event)) pano.prev();
+                else if (HID::isEventRight(event)) pano.next();
+                else if (HID::isEventUp(event)) pano.moveTo(pano.getCurRow() - 1, pano.getCurCol());
+                else if (HID::isEventDown(event)) pano.moveTo(pano.getCurRow() + 1, pano.getCurCol());
+                else if (HID::isEventOk(event)) break;
+                else if (HID::isEventCancel(event)){
+                    running = false;
+                    break;
                 }
+                displayPanoStatus();
+                display.setCursor(0,3*8);
+                display.println(F("        \x1e"));
+                display.println(F("      \x11 X \x10"));
+                display.println(F("        \x1f"));
+                display.display();
             }
             button_clicked = false;
         }
@@ -340,12 +356,14 @@ void executePano(void){
 
     pano.end();
 
-    display.setCursor(0, 7*8);
     Serial.println((button_clicked) ? F("Canceled") : F("Finished"));
-    display.println((button_clicked) ? F("Canceled") : F("Finished"));
-    display.display();
-    int wait = 8000/20;
-    while (wait-- && !joystick.read()) delay(20);
+    int wait = 8000;
+    while (wait && !joystick.read() && !remote.read()){
+        delay(20);
+        wait -= 20;
+    }
+    joystick.clear(4000);
+    remote.clear(4000);
 }
 
 /*
@@ -366,13 +384,17 @@ int onStart(int __){
     setPanoParams();
 
     // set panorama FOV
-    positionCamera("Top Left", NULL, NULL);
-    positionCamera("Bot Right", &horiz, &vert);
+    if (!positionCamera("Top Left", NULL, NULL) ||
+        !positionCamera("Bot Right", &horiz, &vert)){
+        return false;
+    }
 
     pano.setFOV(horiz, vert);
     running = true;
     menu.sync();
-    positionCamera("Adj start", NULL, NULL);
+    if (!positionCamera("Adj start", NULL, NULL)){
+        return false;
+    }
     executePano();
     return __;
 }
@@ -387,7 +409,9 @@ int onRepeat(int __){
     pano.setFOV(horiz, vert);
     running = true;
     menu.sync();
-    positionCamera("Adj start", NULL, NULL);
+    if (!positionCamera("Adj start", NULL, NULL)){
+        return false;
+    }
     executePano();
     return __;
 }
@@ -400,13 +424,17 @@ int on360(int __){
 
     // set panorama FOV
     horiz = 360;
-    positionCamera("Top", NULL, NULL);
-    positionCamera("Bottom", NULL, &vert);
+    if (!positionCamera("Top", NULL, NULL) ||
+        !positionCamera("Bottom", NULL, &vert)){
+        return false;
+    }
 
     pano.setFOV(horiz, vert);
     running = true;
     menu.sync();
-    positionCamera("Adj start", NULL, NULL);
+    if (!positionCamera("Adj start", NULL, NULL)){
+        return false;
+    }
     executePano();
     return __;
 }
@@ -419,7 +447,9 @@ int onPanoInfo(int __){
     pano.setFOV(horiz, vert);
     pano.computeGrid();
     displayPanoInfo();
-    while (!joystick.read());
+    while (!(joystick.read() || remote.read()));
+    joystick.clear(4000);
+    remote.clear(4000);
     return __;
 }
 

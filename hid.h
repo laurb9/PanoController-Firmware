@@ -21,7 +21,16 @@ protected:
         EVENT_CANCEL= 0b100000
     };
 public:
-    unsigned read(void);
+    unsigned read(void){
+        return EVENT_NONE;
+    }
+    int clear(int timeout){
+        while (read() && timeout){
+            delay(20);
+            timeout -= 20;
+        }
+        return timeout;
+    }
     static bool isEventUp(unsigned event){
         return (event & EVENT_UP);
     };

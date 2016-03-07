@@ -14,11 +14,11 @@ Platform for high-resolution panoramic photography, initially intended as board 
 - D0/RX - camera focus
 - D1/TX - camera shutter
 - D2(int) - Joystick SW
-- D3(int)
-- D4
+- D3(int) - IR Remote In
+- D4 - HMC5883L DRDY (future)
 - D5 - StepperV DIR
 - D6 - StepperV STEP
-- D7
+- D7 - GY-521 MPU INT (future)
 - D8 - StepperH DIR
 - D9 - StepperH STEP
 - D10- M0
