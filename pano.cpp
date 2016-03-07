@@ -67,9 +67,6 @@ unsigned Pano::getTimeLeft(void){
  * @param count: ref to image count (will be updated)
  */
 void Pano::gridFit(int total_size, int overlap, int& block_size, int& count){
-    Serial.print("total_size="); Serial.println(total_size);
-    Serial.print("block size="); Serial.println(block_size);
-
     if (block_size <= total_size){
         count = (100*total_size - overlap*block_size - 1) / ((100 - overlap)*block_size);
         block_size = (total_size - block_size + count - 1) / count;
@@ -77,9 +74,6 @@ void Pano::gridFit(int total_size, int overlap, int& block_size, int& count){
     } else {
         count = 1;
     }
-
-    Serial.print("count="); Serial.println(count);
-    Serial.print("new block_size="); Serial.println(block_size);
 }
 /*
  * Calculate shot-to-shot horizontal/vertical head movement,

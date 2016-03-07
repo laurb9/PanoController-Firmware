@@ -182,6 +182,17 @@ void displayPanoSize(){
 }
 
 /*
+ * Display the four navigation arrows, cancel and OK buttons.
+ */
+void displayArrows(){
+    display.setCursor(0,3*8);
+    display.println(F("          \x1e         "));
+    display.println(F(" [X]     \x11+\x10    [OK]"));
+    display.println(F("          \x1f         "));
+    display.display();
+}
+
+/*
  * Let user move the camera while optionally recording position
  * @param msg:   title string
  * @param horiz: pointer to store horizontal movement
@@ -195,10 +206,7 @@ bool positionCamera(const char *msg, int *horiz, int *vert){
     display.clearDisplay();
     display.setCursor(0,0);
     display.println(msg);
-    display.println(F("  \x1e  \n"
-                      "\x11 x \x10\n"
-                      "  \x1f"));
-    display.display();
+    displayArrows();
     pano.motorsEnable(true);
     unsigned event;
     while (true){
@@ -324,11 +332,7 @@ void executePano(void){
             // button was clicked mid-pano, go in manual mode
             int event;
             displayPanoStatus();
-            display.setCursor(0,3*8);
-            display.println(F("        \x1e"));
-            display.println(F("      \x11 X \x10"));
-            display.println(F("        \x1f"));
-            display.display();
+            displayArrows();
             while (running){
                 event=joystick.read() | remote.read();
                 if (!event) continue;
@@ -342,11 +346,7 @@ void executePano(void){
                     break;
                 }
                 displayPanoStatus();
-                display.setCursor(0,3*8);
-                display.println(F("        \x1e"));
-                display.println(F("      \x11 X \x10"));
-                display.println(F("        \x1f"));
-                display.display();
+                displayArrows();
             }
             button_clicked = false;
         }
@@ -358,7 +358,6 @@ void executePano(void){
 
     pano.end();
 
-    Serial.println((button_clicked) ? F("Canceled") : F("Finished"));
     int wait = 8000;
     while (wait && !joystick.read() && !remote.read()){
         delay(20);

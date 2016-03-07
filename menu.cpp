@@ -75,7 +75,6 @@ void OptionSelector::select(void){
 void OptionSelector::sync(void){
     if (eeprom){
         EEPROM.put(eeprom, *value);
-        Serial.print("EEPROM save "); Serial.print(*value); Serial.print(" for "); Serial.println(description);
     }
 }
 
@@ -131,7 +130,6 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
     rows = OptionSelector::render(display, rows);
 
     marker = (pointer < max_val) ? " \x1e": "";
-    Serial.println(marker);
     display.println(marker); rows--;
 
     if (pointer == pos) display.setTextColor(BLACK, WHITE);
@@ -142,7 +140,6 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
     if (pointer == pos) display.setTextColor(WHITE, BLACK);
 
     marker = (pointer > min_val) ? " \x1f": "";
-    Serial.println(marker);
     display.println(marker); rows--;
     return rows;
 }
@@ -190,20 +187,15 @@ int ListSelector::render(DISPLAY_DEVICE display, int rows){
     for (int i=start; i<start+rows && i<count; i++){
         snprintf(buf, sizeof(buf), "%d", FLASH_READ_INT(values, i));
 
-        char marker = (i==pointer) ? '\x10' : ' ';
-
         Serial.print((i==pointer) ? F(">") : F(" "));
-
-        display.print(marker);
+        display.print((i==pointer) ? '\x10' : ' ');
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
-        Serial.print(buf);
+        Serial.println(buf);
         display.print(buf);
         if (i == pos) display.setTextColor(WHITE, BLACK);
 
-        marker = (i==pointer) ? '\x11' : ' ';
-        display.println(marker);
-        Serial.println("");
+        display.println((i==pointer) ? '\x11' : ' ');
     }
     return 0;
 }
@@ -225,19 +217,15 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        char marker = (i==pointer) ? '\x10' : ' ';
-
         Serial.print((i==pointer) ? F(">") : F(" "));
-
-        display.print(marker);
+        display.print((i==pointer) ? '\x10' : ' ');
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
         Serial.println(FLASH_READ_STR(names, i));
         display.print(FLASH_READ_STR(names, i));
         if (i == pos) display.setTextColor(WHITE, BLACK);
 
-        marker = (i==pointer) ? '\x11' : ' ';
-        display.println(marker);
+        display.println((i==pointer) ? '\x11' : ' ');
     }
     return 0;
 }
