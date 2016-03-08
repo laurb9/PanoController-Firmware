@@ -16,6 +16,9 @@
 #include "remote.h"
 #include "menu.h"
 
+// inactivity time to turn display off (ms)
+#define DISPLAY_SLEEP 5*60*1000
+
 // Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
 #define DISPLAY_I2C_ADDRESS 0x3C
@@ -276,6 +279,7 @@ bool positionCamera(const char *msg, int *horiz, int *vert){
  */
 void displayMenu(void){
     int event;
+    int last_event = millis();
 
     menu.open();
     display.clearDisplay();
@@ -285,8 +289,16 @@ void displayMenu(void){
 
     while (!running){
         event = joystick.read() | remote.read();
-        if (!event) continue;
+        if (!event){
+            if (millis() - last_event > DISPLAY_SLEEP){
+                display.clearDisplay();
+                display.display();
+                last_event = millis();
+            }
+            continue;
+        }
 
+        last_event = millis();
         if (HID::isEventLeft(event) || HID::isEventCancel(event)) menu.cancel();
         else if (HID::isEventRight(event) || HID::isEventOk(event)) menu.select();
         else if (HID::isEventDown(event)) menu.next();
