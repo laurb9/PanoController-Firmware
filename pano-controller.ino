@@ -201,7 +201,7 @@ void displayArrows(){
 bool positionCamera(const char *msg, int *horiz, int *vert){
     int pos_x, pos_y;
     int h = 0, v = 0;
-    int when_to_display = 0;
+    unsigned when_to_display = 0;
 
     display.clearDisplay();
     display.setCursor(0,0);
@@ -215,28 +215,34 @@ bool positionCamera(const char *msg, int *horiz, int *vert){
 
         pos_x = joystick.getPositionX();
         if (pos_x == 0){
-            if (HID::isEventRight(event)) pos_x = joystick.range;
-            if (HID::isEventLeft(event)) pos_x = -joystick.range;
+            if (HID::isEventRight(event)) pos_x = pano.horiz_gear_ratio;
+            if (HID::isEventLeft(event)) pos_x = -pano.horiz_gear_ratio;
+            horiz_motor.setRPM(10);
+        } else {
+            horiz_motor.setRPM(30*abs(pos_x)/joystick.range);
+            pos_x = pos_x/abs(pos_x);
         }
+
         pos_y = joystick.getPositionY();
         if (pos_y == 0){
-            if (HID::isEventUp(event)) pos_y = joystick.range;
-            if (HID::isEventDown(event)) pos_y = -joystick.range;
-        }
-        if (pos_x){
-            horiz_motor.setRPM(30*abs(pos_x)/joystick.range);
-            if (!horiz || h + pos_x/abs(pos_x) > 0){
-                horiz_motor.rotate(pos_x/abs(pos_x));
-                h += pos_x/abs(pos_x);
-            }
-        }
-        if (pos_y){
+            if (HID::isEventUp(event)) pos_y = pano.vert_gear_ratio;
+            if (HID::isEventDown(event)) pos_y = -pano.vert_gear_ratio;
+            vert_motor.setRPM(30);
+        } else {
             vert_motor.setRPM(90*abs(pos_y)/joystick.range);
-            if (!vert || v - pos_y/abs(pos_y) > 0){
-                v += -pos_y/abs(pos_y);
-                vert_motor.rotate(pos_y/abs(pos_y));
-            }
+            pos_y = pos_y/abs(pos_y);
         }
+
+        if (pos_x && (!horiz || h + pos_x > 0)){
+            horiz_motor.rotate(pos_x);
+            h += pos_x;
+        }
+
+        if (pos_y && (!vert || v - pos_y > 0)){
+            v += -pos_y;
+            vert_motor.rotate(pos_y);
+        }
+
         if (vert && h >= 0 && v >= 0){
             pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
                         v / pano.vert_gear_ratio + camera.getVertFOV());
