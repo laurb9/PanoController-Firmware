@@ -107,13 +107,15 @@ int readBattery(void){
     return map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE);
 }
 
+/*
+ * Print battery voltage at cursor, format is #.#V (4 chars)
+ */
 void displayBatteryStatus(void){
     int battmV = readBattery();
-    display.print(F("Battery "));
     display.print(battmV/1000);
     display.print('.');
-    display.print(battmV/10 % 100);
-    display.println('V');
+    display.print((battmV % 1000)/100);
+    display.print('V');
 }
 
 /*
@@ -132,6 +134,7 @@ void displayPanoStatus(void){
     display.print(F(" x "));
     display.println(1+pano.getCurCol());
     displayPanoSize();
+    display.print(F("Battery "));
     displayBatteryStatus();
     displayProgress();
     display.display();
@@ -290,6 +293,9 @@ void displayMenu(void){
     while (!running){
         event = joystick.read() | remote.read();
         if (!event){
+            display.setCursor(17*6, 0);
+            displayBatteryStatus();
+            display.display();
             if (millis() - last_event > DISPLAY_SLEEP){
                 display.clearDisplay();
                 display.display();
@@ -308,6 +314,8 @@ void displayMenu(void){
         display.clearDisplay();
         display.setCursor(0,0);
         menu.render(display, DISPLAY_ROWS);
+        display.setCursor(17*6, 0);
+        displayBatteryStatus();
         display.display();
         delay(100);
 
