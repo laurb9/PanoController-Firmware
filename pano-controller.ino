@@ -79,7 +79,7 @@ static Pano pano(horiz_motor, vert_motor, camera, MOTORS_ON);
 
 // these variables are modified by the menu
 volatile int focal, shutter, pre_shutter, orientation, aspect, shots, motors_enable, display_invert;
-int horiz, vert;
+volatile int horiz, vert;
 volatile int running;
 
 void setup() {
@@ -208,10 +208,9 @@ void displayArrows(){
  * @param horiz: pointer to store horizontal movement
  * @param vert:  pointer to store vertical movement
  */
-bool positionCamera(const char *msg, int *horiz, int *vert){
+bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
     int pos_x, pos_y;
     int h = 0, v = 0;
-    unsigned when_to_display = 0;
 
     display.clearDisplay();
     display.setCursor(0,0);
@@ -421,11 +420,11 @@ int onStart(int __){
     }
 
     pano.setFOV(horiz, vert);
-    running = true;
-    menu.sync();
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
+    running = true;
+    menu.sync();
     executePano();
     return __;
 }
@@ -437,11 +436,11 @@ int onRepeat(int __){
     setPanoParams();
 
     pano.setFOV(horiz, vert);
-    running = true;
-    menu.sync();
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
+    running = true;
+    menu.sync();
     executePano();
     return __;
 }
@@ -460,11 +459,11 @@ int on360(int __){
     }
 
     pano.setFOV(horiz, vert);
-    running = true;
-    menu.sync();
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
+    running = true;
+    menu.sync();
     executePano();
     return __;
 }
