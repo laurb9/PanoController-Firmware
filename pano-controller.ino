@@ -89,8 +89,10 @@ void setup() {
     pinMode(MPU_INT, INPUT_PULLUP);
 
     pinMode(BATTERY, INPUT);
+#if defined(__MK20DX256__) || defined(__MKL26Z64__)
     analogReadRes(10);
     analogReadAveraging(32);
+#endif
 
     horiz_motor.setMicrostep(32);
     vert_motor.setMicrostep(32);
