@@ -26,14 +26,14 @@ protected:
     Motor& vert_motor;
     Camera& camera;
     int motors_pin;
-    int horiz_move;
-    int vert_move;
+    float horiz_move;
+    float vert_move;
     int horiz_count;
     int vert_count;
     unsigned shots_per_position = 1;
     unsigned shutter_delay = 1000/250;
     unsigned pre_shutter_delay = 0;
-    void gridFit(int total_size, int overlap, int& block_size, int& count);
+    void gridFit(int total_size, int overlap, float& block_size, int& count);
     // state information
 public:
     const int horiz_gear_ratio = 5; // 1:5
@@ -42,8 +42,8 @@ public:
     int vert_fov;
     unsigned position;
 
-    int horiz_home_offset = 0;
-    int vert_home_offset = 0;
+    float horiz_home_offset = 0;
+    float vert_home_offset = 0;
 
     // configuration
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int motors_pin);
@@ -77,7 +77,7 @@ public:
     void setMotorsHomePosition(void);
     void setZeroElevation(void);
     void moveMotorsHome(void);
-    void moveMotors(int h, int v);
+    void moveMotors(float h, float v);
 };
 
 #endif /* PANO_H_ */

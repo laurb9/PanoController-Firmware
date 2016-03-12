@@ -14,10 +14,10 @@
 const unsigned Camera::focal_lengths[] = {
         12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400
 };
-const unsigned Camera::vert_degrees[] = {
+const float Camera::vert_degrees[] = {
         90, 81, 74, 62, 53, 38, 27, 19,  13,   7,   5,   3
 };
-const unsigned Camera::horiz_degrees[] = {
+const float Camera::horiz_degrees[] = {
        111,103, 95, 82, 74, 54, 40, 29,  19,  10,   7,   5
 };
 
@@ -47,7 +47,7 @@ unsigned Camera::setFocalLength(unsigned focal_length){
     return lens_idx;
 }
 
-unsigned Camera::getHorizFOV(void){
+float Camera::getHorizFOV(void){
     unsigned fov;
     switch (aspect){
     case 32:
@@ -62,7 +62,7 @@ unsigned Camera::getHorizFOV(void){
     return fov;
 }
 
-unsigned Camera::getVertFOV(void){
+float Camera::getVertFOV(void){
     unsigned fov;
     switch (aspect){
     case 32:

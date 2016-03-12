@@ -149,11 +149,11 @@ void displayProgress(void){
 void displayPanoInfo(void){
     display.clearDisplay();
     display.setTextCursor(0,0);
-    display.printf(F("Focal Length %dmm\n"), focal);
-    display.printf(F("Lens FOV %d x %d\n"), camera.getHorizFOV(), camera.getVertFOV());
+    display.printf(F("Lens: %dmm\n"), focal);
+    display.printf(F("      %d x %d\n"), int(camera.getHorizFOV()), int(camera.getVertFOV()));
     display.printf(F("Pano FOV %d x %d\n"), pano.horiz_fov, pano.vert_fov);
-    display.printf(F("%d photos\n"), pano.getHorizShots()*pano.getVertShots());
     displayPanoSize();
+    display.printf(F("%d photos\n"), pano.getHorizShots()*pano.getVertShots());
     displayProgress();
     displayBatteryStatus();
     display.display();
