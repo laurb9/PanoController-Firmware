@@ -20,6 +20,9 @@
 
 #define MIN_OVERLAP 20
 
+// formula used to lower speed for short movements, to reduce shake
+#define DYNAMIC_RPM(rpm, angle) ((abs(angle)>10) ? rpm : rpm/4)
+
 class Pano {
 protected:
     Motor& horiz_motor;
@@ -78,6 +81,7 @@ public:
     void setZeroElevation(void);
     void moveMotorsHome(void);
     void moveMotors(float h, float v);
+    void moveMotorsAdaptive(float h, float v);
 };
 
 #endif /* PANO_H_ */

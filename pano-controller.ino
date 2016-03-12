@@ -38,6 +38,7 @@ static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 #else
 #define VCC 3300
 #endif
+#define LOW_BATTERY 7000
 // R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vin)
 // measure resistors and enter actual values for a more accurate voltage
 #define BATT_R1 9980
@@ -114,7 +115,12 @@ int readBattery(void){
 void displayBatteryStatus(void){
     int battmV = readBattery();
     display.setTextCursor(0, (17-battmV/10000));
+    // poor attempt at blinking
+    if (battmV < LOW_BATTERY && millis() & 1024){
+        display.setTextColor(BLACK, WHITE);
+    }
     display.printf(F("%d.%dV"), battmV/1000, (battmV % 1000)/100);
+    display.setTextColor(WHITE, BLACK);
 }
 
 /*
@@ -151,7 +157,7 @@ void displayPanoInfo(void){
     display.setTextCursor(0,0);
     display.printf(F("Lens: %dmm\n"), focal);
     display.printf(F("      %d x %d\n"), int(camera.getHorizFOV()), int(camera.getVertFOV()));
-    display.printf(F("Pano FOV %d x %d\n"), pano.horiz_fov, pano.vert_fov);
+    display.printf(F("Pano FOV %d x %d \n"), pano.horiz_fov, pano.vert_fov);
     displayPanoSize();
     display.printf(F("%d photos\n"), pano.getHorizShots()*pano.getVertShots());
     displayProgress();
@@ -163,7 +169,7 @@ void displayPanoInfo(void){
  * Display the panorama grid size
  */
 void displayPanoSize(){
-    display.printf(F("Grid %d x %d\n"), pano.getVertShots(), pano.getHorizShots());
+    display.printf(F("Grid %d x %d \n"), pano.getVertShots(), pano.getHorizShots());
 }
 
 /*
@@ -211,6 +217,9 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             horiz_motor.setRPM(HORIZ_RPM*abs(pos_x)/joystick.range);
             pos_x = pos_x/abs(pos_x);
         }
+        if (pos_x && horiz && pano.horiz_home_offset + pos_x < 0){
+            pos_x = -pano.horiz_home_offset;
+        }
 
         pos_y = joystick.getPositionY();
         if (pos_y == 0){
@@ -222,13 +231,8 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             vert_motor.setRPM(VERT_RPM*abs(pos_y)/joystick.range);
             pos_y = pos_y/abs(pos_y);
         }
-
-        if (pos_x && (!horiz || pano.horiz_home_offset + pos_x > 0)){
-            pano.moveMotors(pos_x, 0);
-        }
-
-        if (pos_y && (!vert || -pano.vert_home_offset - pos_y > 0)){
-            pano.moveMotors(0, pos_y);
+        if (pos_y && vert && -pano.vert_home_offset - pos_y < 0){
+            pos_y = -pano.horiz_home_offset;
         }
 
         if (vert && !pos_x && !pos_y){
@@ -243,6 +247,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             displayBatteryStatus();
             display.display();
         }
+        pano.moveMotors(pos_x, pos_y);
     }
 
     if (horiz || vert){

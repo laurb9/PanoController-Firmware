@@ -55,8 +55,12 @@ unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
     int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay) / 1000 +
         // time needed to move the platform
-        photos * camera.getHorizFOV() * horiz_gear_ratio * 60 / HORIZ_MOTOR_RPM / 360 +
-        photos / horiz_count * camera.getVertFOV() * vert_gear_ratio * 60 / VERT_MOTOR_RPM / 360;
+        // each photo requires a horizontal move (except last one in each row)
+        (photos - photos/horiz_count) * camera.getHorizFOV() * horiz_gear_ratio * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
+        // row-to-row movement
+        photos / horiz_count * camera.getVertFOV() * vert_gear_ratio * 60 / DYNAMIC_RPM(VERT_MOTOR_RPM, camera.getVertFOV()) / 360 +
+        // row return horizontal movement
+        photos / horiz_count * horiz_fov * 60 / HORIZ_MOTOR_RPM / 360;
     return seconds;
 }
 /*
@@ -139,11 +143,11 @@ bool Pano::moveTo(int new_row, int new_col){
                 move = move - 360;
             }
         }
-        moveMotors(move, 0);
+        moveMotorsAdaptive(move, 0);
     }
     if (cur_row != new_row){
         // vertical adjustment needed
-        moveMotors(0, -(new_row-cur_row)*vert_move);
+        moveMotorsAdaptive(0, -(new_row-cur_row)*vert_move);
     }
 
     position = new_row * horiz_count + new_col;
@@ -180,7 +184,19 @@ void Pano::setMotorsHomePosition(void){
 }
 
 /*
- * Move head requested number of degrees
+ * Move head requested number of degrees at an adaptive speed
+ */
+void Pano::moveMotorsAdaptive(float h, float v){
+    if (h){
+        horiz_motor.setRPM(DYNAMIC_RPM(HORIZ_MOTOR_RPM, h));
+    }
+    if (v){
+        vert_motor.setRPM(DYNAMIC_RPM(VERT_MOTOR_RPM, v));
+    }
+    moveMotors(h, v);
+}
+/*
+ * Move head requested number of degrees, fixed predefined speed
  */
 void Pano::moveMotors(float h, float v){
     if (h){
