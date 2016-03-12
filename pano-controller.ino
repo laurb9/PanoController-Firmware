@@ -185,51 +185,55 @@ void displayArrows(){
  */
 bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
     int pos_x, pos_y;
-    int h = 0, v = 0;
+    unsigned event;
 
     display.clearDisplay();
     display.setTextCursor(0,0);
     display.println(msg);
     displayArrows();
     pano.motorsEnable(true);
-    unsigned event;
+
+    if (horiz || vert){
+        pano.setMotorsHomePosition();
+    }
+
     while (true){
         event = joystick.read() | remote.read();
         if (HID::isEventOk(event) || HID::isEventCancel(event)) break;
 
         pos_x = joystick.getPositionX();
         if (pos_x == 0){
-            if (HID::isEventRight(event)) pos_x = pano.horiz_gear_ratio;
-            if (HID::isEventLeft(event)) pos_x = -pano.horiz_gear_ratio;
+            if (HID::isEventRight(event)) pos_x = 1;
+            if (HID::isEventLeft(event)) pos_x = -1;
             horiz_motor.setRPM(HORIZ_RPM/3);
         } else {
+            // proportional speed control
             horiz_motor.setRPM(HORIZ_RPM*abs(pos_x)/joystick.range);
             pos_x = pos_x/abs(pos_x);
         }
 
         pos_y = joystick.getPositionY();
         if (pos_y == 0){
-            if (HID::isEventUp(event)) pos_y = pano.vert_gear_ratio;
-            if (HID::isEventDown(event)) pos_y = -pano.vert_gear_ratio;
+            if (HID::isEventUp(event)) pos_y = 1;
+            if (HID::isEventDown(event)) pos_y = -1;
             vert_motor.setRPM(VERT_RPM/3);
         } else {
+            // proportional speed control
             vert_motor.setRPM(VERT_RPM*abs(pos_y)/joystick.range);
             pos_y = pos_y/abs(pos_y);
         }
 
-        if (pos_x && (!horiz || h + pos_x > 0)){
-            horiz_motor.rotate(pos_x);
-            h += pos_x;
+        if (pos_x && (!horiz || pano.horiz_home_offset + pos_x > 0)){
+            pano.moveMotors(pos_x, 0);
         }
 
-        if (pos_y && (!vert || v - pos_y > 0)){
-            v += -pos_y;
-            vert_motor.rotate(pos_y);
+        if (pos_y && (!vert || -pano.vert_home_offset - pos_y > 0)){
+            pano.moveMotors(0, pos_y);
         }
 
         if (vert && !pos_x && !pos_y){
-            pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
-                        v / pano.vert_gear_ratio + camera.getVertFOV());
+            pano.setFOV(abs(pano.horiz_home_offset) + camera.getHorizFOV(),
+                        abs(pano.vert_home_offset) + camera.getVertFOV());
             pano.computeGrid();
             display.setTextCursor(6, 0);
             display.print(F("          "));
@@ -240,15 +244,17 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             display.display();
         }
     }
-    if (horiz){
-        *horiz = h / pano.horiz_gear_ratio + camera.getHorizFOV();
+
+    if (horiz || vert){
+        if (horiz){
+            *horiz = abs(pano.horiz_home_offset) + camera.getHorizFOV();
+        }
+        if (vert){
+            *vert = abs(pano.vert_home_offset) + camera.getVertFOV();
+        }
         horiz_motor.setRPM(HORIZ_RPM);
-        horiz_motor.rotate(-h);
-    }
-    if (vert){
-        *vert = v / pano.vert_gear_ratio + camera.getVertFOV();
         vert_motor.setRPM(VERT_RPM);
-        vert_motor.rotate(v);
+        pano.moveMotorsHome();
     }
     return (HID::isEventOk(event));
 }

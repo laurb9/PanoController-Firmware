@@ -168,7 +168,39 @@ void Pano::run(void){
     } while(next());
     end();
 }
+
+/*
+ * Remember current position as "home"
+ * (start tracking platform movement to be able to return to it)
+ */
+void Pano::setMotorsHomePosition(void){
+    horiz_home_offset = 0;
+    vert_home_offset = 0;
+}
+
+/*
+ * Move head requested number of degrees
+ */
+void Pano::moveMotors(int h, int v){
+    if (h){
+        horiz_motor.rotate(h * horiz_gear_ratio);
+        horiz_home_offset += h;
+    }
+    if (v){
+        vert_motor.rotate(v * vert_gear_ratio);
+        vert_home_offset += v;
+    }
+}
+
+/*
+ * Move head back to home position
+ */
+void Pano::moveMotorsHome(void){
+    moveMotors(-horiz_home_offset, -vert_home_offset);
+}
+
 void Pano::motorsEnable(bool on){
     digitalWrite(motors_pin, (on) ? HIGH : LOW);
     delay(1);
+
 }

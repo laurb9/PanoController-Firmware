@@ -41,7 +41,11 @@ public:
     int horiz_fov;
     int vert_fov;
     unsigned position;
-    volatile unsigned active;
+
+    int horiz_home_offset = 0;
+    int vert_home_offset = 0;
+
+    // configuration
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int motors_pin);
     void setFOV(int horiz_angle, int vert_angle);
     void setShutter(unsigned shutter_delay, unsigned pre_delay);
@@ -50,11 +54,13 @@ public:
     void computeGrid(void);
     unsigned getHorizShots(void);
     unsigned getVertShots(void);
+
+    // pano info
     int getCurRow(void);
     int getCurCol(void);
     unsigned getTimeLeft(void);
-    bool moveTo(int new_position);
-    bool moveTo(int new_row, int new_col);
+
+    // pano execution
     void start(void);
     bool next(void);
     bool prev(void);
@@ -63,6 +69,15 @@ public:
     void shutter(void);
     void motorsEnable(bool on);
 
+    // positioning within pano
+    bool moveTo(int new_position);
+    bool moveTo(int new_row, int new_col);
+
+    // pre-positioning (fine grained)
+    void setMotorsHomePosition(void);
+    void setZeroElevation(void);
+    void moveMotorsHome(void);
+    void moveMotors(int h, int v);
 };
 
 #endif /* PANO_H_ */
