@@ -7,14 +7,13 @@
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 #include <Arduino.h>
-#include <Adafruit_SSD1306.h>
-#include <Adafruit_GFX.h>
 #include <DRV8834.h>
 #include "pano.h"
 #include "camera.h"
 #include "joystick.h"
 #include "remote.h"
 #include "menu.h"
+#include "display.h"
 
 // inactivity time to turn display off (ms)
 #define DISPLAY_SLEEP 5*60*1000
@@ -26,7 +25,7 @@
 #define TEXT_SIZE 1
 #define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
 #define DISPLAY_COLS SSD1306_LCDWIDTH/6/TEXT_SIZE
-static Adafruit_SSD1306 display(OLED_RESET);
+static Display display(OLED_RESET);
 
 // Camera shutter controls
 #define CAMERA_FOCUS 0
@@ -99,7 +98,7 @@ void setup() {
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
     display.setRotation(2);
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
     Serial.println(F("Ready\n"));
@@ -114,11 +113,8 @@ int readBattery(void){
  */
 void displayBatteryStatus(void){
     int battmV = readBattery();
-    display.setCursor((17-battmV/10000)*6, 0);
-    display.print(battmV/1000);
-    display.print('.');
-    display.print((battmV % 1000)/100);
-    display.print('V');
+    display.setTextCursor(0, (17-battmV/10000));
+    display.printf(F("%d.%dV"), battmV/1000, (battmV % 1000)/100);
 }
 
 /*
@@ -126,18 +122,11 @@ void displayBatteryStatus(void){
  */
 void displayPanoStatus(void){
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
 
-    display.print(F("Photo "));
-    display.print(pano.position+1);
-    display.print(F(" of "));
-    display.println(pano.getHorizShots()*pano.getVertShots());
-    display.print(F("At "));
-    display.print(1+pano.getCurRow());
-    display.print(F(" x "));
-    display.println(1+pano.getCurCol());
+    display.printf(F("Photo %d of %d\n"), pano.position+1, pano.getHorizShots()*pano.getVertShots());
+    display.printf(F("At %d x %d\n"), 1+pano.getCurRow(), 1+pano.getCurCol());
     displayPanoSize();
-    display.print(F("Battery "));
     displayBatteryStatus();
     displayProgress();
     display.display();
@@ -147,10 +136,9 @@ void displayPanoStatus(void){
  */
 void displayProgress(void){
     int photos = pano.getHorizShots() * pano.getVertShots();
-    display.setCursor(0, 6*8);
-    display.print(pano.getTimeLeft()/60);
-    display.println(" minutes");
-    for (int i=pano.position * DISPLAY_COLS / photos; i > 0; i--){
+    display.setTextCursor(6, 0);
+    display.printf("%d minutes\n", pano.getTimeLeft()/60);
+    for (int i=(pano.position+1) * DISPLAY_COLS / photos; i > 0; i--){
         display.print('\xda');
     }
     display.println();
@@ -160,20 +148,11 @@ void displayProgress(void){
  */
 void displayPanoInfo(void){
     display.clearDisplay();
-    display.setCursor(0,0);
-    display.print(F("Focal Length "));
-    display.print(focal);
-    display.println(F("mm"));
-    display.print(F("Lens FOV "));
-    display.print(camera.getHorizFOV());
-    display.print(F("x"));
-    display.println(camera.getVertFOV());
-    display.print(F("Pano FOV "));
-    display.print(pano.horiz_fov);
-    display.print(F("x"));
-    display.println(pano.vert_fov);
-    display.print(pano.getHorizShots()*pano.getVertShots());
-    display.println(F(" photos"));
+    display.setTextCursor(0,0);
+    display.printf(F("Focal Length %dmm\n"), focal);
+    display.printf(F("Lens FOV %d x %d\n"), camera.getHorizFOV(), camera.getVertFOV());
+    display.printf(F("Pano FOV %d x %d\n"), pano.horiz_fov, pano.vert_fov);
+    display.printf(F("%d photos\n"), pano.getHorizShots()*pano.getVertShots());
     displayPanoSize();
     displayProgress();
     displayBatteryStatus();
@@ -184,21 +163,17 @@ void displayPanoInfo(void){
  * Display the panorama grid size
  */
 void displayPanoSize(){
-    display.print(F("Grid "));
-    display.print(pano.getVertShots());
-    display.print(F(" x "));
-    display.print(pano.getHorizShots());
-    display.println();
+    display.printf(F("Grid %d x %d\n"), pano.getVertShots(), pano.getHorizShots());
 }
 
 /*
  * Display the four navigation arrows, cancel and OK buttons.
  */
 void displayArrows(){
-    display.setCursor(0,3*8);
-    display.println(F("          \x1e         "));
-    display.println(F(" [X]     \x11+\x10    [OK]"));
-    display.println(F("          \x1f         "));
+    display.setTextCursor(3, 0);
+    display.println(F("          \x1e         \n"
+                      " [X]     \x11+\x10    [OK]\n"
+                      "          \x1f         "));
     display.display();
 }
 
@@ -213,7 +188,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
     int h = 0, v = 0;
 
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
     display.println(msg);
     displayArrows();
     pano.motorsEnable(true);
@@ -256,14 +231,11 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
                         v / pano.vert_gear_ratio + camera.getVertFOV());
             pano.computeGrid();
-            display.setCursor(0,8*6);
+            display.setTextCursor(6, 0);
             display.print(F("          "));
-            display.setCursor(0,8*6);
+            display.setTextCursor(6, 0);
             displayPanoSize();
-            display.print(pano.horiz_fov);
-            display.print("x");
-            display.print(pano.vert_fov);
-            display.print(" ");
+            display.printf(F("FOV %d x %d "), pano.horiz_fov, pano.vert_fov);
             displayBatteryStatus();
             display.display();
         }
@@ -291,7 +263,7 @@ void displayMenu(void){
 
     menu.open();
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
     menu.render(display, DISPLAY_ROWS);
     display.display();
 
@@ -316,7 +288,7 @@ void displayMenu(void){
 
         Serial.println();
         display.clearDisplay();
-        display.setCursor(0,0);
+        display.setTextCursor(0,0);
         menu.render(display, DISPLAY_ROWS);
         displayBatteryStatus();
         display.display();
@@ -384,6 +356,7 @@ void executePano(void){
     // clean up
     detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
     running = false;
+    displayPanoStatus();
 
     pano.end();
 
