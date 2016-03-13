@@ -155,10 +155,14 @@ void displayProgress(void){
  * Display panorama information
  */
 void displayPanoInfo(void){
+    float horiz_fov = camera.getHorizFOV();
+    float vert_fov = camera.getVertFOV();
     display.clearDisplay();
     display.setTextCursor(0,0);
     display.printf(F("Lens: %dmm\n"), focal);
-    display.printf(F("      %d x %d\n"), int(camera.getHorizFOV()), int(camera.getVertFOV()));
+    display.printf(F("      %d.%d x %d.%d\n"),
+                   int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
+                   int(vert_fov), round(10*(vert_fov-int(vert_fov))));
     display.printf(F("Pano FOV %d x %d \n"), pano.horiz_fov, pano.vert_fov);
     displayPanoSize();
     display.printf(F("%d photos\n"), pano.getHorizShots()*pano.getVertShots());
