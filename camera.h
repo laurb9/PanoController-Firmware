@@ -14,18 +14,16 @@ protected:
     int focus_pin;
     int shutter_pin;
     unsigned lens_idx;
-    static const unsigned vert_degrees[];
-    static const unsigned horiz_degrees[];
-    static const unsigned vert_steps[];
-    static const unsigned horiz_steps[];
+    static const float vert_degrees[];
+    static const float horiz_degrees[];
 public:
     int aspect = 23;
     static const unsigned focal_lengths[];
     Camera(int focus_pin, int shutter_pin);
     void shutter(int delay_ms);
     unsigned setFocalLength(unsigned focal_length);;
-    unsigned getHorizFOV(void);
-    unsigned getVertFOV(void);
+    float getHorizFOV(void);
+    float getVertFOV(void);
     void setAspect(int aspect);
 };
 
