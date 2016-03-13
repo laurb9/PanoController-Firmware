@@ -107,11 +107,17 @@ static const PROGMEM char * const menu_aspect_names[7] = {menu_aspect_name_0, me
 static const PROGMEM int menu_aspect_values[7] = {23, 916, 34, 11, 32, 169, 43};
 static NamedListSelector menu_aspect(menu_aspect_desc, &aspect, 23, 7 * sizeof(int), NULL, 7, menu_aspect_names, menu_aspect_values);
 
+// Test Shutter
+int onTestShutter(int);
+static const PROGMEM char menu_test_shutter_desc[] = "Test Shutter";
 
-static const PROGMEM union MenuItem menu_camera_opts[] = {&menu_focal_len, &menu_shutter, &menu_delay, &menu_shots__, &menu_aspect};
-static const PROGMEM int menu_camera_types[] = {ListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, RangeSelector::class_id, NamedListSelector::class_id};
+static OptionSelector menu_test_shutter(menu_test_shutter_desc, NULL, 0, 0 * sizeof(int), onTestShutter);
+
+
+static const PROGMEM union MenuItem menu_camera_opts[] = {&menu_focal_len, &menu_shutter, &menu_delay, &menu_shots__, &menu_aspect, &menu_test_shutter};
+static const PROGMEM int menu_camera_types[] = {ListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, RangeSelector::class_id, NamedListSelector::class_id, OptionSelector::class_id};
 static const PROGMEM char menu_camera_desc[] = "Camera";
-Menu menu_camera(menu_camera_desc, 5, menu_camera_opts, menu_camera_types);
+Menu menu_camera(menu_camera_desc, 6, menu_camera_opts, menu_camera_types);
 
 // Motors
 extern volatile int motors_enable;
