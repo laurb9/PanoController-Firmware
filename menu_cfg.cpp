@@ -53,8 +53,8 @@ Menu menu_pano(menu_pano_desc, 6, menu_pano_opts, menu_pano_types);
 extern volatile int focal;
 static const PROGMEM char menu_focal_len_desc[] = "Focal Len";
 
-static const PROGMEM int menu_focal_len_values[12] = {12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400};
-static ListSelector menu_focal_len(menu_focal_len_desc, &focal, 35, 3 * sizeof(int), NULL, 12, menu_focal_len_values);
+static const PROGMEM int menu_focal_len_values[14] = {12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500, 640};
+static ListSelector menu_focal_len(menu_focal_len_desc, &focal, 35, 3 * sizeof(int), NULL, 14, menu_focal_len_values);
 
 // Shutter
 extern volatile int shutter;

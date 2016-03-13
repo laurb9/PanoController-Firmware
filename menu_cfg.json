@@ -46,7 +46,7 @@
              {
                  "description": "Focal Len",
                  "default": 35,
-                 "options": [12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400],
+                 "options": [12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500, 640],
                  "unit": "mm",
                  "variable": "focal",
                  "eeprom": true

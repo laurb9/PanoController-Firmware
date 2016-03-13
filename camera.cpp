@@ -12,7 +12,7 @@
 
 // taken from https://en.wikipedia.org/wiki/Angle_of_view for now
 const unsigned Camera::focal_lengths[] = {
-        12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500
+        12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500, 640
 };
 
 Camera::Camera(int focus_pin, int shutter_pin)
