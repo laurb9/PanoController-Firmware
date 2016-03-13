@@ -26,9 +26,11 @@ void Pano::setFOV(int horiz_angle, int vert_angle){
         vert_fov = vert_angle;
     }
 }
-void Pano::setShutter(unsigned speed, unsigned pre_delay){
+void Pano::setShutter(unsigned speed, unsigned pre_delay, unsigned post_wait, bool long_pulse){
     shutter_delay = speed;
     pre_shutter_delay = pre_delay;
+    post_shutter_delay = post_wait;
+    shutter_long_pulse = long_pulse;
 }
 void Pano::setShots(unsigned shots){
     shots_per_position = shots;
@@ -53,7 +55,7 @@ int Pano::getCurCol(void){
  */
 unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
-    int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay) / 1000 +
+    int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay + post_shutter_delay) / 1000 +
         // time needed to move the platform
         // each photo requires a horizontal move (except last one in each row)
         (photos - photos/horiz_count) * camera.getHorizFOV() * horiz_gear_ratio * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
@@ -102,7 +104,8 @@ void Pano::start(void){
 void Pano::shutter(void){
     delay(pre_shutter_delay);
     for (unsigned i=shots_per_position; i; i--){
-        camera.shutter(shutter_delay);
+        camera.shutter(shutter_delay, shutter_long_pulse);
+        delay(post_shutter_delay);
     }
 }
 /*
