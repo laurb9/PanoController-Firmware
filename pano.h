@@ -22,6 +22,8 @@
 
 // formula used to lower speed for short movements, to reduce shake
 #define DYNAMIC_RPM(rpm, angle) ((abs(angle)>10) ? rpm : rpm/4)
+#define DYNAMIC_HORIZ_RPM(angle) DYNAMIC_RPM(HORIZ_MOTOR_RPM, angle)
+#define DYNAMIC_VERT_RPM(angle) DYNAMIC_RPM(VERT_MOTOR_RPM, angle)
 
 class Pano {
 protected:

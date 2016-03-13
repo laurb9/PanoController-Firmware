@@ -188,10 +188,10 @@ void Pano::setMotorsHomePosition(void){
  */
 void Pano::moveMotorsAdaptive(float h, float v){
     if (h){
-        horiz_motor.setRPM(DYNAMIC_RPM(HORIZ_MOTOR_RPM, h));
+        horiz_motor.setRPM(DYNAMIC_HORIZ_RPM(h));
     }
     if (v){
-        vert_motor.setRPM(DYNAMIC_RPM(VERT_MOTOR_RPM, v));
+        vert_motor.setRPM(DYNAMIC_VERT_RPM(v));
     }
     moveMotors(h, v);
 }
@@ -213,7 +213,7 @@ void Pano::moveMotors(float h, float v){
  * Move head back to home position
  */
 void Pano::moveMotorsHome(void){
-    moveMotors(-horiz_home_offset, -vert_home_offset);
+    moveMotorsAdaptive(-horiz_home_offset, -vert_home_offset);
 }
 
 void Pano::motorsEnable(bool on){
