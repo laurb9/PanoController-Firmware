@@ -12,13 +12,13 @@
 
 // taken from https://en.wikipedia.org/wiki/Angle_of_view for now
 const unsigned Camera::focal_lengths[] = {
-        12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400
+        12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500
 };
-const unsigned Camera::vert_degrees[] = {
-        90, 81, 74, 62, 53, 38, 27, 19,  13,   7,   5,   3
+const float Camera::vert_degrees[] = {
+        90.0, 81.2, 73.9, 61.9, 53.1, 37.8, 27.0, 19.5, 13.0, 6.87, 4.58, 3.44, 2.75
 };
-const unsigned Camera::horiz_degrees[] = {
-       111,103, 95, 82, 74, 54, 40, 29,  19,  10,   7,   5
+const float Camera::horiz_degrees[] = {
+       111.1, 102.7, 95.1, 82.4, 73.7, 54.4, 39.6, 28.8, 19.5, 10.3, 6.87, 5.15, 4.12
 };
 
 Camera::Camera(int focus_pin, int shutter_pin)
@@ -47,8 +47,8 @@ unsigned Camera::setFocalLength(unsigned focal_length){
     return lens_idx;
 }
 
-unsigned Camera::getHorizFOV(void){
-    unsigned fov;
+float Camera::getHorizFOV(void){
+    float fov;
     switch (aspect){
     case 32:
         fov = horiz_degrees[lens_idx];
@@ -62,8 +62,8 @@ unsigned Camera::getHorizFOV(void){
     return fov;
 }
 
-unsigned Camera::getVertFOV(void){
-    unsigned fov;
+float Camera::getVertFOV(void){
+    float fov;
     switch (aspect){
     case 32:
         fov = vert_degrees[lens_idx];

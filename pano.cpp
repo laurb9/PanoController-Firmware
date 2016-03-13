@@ -55,8 +55,12 @@ unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
     int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay) / 1000 +
         // time needed to move the platform
-        photos * camera.getHorizFOV() * horiz_gear_ratio * 60 / HORIZ_MOTOR_RPM / 360 +
-        photos / horiz_count * camera.getVertFOV() * vert_gear_ratio * 60 / VERT_MOTOR_RPM / 360;
+        // each photo requires a horizontal move (except last one in each row)
+        (photos - photos/horiz_count) * camera.getHorizFOV() * horiz_gear_ratio * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
+        // row-to-row movement
+        photos / horiz_count * camera.getVertFOV() * vert_gear_ratio * 60 / DYNAMIC_RPM(VERT_MOTOR_RPM, camera.getVertFOV()) / 360 +
+        // row return horizontal movement
+        photos / horiz_count * horiz_fov * 60 / HORIZ_MOTOR_RPM / 360;
     return seconds;
 }
 /*
@@ -66,10 +70,10 @@ unsigned Pano::getTimeLeft(void){
  * @param block_size: ref to initial block size (will be updated)
  * @param count: ref to image count (will be updated)
  */
-void Pano::gridFit(int total_size, int overlap, int& block_size, int& count){
+void Pano::gridFit(int total_size, int overlap, float& block_size, int& count){
     if (block_size <= total_size){
         count = (100*total_size - overlap*block_size - 1) / ((100 - overlap)*block_size);
-        block_size = (total_size - block_size + count - 1) / count;
+        block_size = round(total_size - block_size) / count;
         count++;
     } else {
         count = 1;
@@ -81,17 +85,18 @@ void Pano::gridFit(int total_size, int overlap, int& block_size, int& count){
  * Must be called every time focal distance or panorama dimensions change.
  */
 void Pano::computeGrid(void){
-    horiz_move = camera.getHorizFOV() * horiz_gear_ratio;
-    gridFit(horiz_fov * horiz_gear_ratio, MIN_OVERLAP, horiz_move, horiz_count);
-    vert_move = camera.getVertFOV() * vert_gear_ratio;
-    gridFit(vert_fov * vert_gear_ratio, MIN_OVERLAP, vert_move, vert_count);
+    horiz_move = camera.getHorizFOV();
+    gridFit(horiz_fov, MIN_OVERLAP, horiz_move, horiz_count);
+    vert_move = camera.getVertFOV();
+    gridFit(vert_fov, MIN_OVERLAP, vert_move, vert_count);
 }
 void Pano::start(void){
     computeGrid();
     motorsEnable(true);
     horiz_motor.setRPM(HORIZ_MOTOR_RPM);
     vert_motor.setRPM(VERT_MOTOR_RPM);
-    // move to start position
+    // set start position
+    setMotorsHomePosition();
     position = 0;
 }
 void Pano::shutter(void){
@@ -130,19 +135,19 @@ bool Pano::moveTo(int new_row, int new_col){
         // horizontal adjustment needed
         // figure out shortest path around the circle
         // good idea if on batteries, bad idea when power cable in use
-        int move = (new_col-cur_col)*horiz_move;
-        if (abs(move) > 180 * horiz_gear_ratio){
+        int move = (new_col-cur_col) * horiz_move;
+        if (abs(move) > 180){
             if (move < 0){
-                move = 360 * horiz_gear_ratio + move;
+                move = 360 + move;
             } else {
-                move = move - 360 * horiz_gear_ratio;
+                move = move - 360;
             }
         }
-        horiz_motor.rotate(move);
+        moveMotorsAdaptive(move, 0);
     }
     if (cur_row != new_row){
         // vertical adjustment needed
-        vert_motor.rotate(-(new_row-cur_row)*vert_move);
+        moveMotorsAdaptive(0, -(new_row-cur_row)*vert_move);
     }
 
     position = new_row * horiz_count + new_col;
@@ -168,7 +173,51 @@ void Pano::run(void){
     } while(next());
     end();
 }
+
+/*
+ * Remember current position as "home"
+ * (start tracking platform movement to be able to return to it)
+ */
+void Pano::setMotorsHomePosition(void){
+    horiz_home_offset = 0;
+    vert_home_offset = 0;
+}
+
+/*
+ * Move head requested number of degrees at an adaptive speed
+ */
+void Pano::moveMotorsAdaptive(float h, float v){
+    if (h){
+        horiz_motor.setRPM(DYNAMIC_HORIZ_RPM(h));
+    }
+    if (v){
+        vert_motor.setRPM(DYNAMIC_VERT_RPM(v));
+    }
+    moveMotors(h, v);
+}
+/*
+ * Move head requested number of degrees, fixed predefined speed
+ */
+void Pano::moveMotors(float h, float v){
+    if (h){
+        horiz_motor.rotate(h * horiz_gear_ratio);
+        horiz_home_offset += h;
+    }
+    if (v){
+        vert_motor.rotate(v * vert_gear_ratio);
+        vert_home_offset += v;
+    }
+}
+
+/*
+ * Move head back to home position
+ */
+void Pano::moveMotorsHome(void){
+    moveMotorsAdaptive(-horiz_home_offset, -vert_home_offset);
+}
+
 void Pano::motorsEnable(bool on){
     digitalWrite(motors_pin, (on) ? HIGH : LOW);
     delay(1);
+
 }

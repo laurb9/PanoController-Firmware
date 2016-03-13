@@ -76,10 +76,14 @@ Current state: functional on prototype board.
 - Itrip = Vref/(5*Risense)
 - So set Vref = Itrip/2
 
-Gigapan motor spec is 1A, so 0.5V. But at full step the current limit is 0.7Itrip, so
-we have to set Itrip to 1.4 and Vref to 0.7V.
+Gigapan motor spec is 1A, so 0.5V. At full step the current limit is 0.7*Itrip, so
+we have to set Itrip to 1.4 and Vref to 0.7V as upper bound.
 
-Note: Actually the EPIC 100 drives the motors at 0.3A, so I'm setting Vref to 0.2V.
+### Lower current
+
+Tested with ~1.5lb zoom lens+camera. The minimum Vref that avoids skipping is about
+0.3V (0.6A to motor), but it will vary with camera weight. It may be possible to use
+lower current even, if we reduce the speed.
 
 ## BOM
 

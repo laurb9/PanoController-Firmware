@@ -7,14 +7,16 @@
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 #include <Arduino.h>
-#include <Adafruit_SSD1306.h>
-#include <Adafruit_GFX.h>
 #include <DRV8834.h>
 #include "pano.h"
 #include "camera.h"
 #include "joystick.h"
 #include "remote.h"
 #include "menu.h"
+#include "display.h"
+
+// inactivity time to turn display off (ms)
+#define DISPLAY_SLEEP 5*60*1000
 
 // Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
@@ -23,7 +25,7 @@
 #define TEXT_SIZE 1
 #define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
 #define DISPLAY_COLS SSD1306_LCDWIDTH/6/TEXT_SIZE
-static Adafruit_SSD1306 display(OLED_RESET);
+static Display display(OLED_RESET);
 
 // Camera shutter controls
 #define CAMERA_FOCUS 0
@@ -36,6 +38,7 @@ static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 #else
 #define VCC 3300
 #endif
+#define LOW_BATTERY 7000
 // R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vin)
 // measure resistors and enter actual values for a more accurate voltage
 #define BATT_R1 9980
@@ -74,7 +77,7 @@ static Pano pano(horiz_motor, vert_motor, camera, MOTORS_ON);
 
 // these variables are modified by the menu
 volatile int focal, shutter, pre_shutter, orientation, aspect, shots, motors_enable, display_invert;
-int horiz, vert;
+volatile int horiz, vert;
 volatile int running;
 
 void setup() {
@@ -84,8 +87,10 @@ void setup() {
     pinMode(MPU_INT, INPUT_PULLUP);
 
     pinMode(BATTERY, INPUT);
+#if defined(__MK20DX256__) || defined(__MKL26Z64__)
     analogReadRes(10);
     analogReadAveraging(32);
+#endif
 
     horiz_motor.setMicrostep(32);
     vert_motor.setMicrostep(32);
@@ -94,7 +99,7 @@ void setup() {
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
     display.setRotation(2);
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
     Serial.println(F("Ready\n"));
@@ -104,13 +109,18 @@ int readBattery(void){
     return map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE);
 }
 
+/*
+ * Print battery voltage at cursor, format is #.#V (4 chars)
+ */
 void displayBatteryStatus(void){
     int battmV = readBattery();
-    display.print(F("Battery "));
-    display.print(battmV/1000);
-    display.print('.');
-    display.print(battmV/10 % 100);
-    display.println('V');
+    display.setTextCursor(0, (17-battmV/10000));
+    // poor attempt at blinking
+    if (battmV < LOW_BATTERY && millis() & 1024){
+        display.setTextColor(BLACK, WHITE);
+    }
+    display.printf(F("%d.%dV"), battmV/1000, (battmV % 1000)/100);
+    display.setTextColor(WHITE, BLACK);
 }
 
 /*
@@ -118,16 +128,10 @@ void displayBatteryStatus(void){
  */
 void displayPanoStatus(void){
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
 
-    display.print(F("Photo "));
-    display.print(pano.position+1);
-    display.print(F(" of "));
-    display.println(pano.getHorizShots()*pano.getVertShots());
-    display.print(F("At "));
-    display.print(1+pano.getCurRow());
-    display.print(F(" x "));
-    display.println(1+pano.getCurCol());
+    display.printf(F("Photo %d of %d\n"), pano.position+1, pano.getHorizShots()*pano.getVertShots());
+    display.printf(F("At %d x %d\n"), 1+pano.getCurRow(), 1+pano.getCurCol());
     displayPanoSize();
     displayBatteryStatus();
     displayProgress();
@@ -138,10 +142,9 @@ void displayPanoStatus(void){
  */
 void displayProgress(void){
     int photos = pano.getHorizShots() * pano.getVertShots();
-    display.setCursor(0, 6*8);
-    display.print(pano.getTimeLeft()/60);
-    display.println(" minutes");
-    for (int i=pano.position * DISPLAY_COLS / photos; i > 0; i--){
+    display.setTextCursor(6, 0);
+    display.printf("%d minutes\n", pano.getTimeLeft()/60);
+    for (int i=(pano.position+1) * DISPLAY_COLS / photos; i > 0; i--){
         display.print('\xda');
     }
     display.println();
@@ -150,23 +153,19 @@ void displayProgress(void){
  * Display panorama information
  */
 void displayPanoInfo(void){
+    float horiz_fov = camera.getHorizFOV();
+    float vert_fov = camera.getVertFOV();
     display.clearDisplay();
-    display.setCursor(0,0);
-    display.print(F("Focal Length "));
-    display.print(focal);
-    display.println(F("mm"));
-    display.print(F("Lens FOV "));
-    display.print(camera.getHorizFOV());
-    display.print(F("x"));
-    display.println(camera.getVertFOV());
-    display.print(F("Pano FOV "));
-    display.print(pano.horiz_fov);
-    display.print(F("x"));
-    display.println(pano.vert_fov);
-    display.print(pano.getHorizShots()*pano.getVertShots());
-    display.println(F(" photos"));
+    display.setTextCursor(0,0);
+    display.printf(F("Lens: %dmm\n"), focal);
+    display.printf(F("      %d.%d x %d.%d\n"),
+                   int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
+                   int(vert_fov), round(10*(vert_fov-int(vert_fov))));
+    display.printf(F("Pano FOV %d x %d \n"), pano.horiz_fov, pano.vert_fov);
     displayPanoSize();
+    display.printf(F("%d photos\n"), pano.getHorizShots()*pano.getVertShots());
     displayProgress();
+    displayBatteryStatus();
     display.display();
 }
 
@@ -174,21 +173,17 @@ void displayPanoInfo(void){
  * Display the panorama grid size
  */
 void displayPanoSize(){
-    display.print(F("Grid "));
-    display.print(pano.getVertShots());
-    display.print(F(" x "));
-    display.print(pano.getHorizShots());
-    display.println();
+    display.printf(F("Grid %d x %d \n"), pano.getVertShots(), pano.getHorizShots());
 }
 
 /*
  * Display the four navigation arrows, cancel and OK buttons.
  */
 void displayArrows(){
-    display.setCursor(0,3*8);
-    display.println(F("          \x1e         "));
-    display.println(F(" [X]     \x11+\x10    [OK]"));
-    display.println(F("          \x1f         "));
+    display.setTextCursor(3, 0);
+    display.println(F("          \x1e         \n"
+                      " [X]     \x11+\x10    [OK]\n"
+                      "          \x1f         "));
     display.display();
 }
 
@@ -198,68 +193,83 @@ void displayArrows(){
  * @param horiz: pointer to store horizontal movement
  * @param vert:  pointer to store vertical movement
  */
-bool positionCamera(const char *msg, int *horiz, int *vert){
+bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
     int pos_x, pos_y;
-    int h = 0, v = 0;
-    int when_to_display = 0;
+    unsigned event;
+    int horiz_rpm, vert_rpm;
 
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
     display.println(msg);
     displayArrows();
     pano.motorsEnable(true);
-    unsigned event;
+
+    if (horiz || vert){
+        pano.setMotorsHomePosition();
+    }
+
     while (true){
         event = joystick.read() | remote.read();
         if (HID::isEventOk(event) || HID::isEventCancel(event)) break;
 
         pos_x = joystick.getPositionX();
+        horiz_rpm = DYNAMIC_HORIZ_RPM(camera.getHorizFOV()/10);
         if (pos_x == 0){
-            if (HID::isEventRight(event)) pos_x = joystick.range;
-            if (HID::isEventLeft(event)) pos_x = -joystick.range;
+            if (HID::isEventRight(event)) pos_x = 1;
+            if (HID::isEventLeft(event)) pos_x = -1;
+            horiz_rpm /= 3;
+        } else {
+            // proportional speed control
+            horiz_rpm = horiz_rpm * abs(pos_x) / joystick.range;
+            pos_x = pos_x / abs(pos_x);
         }
+        if (pos_x && horiz && pano.horiz_home_offset + pos_x < 0){
+            pos_x = -pano.horiz_home_offset;
+        }
+
         pos_y = joystick.getPositionY();
+        vert_rpm = DYNAMIC_VERT_RPM(camera.getVertFOV()/10);
         if (pos_y == 0){
-            if (HID::isEventUp(event)) pos_y = joystick.range;
-            if (HID::isEventDown(event)) pos_y = -joystick.range;
+            if (HID::isEventUp(event)) pos_y = 1;
+            if (HID::isEventDown(event)) pos_y = -1;
+            vert_rpm /= 3;
+        } else {
+            // proportional speed control
+            vert_rpm = vert_rpm * abs(pos_y) / joystick.range;
+            pos_y = pos_y / abs(pos_y);
         }
-        if (pos_x){
-            horiz_motor.setRPM(30*abs(pos_x)/joystick.range);
-            if (!horiz || h + pos_x/abs(pos_x) > 0){
-                horiz_motor.rotate(pos_x/abs(pos_x));
-                h += pos_x/abs(pos_x);
-            }
+        if (pos_y && vert && -pano.vert_home_offset - pos_y < 0){
+            pos_y = -pano.vert_home_offset;
         }
-        if (pos_y){
-            vert_motor.setRPM(90*abs(pos_y)/joystick.range);
-            if (!vert || v - pos_y/abs(pos_y) > 0){
-                v += -pos_y/abs(pos_y);
-                vert_motor.rotate(pos_y/abs(pos_y));
-            }
-        }
-        if (vert && h >= 0 && v >= 0){
-            pano.setFOV(h / pano.horiz_gear_ratio + camera.getHorizFOV(),
-                        v / pano.vert_gear_ratio + camera.getVertFOV());
+
+        if (vert && !pos_x && !pos_y){
+            pano.setFOV(abs(pano.horiz_home_offset) + camera.getHorizFOV(),
+                        abs(pano.vert_home_offset) + camera.getVertFOV());
             pano.computeGrid();
-            if (pano.getVertShots()+pano.getHorizShots() != when_to_display){
-                display.setCursor(0,8*6);
-                display.print("          ");
-                display.setCursor(0,8*6);
-                displayPanoSize();
-                display.display();
-                when_to_display = pano.getVertShots() + pano.getHorizShots();
-            }
+            display.setTextCursor(6, 0);
+            display.print(F("          "));
+            display.setTextCursor(6, 0);
+            displayPanoSize();
+            display.printf(F("FOV %d x %d "), pano.horiz_fov, pano.vert_fov);
+            displayBatteryStatus();
+            display.display();
+        }
+
+        if (pos_x || pos_y){
+            horiz_motor.setRPM(horiz_rpm);
+            vert_motor.setRPM(vert_rpm);
+            pano.moveMotors(pos_x, pos_y);
         }
     }
-    if (horiz){
-        *horiz = h / pano.horiz_gear_ratio + camera.getHorizFOV();
-        horiz_motor.setRPM(40);
-        horiz_motor.rotate(-h);
-    }
-    if (vert){
-        *vert = v / pano.vert_gear_ratio + camera.getVertFOV();
-        vert_motor.setRPM(120);
-        vert_motor.rotate(v);
+
+    if (horiz || vert){
+        if (horiz){
+            *horiz = abs(pano.horiz_home_offset) + camera.getHorizFOV();
+        }
+        if (vert){
+            *vert = abs(pano.vert_home_offset) + camera.getVertFOV();
+        }
+        pano.moveMotorsHome();
     }
     return (HID::isEventOk(event));
 }
@@ -270,17 +280,28 @@ bool positionCamera(const char *msg, int *horiz, int *vert){
  */
 void displayMenu(void){
     int event;
+    int last_event = millis();
 
     menu.open();
     display.clearDisplay();
-    display.setCursor(0,0);
+    display.setTextCursor(0,0);
     menu.render(display, DISPLAY_ROWS);
     display.display();
 
     while (!running){
         event = joystick.read() | remote.read();
-        if (!event) continue;
+        if (!event){
+            displayBatteryStatus();
+            display.display();
+            if (millis() - last_event > DISPLAY_SLEEP){
+                display.clearDisplay();
+                display.display();
+                last_event = millis();
+            }
+            continue;
+        }
 
+        last_event = millis();
         if (HID::isEventLeft(event) || HID::isEventCancel(event)) menu.cancel();
         else if (HID::isEventRight(event) || HID::isEventOk(event)) menu.select();
         else if (HID::isEventDown(event)) menu.next();
@@ -288,8 +309,9 @@ void displayMenu(void){
 
         Serial.println();
         display.clearDisplay();
-        display.setCursor(0,0);
+        display.setTextCursor(0,0);
         menu.render(display, DISPLAY_ROWS);
+        displayBatteryStatus();
         display.display();
         delay(100);
 
@@ -355,6 +377,7 @@ void executePano(void){
     // clean up
     detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
     running = false;
+    displayPanoStatus();
 
     pano.end();
 
@@ -379,69 +402,68 @@ void setPanoParams(void){
 }
 
 /*
- * This is a callback invoked by selecting "Start"
+ * Menu callback invoked by selecting "Start"
  */
 int onStart(int __){
     setPanoParams();
 
     // set panorama FOV
-    if (!positionCamera("Top Left", NULL, NULL) ||
-        !positionCamera("Bot Right", &horiz, &vert)){
+    if (!positionCamera("Set Top Left", NULL, NULL) ||
+        !positionCamera("Set Bottom Right", &horiz, &vert)){
         return false;
     }
 
     pano.setFOV(horiz, vert);
-    running = true;
-    menu.sync();
-    if (!positionCamera("Adj start", NULL, NULL)){
+    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
+    running = true;
+    menu.sync();
     executePano();
     return __;
 }
 
 /*
- * This is a callback invoked by selecting "Repeat"
- * FIXME: does not work when previous was a 360 pano
+ * Menu callback invoked by selecting "Repeat"
  */
 int onRepeat(int __){
     setPanoParams();
 
     pano.setFOV(horiz, vert);
-    running = true;
-    menu.sync();
-    if (!positionCamera("Adj start", NULL, NULL)){
+    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
+    running = true;
+    menu.sync();
     executePano();
     return __;
 }
 
 /*
- * This is a callback invoked by selecting "Repeat"
+ * Menu callback invoked by selecting "Repeat"
  */
 int on360(int __){
     setPanoParams();
 
     // set panorama FOV
     horiz = 360;
-    if (!positionCamera("Top", NULL, NULL) ||
-        !positionCamera("Bottom", NULL, &vert)){
+    if (!positionCamera("Set Top", NULL, NULL) ||
+        !positionCamera("Set Bottom", NULL, &vert)){
         return false;
     }
 
     pano.setFOV(horiz, vert);
-    running = true;
-    menu.sync();
-    if (!positionCamera("Adj start", NULL, NULL)){
+    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
+    running = true;
+    menu.sync();
     executePano();
     return __;
 }
 
 /*
- * Menu callback for display pano info
+ * Menu callback for displaying last pano info
  */
 int onPanoInfo(int __){
     setPanoParams();
