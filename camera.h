@@ -9,13 +9,13 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
+#include <math.h>
+
 class Camera {
 protected:
     int focus_pin;
     int shutter_pin;
     unsigned lens_idx;
-    static const float vert_degrees[];
-    static const float horiz_degrees[];
 public:
     int aspect = 23;
     static const unsigned focal_lengths[];
@@ -25,6 +25,10 @@ public:
     float getHorizFOV(void);
     float getVertFOV(void);
     void setAspect(int aspect);
+    float calcFOV(float d){
+        // https://en.wikipedia.org/wiki/Angle_of_view
+        return 360*atan(d/2/focal_lengths[lens_idx])/M_PI;
+    }
 };
 
 #endif /* CAMERA_H_ */
