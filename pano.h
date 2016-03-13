@@ -38,6 +38,8 @@ protected:
     unsigned shots_per_position = 1;
     unsigned shutter_delay = 1000/250;
     unsigned pre_shutter_delay = 0;
+    unsigned post_shutter_delay = 100;
+    bool shutter_long_pulse = false;
     void gridFit(int total_size, int overlap, float& block_size, int& count);
     // state information
 public:
@@ -53,7 +55,7 @@ public:
     // configuration
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int motors_pin);
     void setFOV(int horiz_angle, int vert_angle);
-    void setShutter(unsigned shutter_delay, unsigned pre_delay);
+    void setShutter(unsigned shutter_delay, unsigned pre_delay, unsigned post_wait, bool long_pulse);
     void setShots(unsigned shots);
     void setMode(unsigned mode);
     void computeGrid(void);

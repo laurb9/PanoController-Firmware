@@ -11,6 +11,9 @@
 
 #include <math.h>
 
+// shutter pulse, in ms - 100 = 0.1s
+#define SHUTTER_PULSE 100
+
 class Camera {
 protected:
     int focus_pin;
@@ -20,7 +23,7 @@ public:
     int aspect = 23;
     static const unsigned focal_lengths[];
     Camera(int focus_pin, int shutter_pin);
-    void shutter(int delay_ms);
+    void shutter(int delay_ms, bool long_pulse);
     unsigned setFocalLength(unsigned focal_length);;
     float getHorizFOV(void);
     float getVertFOV(void);

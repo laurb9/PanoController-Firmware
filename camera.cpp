@@ -26,12 +26,16 @@ Camera::Camera(int focus_pin, int shutter_pin)
     setFocalLength(24);
 }
 
-void Camera::shutter(int delay_ms){
+void Camera::shutter(int delay_ms, bool long_pulse){
+    int shutter_pulse = (long_pulse) ? delay_ms : SHUTTER_PULSE;
     digitalWrite(focus_pin, LOW);
     digitalWrite(shutter_pin, LOW);
-    delay(delay_ms);
+    delay(min(shutter_pulse, delay_ms));
     digitalWrite(focus_pin, HIGH);
     digitalWrite(shutter_pin, HIGH);
+    if (delay_ms > shutter_pulse){
+        delay(delay_ms - shutter_pulse);
+    }
 }
 
 unsigned Camera::setFocalLength(unsigned focal_length){

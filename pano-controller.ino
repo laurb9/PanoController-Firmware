@@ -76,9 +76,9 @@ static DRV8834 vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
 static Pano pano(horiz_motor, vert_motor, camera, MOTORS_ON);
 
 // these variables are modified by the menu
-volatile int focal, shutter, pre_shutter, orientation, aspect, shots, motors_enable, display_invert;
-volatile int horiz, vert;
-volatile int running;
+volatile int focal, shutter, pre_shutter, post_wait, long_pulse,
+             orientation, aspect, shots, motors_enable, display_invert,
+             horiz, vert, running;
 
 void setup() {
     Serial.begin(38400);
@@ -397,7 +397,7 @@ void setPanoParams(void){
     menu.cancel();
     camera.setAspect(aspect);
     camera.setFocalLength(focal);
-    pano.setShutter(shutter, pre_shutter);
+    pano.setShutter(shutter, pre_shutter, post_wait, long_pulse);
     pano.setShots(shots);
 }
 
