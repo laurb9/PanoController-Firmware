@@ -72,7 +72,7 @@ unsigned Pano::getTimeLeft(void){
  */
 void Pano::gridFit(int total_size, int overlap, float& block_size, int& count){
     if (block_size <= total_size){
-        count = (100*total_size - overlap*block_size - 1) / ((100 - overlap)*block_size);
+        count = (100*total_size - overlap*block_size) / ((100 - overlap)*block_size);
         block_size = round(total_size - block_size) / count;
         count++;
     } else {
