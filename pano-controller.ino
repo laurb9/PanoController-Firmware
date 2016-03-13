@@ -476,6 +476,14 @@ int onPanoInfo(int __){
     return __;
 }
 
+/*
+ * Menu callback for testing camera shutter
+ */
+int onTestShutter(int __){
+    pano.shutter();
+    return __;
+}
+
 void loop() {
     displayMenu();
     menu.sync();

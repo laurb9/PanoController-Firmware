@@ -104,6 +104,10 @@
                  ],
                  "variable": "aspect",
                  "eeprom": true
+             },
+             {
+                 "description": "Test Shutter",
+                 "onselect": "onTestShutter"
              }
         ]
     },
