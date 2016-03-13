@@ -213,7 +213,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
         if (HID::isEventOk(event) || HID::isEventCancel(event)) break;
 
         pos_x = joystick.getPositionX();
-        horiz_rpm = DYNAMIC_HORIZ_RPM(camera.getHorizFOV()/10);
+        horiz_rpm = DYNAMIC_HORIZ_RPM(camera.getHorizFOV());
         if (pos_x == 0){
             if (HID::isEventRight(event)) pos_x = 1;
             if (HID::isEventLeft(event)) pos_x = -1;
@@ -228,7 +228,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
         }
 
         pos_y = joystick.getPositionY();
-        vert_rpm = DYNAMIC_VERT_RPM(camera.getVertFOV()/10);
+        vert_rpm = DYNAMIC_VERT_RPM(camera.getVertFOV());
         if (pos_y == 0){
             if (HID::isEventUp(event)) pos_y = 1;
             if (HID::isEventDown(event)) pos_y = -1;
