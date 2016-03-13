@@ -29,9 +29,13 @@ Camera::Camera(int focus_pin, int shutter_pin)
 void Camera::shutter(int delay_ms){
     digitalWrite(focus_pin, LOW);
     digitalWrite(shutter_pin, LOW);
-    delay(delay_ms);
+    delay(min(SHUTTER_PULSE, delay_ms));
     digitalWrite(focus_pin, HIGH);
     digitalWrite(shutter_pin, HIGH);
+    if (delay_ms > SHUTTER_PULSE){
+        delay(delay_ms - SHUTTER_PULSE);
+    }
+    delay(SHUTTER_PULSE); // additional post-release delay
 }
 
 unsigned Camera::setFocalLength(unsigned focal_length){

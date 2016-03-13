@@ -11,6 +11,9 @@
 
 #include <math.h>
 
+// shutter pulse, in ms - 100 = 0.1s
+#define SHUTTER_PULSE 100
+
 class Camera {
 protected:
     int focus_pin;
