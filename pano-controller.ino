@@ -243,7 +243,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
         }
 
         if (vert && !pos_x && !pos_y){
-            pano.setFOV(abs(pano.horiz_home_offset) + camera.getHorizFOV(),
+            pano.setFOV((horiz) ? abs(pano.horiz_home_offset) + camera.getHorizFOV() : 360,
                         abs(pano.vert_home_offset) + camera.getVertFOV());
             pano.computeGrid();
             display.setTextCursor(6, 0);

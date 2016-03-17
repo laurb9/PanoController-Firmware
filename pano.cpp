@@ -67,16 +67,23 @@ unsigned Pano::getTimeLeft(void){
 }
 /*
  * Helper to calculate grid fit with overlap
- * @param total_size: entire grid size
+ * @param total_size: entire grid size (1-360 degrees)
  * @param overlap: min required overlap in percent (1-99)
- * @param block_size: ref to initial block size (will be updated)
+ * @param block_size: ref to initial (max) block size (will be updated)
  * @param count: ref to image count (will be updated)
  */
 void Pano::gridFit(int total_size, int overlap, float& block_size, int& count){
     if (block_size <= total_size){
-        count = (100*total_size - overlap*block_size) / ((100 - overlap)*block_size);
-        block_size = round(total_size - block_size) / count;
-        count++;
+        /*
+         * For 360 pano, we need to cover entire circle plus overlap.
+         * For smaller panos, we cover the requested size only.
+         */
+        if (total_size != 360){
+            total_size = ceil(total_size - block_size * overlap/100);
+        }
+        block_size = block_size * (100-overlap) / 100;
+        count = ceil(total_size / block_size);
+        block_size = float(total_size) / count;
     } else {
         count = 1;
     }
