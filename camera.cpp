@@ -12,13 +12,7 @@
 
 // taken from https://en.wikipedia.org/wiki/Angle_of_view for now
 const unsigned Camera::focal_lengths[] = {
-        12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500
-};
-const float Camera::vert_degrees[] = {
-        90.0, 81.2, 73.9, 61.9, 53.1, 37.8, 27.0, 19.5, 13.0, 6.87, 4.58, 3.44, 2.75
-};
-const float Camera::horiz_degrees[] = {
-       111.1, 102.7, 95.1, 82.4, 73.7, 54.4, 39.6, 28.8, 19.5, 10.3, 6.87, 5.15, 4.12
+        12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500, 640
 };
 
 Camera::Camera(int focus_pin, int shutter_pin)
@@ -32,12 +26,16 @@ Camera::Camera(int focus_pin, int shutter_pin)
     setFocalLength(24);
 }
 
-void Camera::shutter(int delay_ms){
+void Camera::shutter(int delay_ms, bool long_pulse){
+    int shutter_pulse = (long_pulse) ? delay_ms : SHUTTER_PULSE;
     digitalWrite(focus_pin, LOW);
     digitalWrite(shutter_pin, LOW);
-    delay(delay_ms);
+    delay(min(shutter_pulse, delay_ms));
     digitalWrite(focus_pin, HIGH);
     digitalWrite(shutter_pin, HIGH);
+    if (delay_ms > shutter_pulse){
+        delay(delay_ms - shutter_pulse);
+    }
 }
 
 unsigned Camera::setFocalLength(unsigned focal_length){
@@ -48,33 +46,33 @@ unsigned Camera::setFocalLength(unsigned focal_length){
 }
 
 float Camera::getHorizFOV(void){
-    float fov;
+    float d;
     switch (aspect){
     case 32:
-        fov = horiz_degrees[lens_idx];
+        d = 36;
         break;
     case 23:
-        fov = vert_degrees[lens_idx];
+        d = 24;
         break;
     default:
-        fov = 0;
+        d = 36;
     }
-    return fov;
+    return calcFOV(d);
 }
 
 float Camera::getVertFOV(void){
-    float fov;
+    float d;
     switch (aspect){
     case 32:
-        fov = vert_degrees[lens_idx];
+        d = 24;
         break;
     case 23:
-        fov = horiz_degrees[lens_idx];
+        d = 36;
         break;
     default:
-        fov = 0;
+        d = 24;
     }
-    return fov;
+    return calcFOV(d);
 }
 
 /*

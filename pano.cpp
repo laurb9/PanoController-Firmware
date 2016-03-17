@@ -26,9 +26,11 @@ void Pano::setFOV(int horiz_angle, int vert_angle){
         vert_fov = vert_angle;
     }
 }
-void Pano::setShutter(unsigned speed, unsigned pre_delay){
+void Pano::setShutter(unsigned speed, unsigned pre_delay, unsigned post_wait, bool long_pulse){
     shutter_delay = speed;
     pre_shutter_delay = pre_delay;
+    post_shutter_delay = post_wait;
+    shutter_long_pulse = long_pulse;
 }
 void Pano::setShots(unsigned shots){
     shots_per_position = shots;
@@ -53,7 +55,7 @@ int Pano::getCurCol(void){
  */
 unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
-    int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay) / 1000 +
+    int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay + post_shutter_delay) / 1000 +
         // time needed to move the platform
         // each photo requires a horizontal move (except last one in each row)
         (photos - photos/horiz_count) * camera.getHorizFOV() * horiz_gear_ratio * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
@@ -65,16 +67,23 @@ unsigned Pano::getTimeLeft(void){
 }
 /*
  * Helper to calculate grid fit with overlap
- * @param total_size: entire grid size
+ * @param total_size: entire grid size (1-360 degrees)
  * @param overlap: min required overlap in percent (1-99)
- * @param block_size: ref to initial block size (will be updated)
+ * @param block_size: ref to initial (max) block size (will be updated)
  * @param count: ref to image count (will be updated)
  */
 void Pano::gridFit(int total_size, int overlap, float& block_size, int& count){
     if (block_size <= total_size){
-        count = (100*total_size - overlap*block_size - 1) / ((100 - overlap)*block_size);
-        block_size = round(total_size - block_size) / count;
-        count++;
+        /*
+         * For 360 pano, we need to cover entire circle plus overlap.
+         * For smaller panos, we cover the requested size only.
+         */
+        if (total_size != 360){
+            total_size = ceil(total_size - block_size * overlap/100);
+        }
+        block_size = block_size * (100-overlap) / 100;
+        count = ceil(total_size / block_size);
+        block_size = float(total_size) / count;
     } else {
         count = 1;
     }
@@ -102,7 +111,8 @@ void Pano::start(void){
 void Pano::shutter(void){
     delay(pre_shutter_delay);
     for (unsigned i=shots_per_position; i; i--){
-        camera.shutter(shutter_delay);
+        camera.shutter(shutter_delay, shutter_long_pulse);
+        delay(post_shutter_delay);
     }
 }
 /*

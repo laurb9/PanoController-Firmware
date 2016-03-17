@@ -46,7 +46,7 @@
              {
                  "description": "Focal Len",
                  "default": 35,
-                 "options": [12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400],
+                 "options": [12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500, 640],
                  "unit": "mm",
                  "variable": "focal",
                  "eeprom": true
@@ -79,6 +79,30 @@
                      {"4s": 4000}
                  ],
                  "variable": "pre_shutter",
+                 "eeprom": true
+             },
+             {
+                 "description": "Processing Wait",
+                 "default": "0.1s",
+                 "options": [
+                     {"0.1s": 100},
+                     {"0.5s": 500},
+                     {"1s": 1000},
+                     {"2s": 2000},
+                     {"4s": 4000},
+                     {"8s": 8000}
+                 ],
+                 "variable": "post_wait",
+                 "eeprom": true
+             },
+             {
+                 "description": "Shutter Mode",
+                 "default": "Normal",
+                 "options": [
+                     {"Normal": 0},
+                     {"Cont Bkt": 1}
+                 ],
+                 "variable": "long_pulse",
                  "eeprom": true
              },
              {
