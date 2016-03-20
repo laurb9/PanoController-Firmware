@@ -8,9 +8,8 @@ Current state: functional on prototype board.
 
 ## Features:
 - OLED 128x64 display
-- Joystick menu navigation and position setting
-- Infrared remote menu operation and triggering
-- Camera focal length presets from 12 to 400mm
+- Joystick menu navigation and optional IR remote
+- Camera focal length presets from 12 to 680mm
 - 360 pano option
 - Can operate with battery voltage from 10V down to 6V
 - Lower power usage and later cutoff than original Gigapan
@@ -22,7 +21,9 @@ Current state: functional on prototype board.
   - estimated time left in minutes
   - battery status
 
-## Wiring map (Teensy or Pro Mini*)
+## Wiring map
+
+<img src="images/connection-diagram.png" width="870" alt="Breadboard setup with Teensy LC">
 
 ### Teensy LC
 - A0 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
@@ -85,6 +86,39 @@ Tested with ~1.5lb zoom lens+camera. The minimum Vref that avoids skipping is ab
 0.3V (0.6A to motor), but it will vary with camera weight. It may be possible to use
 lower current even, if we reduce the speed.
 
-## BOM
+## Bill of Materials
 
-(TODO)
+### Electronics
+
+- <a href="http://www.pjrc.com/store/teensylc.html">Teensy LC</a> 
+  (or <a href="http://www.pjrc.com/store/teensy32.html">Teensy 3.1</a>) from PJRC
+- 2 x <a href="https://www.pololu.com/product/2134">DRV8834 Low-Voltage Stepper Motor Driver</a> from Pololu
+- <a href="http://www.amazon.com/Yellow-Serial-128X64-Display-Arduino/dp/B00O2LLT30">128x64 OLED display, SSD1306 I2C</a> from anywhere
+- 2-axis + switch analog joystick
+- 1834HS IR receiver with some remote - optional but recommended
+  - Remote codes are hardcoded in remote.cpp if you have a different remote
+- Step-Down 3.3V converter (<a href="https://www.pololu.com/product/2842">Pololu D24V5F3</a>)
+- 47uF electrolytic capacitor 
+- 10K resistor
+- 47K resistor
+- 2 x <a href="https://www.circuitspecialists.com/stepper-motor">Bipolar Stepper Motors</a> with reduction gears (I used a Gigapan Epic 100 platform)
+  - Examples: 
+    - 39BYG101 0.5A 
+    - 39BYG001 1A (used in Gigapan platform)
+  - Notes: 
+    - the DRV8834 current limit must be set according to motor spec
+    - reduction gear settings are hardcoded in pano.h
+- 2 x 4-pin female connectors for motor connections
+- 3-pin connector/jack for remote shutter
+- 2-pin power connector/DC power jack 
+- 6AA battery holder
+
+### Libraries
+- SSD1306
+- IRremote
+- <a href="https://github.com/laurb9/StepperDriver/releases">StepperDriver</a>
+
+### Hardware
+
+Well, this is a controller, so it needs a pano bot to control. I used the Gigapan
+Epic 100 but any platform with two motors (or even one, I suppose) can be used.
