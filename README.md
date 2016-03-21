@@ -1,8 +1,10 @@
 # Pano Controller
 
-Platform for high-resolution panoramic photography, initially intended as board upgrade for the Gigapan EPIC 100.
+Open Platform for high-resolution panoramic photography. Initially developed a board 
+upgrade for the Gigapan EPIC 100, but designed to be flexible and support home-brew
+panoramic platforms.
 
-Current state: functional on prototype board.
+Current state: functional on prototype board, tested in the field.
 
 <img src="images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
 
