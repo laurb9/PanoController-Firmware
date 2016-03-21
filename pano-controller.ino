@@ -1,7 +1,7 @@
 /*
- * GigapanPlus for Arduino project
+ * Pano Controller for Arduino project
  *
- * Copyright (C)2015 Laurentiu Badea
+ * Copyright (C)2015,2016 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
@@ -346,12 +346,15 @@ void executePano(void){
         if (!pano.position){
             delay(2000);
         }
-        pano.shutter();
-        running = pano.next();
+        if (shutter > 0){
+            pano.shutter();
+        } else {
+            button_clicked = true;
+        }
 
         if (button_clicked || remote.read()){
             joystick.clear(1000), remote.clear(1000);
-            // button was clicked mid-pano, go in manual mode
+            // button was clicked mid-pano or we are in manual shutter mode
             int event;
             displayPanoStatus();
             displayArrows();
@@ -372,6 +375,7 @@ void executePano(void){
             }
             button_clicked = false;
         }
+        running = running && pano.next();
     };
 
     // clean up

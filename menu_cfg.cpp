@@ -68,10 +68,11 @@ static const PROGMEM char menu_shutter_name_5[] = "1s";
 static const PROGMEM char menu_shutter_name_6[] = "2s";
 static const PROGMEM char menu_shutter_name_7[] = "4s";
 static const PROGMEM char menu_shutter_name_8[] = "8s";
+static const PROGMEM char menu_shutter_name_9[] = "MANUAL";
 
-static const PROGMEM char * const menu_shutter_names[9] = {menu_shutter_name_0, menu_shutter_name_1, menu_shutter_name_2, menu_shutter_name_3, menu_shutter_name_4, menu_shutter_name_5, menu_shutter_name_6, menu_shutter_name_7, menu_shutter_name_8};
-static const PROGMEM int menu_shutter_values[9] = {10, 50, 100, 250, 500, 1000, 2000, 4000, 8000};
-static NamedListSelector menu_shutter(menu_shutter_desc, &shutter, 10, 4 * sizeof(int), NULL, 9, menu_shutter_names, menu_shutter_values);
+static const PROGMEM char * const menu_shutter_names[10] = {menu_shutter_name_0, menu_shutter_name_1, menu_shutter_name_2, menu_shutter_name_3, menu_shutter_name_4, menu_shutter_name_5, menu_shutter_name_6, menu_shutter_name_7, menu_shutter_name_8, menu_shutter_name_9};
+static const PROGMEM int menu_shutter_values[10] = {10, 50, 100, 250, 500, 1000, 2000, 4000, 8000, 0};
+static NamedListSelector menu_shutter(menu_shutter_desc, &shutter, 10, 4 * sizeof(int), NULL, 10, menu_shutter_names, menu_shutter_values);
 
 // Delay
 extern volatile int pre_shutter;
