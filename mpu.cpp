@@ -54,14 +54,18 @@ void MPU::read(void){
 
 /*
  * Wait for zero motion with timeout.
+ * @param target: "zero" motion threshold target, in 1/100deg/s
  * @param timeout: milliseconds to wait
  * @returns: true if zero motion was detected, false if exited via timeout
  */
-bool MPU::zeroMotionWait(const int timeout){
+bool MPU::zeroMotionWait(int target, const int timeout){
     static int avg_gyro_x, avg_gyro_y, avg_gyro_z;
     bool zero_motion = false;
     unsigned zero_motion_duration = 0;
     unsigned end_timeout = millis() + timeout;
+
+    // a target less than GYRO_NOISE will never be reached
+    target = max(GYRO_NOISE, target);
 
     read();
     avg_gyro_x = gyro_x;
@@ -91,9 +95,7 @@ bool MPU::zeroMotionWait(const int timeout){
         span_y = max_gyro_y - min_gyro_y;
         span_z = max_gyro_z - min_gyro_z;
 
-        if (span_x < ZERO_MOTION_TARGET &&
-            span_y < ZERO_MOTION_TARGET &&
-            span_z < ZERO_MOTION_TARGET){
+        if (span_x < target && span_y < target && span_z < target){
             // one event of "zero" motion
             if (!zero_motion_duration){
                 // set wait target - 100ms of zero motion activates flag

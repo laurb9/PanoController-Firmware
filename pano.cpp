@@ -112,10 +112,7 @@ void Pano::start(void){
 
 void Pano::shutter(void){
     delay(pre_shutter_delay);
-    // activate zero motion shutter if shutter slower than 4/f (4 to allow for OS)
-    if (camera.getFocalLength() > 4*1000/shutter_delay){
-        mpu.zeroMotionWait(10000);
-    }
+    mpu.zeroMotionWait(STEADY_TARGET(camera.getVertFOV(), shutter_delay, CAMERA_RESOLUTION), STEADY_TIMEOUT);
     for (unsigned i=shots_per_position; i; i--){
         camera.shutter(shutter_delay, shutter_long_pulse);
         delay(post_shutter_delay);

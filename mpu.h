@@ -12,8 +12,8 @@
 
 #include <Wire.h>
 
-// for gyro_scale=25000 (in 1/100deg) 50 = 0.1
-#define ZERO_MOTION_TARGET 25
+// for gyro_scale=25000 (in 1/100deg) 15 = 0.15
+#define GYRO_NOISE 10
 
 // http://playground.arduino.cc/Main/MPU-6050
 #define MPU6050_RA_ACCEL_XOUT_H     0x3B
@@ -64,7 +64,7 @@ public:
     MPU(const int address, const int int_pin);
     void init(void);
     void read(void);
-    bool zeroMotionWait(const int timeout);
+    bool zeroMotionWait(int target, const int timeout);
 };
 
 #endif /* MPU_H_ */

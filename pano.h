@@ -12,6 +12,12 @@
 #include "camera.h"
 #include "mpu.h"
 
+// Calculate maximum allowed movement at given focal length and shutter
+#define STEADY_TARGET(fov, shutter, resolution) (100*1000/shutter*4*fov/resolution)
+// how long to wait for steady camera before giving up (ms)
+#define STEADY_TIMEOUT 10000
+#define CAMERA_RESOLUTION 4000
+
 #define Motor BasicStepperDriver
 // can do 60 @ 0.8A, 20 @ 0.3A & 1:16
 #define HORIZ_MOTOR_RPM 20
