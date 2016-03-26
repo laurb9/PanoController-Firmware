@@ -60,7 +60,7 @@ static Remote remote(REMOTE_IN);
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
 #define MPU_INT 7
-MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
+static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
 
 // Future devices
 #define COMPASS_DRDY 4
@@ -78,7 +78,7 @@ static DRV8834 vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
 
 // this should be hooked up to nSLEEP on both drivers
 #define MOTORS_ON 13
-static Pano pano(horiz_motor, vert_motor, camera, MOTORS_ON);
+static Pano pano(horiz_motor, vert_motor, camera, mpu, MOTORS_ON);
 
 // these variables are modified by the menu
 volatile int focal, shutter, pre_shutter, post_wait, long_pulse,
@@ -490,6 +490,7 @@ int onPanoInfo(int __){
  * Menu callback for testing camera shutter
  */
 int onTestShutter(int __){
+    setPanoParams();
     pano.shutter();
     return __;
 }

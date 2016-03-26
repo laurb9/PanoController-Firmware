@@ -24,7 +24,8 @@ public:
     static const unsigned focal_lengths[];
     Camera(int focus_pin, int shutter_pin);
     void shutter(int delay_ms, bool long_pulse);
-    unsigned setFocalLength(unsigned focal_length);;
+    unsigned setFocalLength(unsigned focal_length);
+    unsigned getFocalLength(void);
     float getHorizFOV(void);
     float getVertFOV(void);
     void setAspect(int aspect);

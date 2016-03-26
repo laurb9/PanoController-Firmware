@@ -45,6 +45,10 @@ unsigned Camera::setFocalLength(unsigned focal_length){
     return lens_idx;
 }
 
+unsigned Camera::getFocalLength(void){
+    return focal_lengths[lens_idx];
+}
+
 float Camera::getHorizFOV(void){
     float d;
     switch (aspect){
