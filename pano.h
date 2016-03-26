@@ -13,7 +13,8 @@
 #include "mpu.h"
 
 // Calculate maximum allowed movement at given focal length and shutter
-#define STEADY_TARGET(fov, shutter, resolution) (100*1000/shutter*4*fov/resolution)
+// =angular velocity that would cause a pixel to overlap next one within shot time
+#define STEADY_TARGET(fov, shutter, resolution) (100*1000/shutter*fov/resolution)
 // how long to wait for steady camera before giving up (ms)
 #define STEADY_TIMEOUT 10000
 #define CAMERA_RESOLUTION 4000
