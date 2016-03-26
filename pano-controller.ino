@@ -14,6 +14,7 @@
 #include "remote.h"
 #include "menu.h"
 #include "display.h"
+#include "mpu.h"
 
 // inactivity time to turn display off (ms)
 #define DISPLAY_SLEEP 5*60*1000
@@ -56,9 +57,13 @@ static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 #define REMOTE_IN 3
 static Remote remote(REMOTE_IN);
 
+// MPU (accel/gyro)
+#define MPU_I2C_ADDRESS 0x68
+#define MPU_INT 7
+MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
+
 // Future devices
 #define COMPASS_DRDY 4
-#define MPU_INT 7
 
 // Stepper motors and drivers
 #define MOTOR_STEPS 200
@@ -84,7 +89,8 @@ void setup() {
     Serial.begin(38400);
 
     pinMode(COMPASS_DRDY, INPUT_PULLUP);
-    pinMode(MPU_INT, INPUT_PULLUP);
+
+    mpu.init();
 
     pinMode(BATTERY, INPUT);
 #if defined(__MK20DX256__) || defined(__MKL26Z64__)
