@@ -234,8 +234,12 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             horiz_rpm = horiz_rpm * abs(pos_x) / joystick.range;
             pos_x = pos_x / abs(pos_x);
         }
-        if (pos_x && horiz && pano.horiz_home_offset + pos_x < 0){
-            pos_x = -pano.horiz_home_offset;
+        if (pos_x && horiz){
+            if (pos_x < -pano.horiz_home_offset){
+                pos_x = -pano.horiz_home_offset;
+            } else if (abs(pos_x + pano.horiz_home_offset) + camera.getHorizFOV() > 360){
+                pos_x = 360 - camera.getHorizFOV() - pano.horiz_home_offset;
+            }
         }
 
         pos_y = joystick.getPositionY();
@@ -249,8 +253,12 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             vert_rpm = vert_rpm * abs(pos_y) / joystick.range;
             pos_y = pos_y / abs(pos_y);
         }
-        if (pos_y && vert && -pano.vert_home_offset - pos_y < 0){
-            pos_y = -pano.vert_home_offset;
+        if (pos_y && vert){
+            if (pos_y > -pano.vert_home_offset){
+                pos_y = -pano.vert_home_offset;
+            } else if (-(pos_y + pano.vert_home_offset) + camera.getVertFOV() > 180){
+                pos_y = -(180 - camera.getVertFOV() + pano.vert_home_offset);
+            }
         }
 
         if (vert && !pos_x && !pos_y){
