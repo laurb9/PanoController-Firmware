@@ -56,8 +56,7 @@ int Pano::getCurCol(void){
  */
 unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
-    int steady_delay = 130;
-    int seconds = photos * shots_per_position * (pre_shutter_delay + steady_delay + shots_per_position * (shutter_delay + post_shutter_delay)) / 1000 +
+    int seconds = photos * shots_per_position * (pre_shutter_delay + steady_delay_avg + shots_per_position * (shutter_delay + post_shutter_delay)) / 1000 +
         // time needed to move the platform
         // each photo requires a horizontal move (except last one in each row)
         (photos - photos/horiz_count) * camera.getHorizFOV() * horiz_gear_ratio * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
@@ -112,8 +111,10 @@ void Pano::start(void){
 }
 
 void Pano::shutter(void){
+    int start = millis();
     delay(pre_shutter_delay);
     mpu.zeroMotionWait(STEADY_TARGET(camera.getVertFOV(), shutter_delay, CAMERA_RESOLUTION), STEADY_TIMEOUT);
+    steady_delay_avg = (steady_delay_avg * position + millis() - start) / (position + 1);
     for (unsigned i=shots_per_position; i; i--){
         camera.shutter(shutter_delay, shutter_long_pulse);
         delay(post_shutter_delay);

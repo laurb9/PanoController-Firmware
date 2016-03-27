@@ -149,7 +149,12 @@ void displayPanoStatus(void){
 void displayProgress(void){
     int photos = pano.getHorizShots() * pano.getVertShots();
     display.setTextCursor(6, 0);
-    display.printf("%d minutes\n", pano.getTimeLeft()/60);
+    display.printf("%d minutes ", pano.getTimeLeft()/60);
+    if (pano.steady_delay_avg > 500){
+        display.setTextCursor(6, 16);
+        display.printf("%2ds ", (pano.steady_delay_avg+500)/1000);
+        display.printf((pano.steady_delay_avg < 8000) ? "\x12" : "!");
+    }
     for (int i=(pano.position+1) * DISPLAY_COLS / photos; i > 0; i--){
         display.print('\xda');
     }

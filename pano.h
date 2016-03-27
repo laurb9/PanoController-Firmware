@@ -60,6 +60,8 @@ public:
     float horiz_home_offset = 0;
     float vert_home_offset = 0;
 
+    unsigned steady_delay_avg = 100;
+
     // configuration
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, int motors_pin);
     void setFOV(int horiz_angle, int vert_angle);
