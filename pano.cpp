@@ -145,7 +145,7 @@ bool Pano::moveTo(int new_row, int new_col){
         // horizontal adjustment needed
         // figure out shortest path around the circle
         // good idea if on batteries, bad idea when power cable in use
-        int move = (new_col-cur_col) * horiz_move;
+        float move = (new_col-cur_col) * horiz_move;
         if (abs(move) > 180){
             if (move < 0){
                 move = 360 + move;
@@ -217,6 +217,8 @@ void Pano::moveMotors(float h, float v){
         vert_motor.rotate(v * vert_gear_ratio);
         vert_home_offset += v;
     }
+    Serial.print("horiz_home_offset ");
+    Serial.println(horiz_home_offset);
 }
 
 /*
