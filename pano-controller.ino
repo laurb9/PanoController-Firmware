@@ -14,6 +14,7 @@
 #include "remote.h"
 #include "menu.h"
 #include "display.h"
+#include "mpu.h"
 
 // inactivity time to turn display off (ms)
 #define DISPLAY_SLEEP 5*60*1000
@@ -56,9 +57,13 @@ static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 #define REMOTE_IN 3
 static Remote remote(REMOTE_IN);
 
+// MPU (accel/gyro)
+#define MPU_I2C_ADDRESS 0x68
+#define MPU_INT 7
+static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
+
 // Future devices
 #define COMPASS_DRDY 4
-#define MPU_INT 7
 
 // Stepper motors and drivers
 #define MOTOR_STEPS 200
@@ -73,7 +78,7 @@ static DRV8834 vert_motor(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
 
 // this should be hooked up to nSLEEP on both drivers
 #define MOTORS_ON 13
-static Pano pano(horiz_motor, vert_motor, camera, MOTORS_ON);
+static Pano pano(horiz_motor, vert_motor, camera, mpu, MOTORS_ON);
 
 // these variables are modified by the menu
 volatile int focal, shutter, pre_shutter, post_wait, long_pulse,
@@ -84,7 +89,8 @@ void setup() {
     Serial.begin(38400);
 
     pinMode(COMPASS_DRDY, INPUT_PULLUP);
-    pinMode(MPU_INT, INPUT_PULLUP);
+
+    mpu.init();
 
     pinMode(BATTERY, INPUT);
 #if defined(__MK20DX256__) || defined(__MKL26Z64__)
@@ -143,7 +149,12 @@ void displayPanoStatus(void){
 void displayProgress(void){
     int photos = pano.getHorizShots() * pano.getVertShots();
     display.setTextCursor(6, 0);
-    display.printf("%d minutes\n", pano.getTimeLeft()/60);
+    display.printf("%d minutes ", pano.getTimeLeft()/60);
+    if (pano.steady_delay_avg > 500){
+        display.setTextCursor(6, 16);
+        display.printf("%2ds ", (pano.steady_delay_avg+500)/1000);
+        display.printf((pano.steady_delay_avg < 8000) ? "\x12" : "!");
+    }
     for (int i=(pano.position+1) * DISPLAY_COLS / photos; i > 0; i--){
         display.print('\xda');
     }
@@ -223,8 +234,12 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             horiz_rpm = horiz_rpm * abs(pos_x) / joystick.range;
             pos_x = pos_x / abs(pos_x);
         }
-        if (pos_x && horiz && pano.horiz_home_offset + pos_x < 0){
-            pos_x = -pano.horiz_home_offset;
+        if (pos_x && horiz){
+            if (pos_x < -pano.horiz_home_offset){
+                pos_x = -pano.horiz_home_offset;
+            } else if (abs(pos_x + pano.horiz_home_offset) + camera.getHorizFOV() > 360){
+                pos_x = 360 - camera.getHorizFOV() - pano.horiz_home_offset;
+            }
         }
 
         pos_y = joystick.getPositionY();
@@ -238,8 +253,12 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             vert_rpm = vert_rpm * abs(pos_y) / joystick.range;
             pos_y = pos_y / abs(pos_y);
         }
-        if (pos_y && vert && -pano.vert_home_offset - pos_y < 0){
-            pos_y = -pano.vert_home_offset;
+        if (pos_y && vert){
+            if (pos_y > -pano.vert_home_offset){
+                pos_y = -pano.vert_home_offset;
+            } else if (-(pos_y + pano.vert_home_offset) + camera.getVertFOV() > 180){
+                pos_y = -(180 - camera.getVertFOV() + pano.vert_home_offset);
+            }
         }
 
         if (vert && !pos_x && !pos_y){
@@ -484,6 +503,7 @@ int onPanoInfo(int __){
  * Menu callback for testing camera shutter
  */
 int onTestShutter(int __){
+    setPanoParams();
     pano.shutter();
     return __;
 }

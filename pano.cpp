@@ -9,10 +9,11 @@
 
 #include "pano.h"
 
-Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int motors_pin)
+Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, int motors_pin)
 :horiz_motor(horiz_motor),
  vert_motor(vert_motor),
  camera(camera),
+ mpu(mpu),
  motors_pin(motors_pin)
 {
     pinMode(motors_pin, OUTPUT);
@@ -55,7 +56,7 @@ int Pano::getCurCol(void){
  */
 unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
-    int seconds = photos * shots_per_position * (pre_shutter_delay + shutter_delay + post_shutter_delay) / 1000 +
+    int seconds = photos * shots_per_position * (pre_shutter_delay + steady_delay_avg + shots_per_position * (shutter_delay + post_shutter_delay)) / 1000 +
         // time needed to move the platform
         // each photo requires a horizontal move (except last one in each row)
         (photos - photos/horiz_count) * camera.getHorizFOV() * horiz_gear_ratio * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
@@ -108,8 +109,12 @@ void Pano::start(void){
     setMotorsHomePosition();
     position = 0;
 }
+
 void Pano::shutter(void){
+    int start = millis();
     delay(pre_shutter_delay);
+    mpu.zeroMotionWait(STEADY_TARGET(camera.getVertFOV(), shutter_delay, CAMERA_RESOLUTION), STEADY_TIMEOUT);
+    steady_delay_avg = (steady_delay_avg * position + millis() - start) / (position + 1);
     for (unsigned i=shots_per_position; i; i--){
         camera.shutter(shutter_delay, shutter_long_pulse);
         delay(post_shutter_delay);

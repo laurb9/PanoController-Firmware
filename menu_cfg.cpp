@@ -53,26 +53,27 @@ Menu menu_pano(menu_pano_desc, 6, menu_pano_opts, menu_pano_types);
 extern volatile int focal;
 static const PROGMEM char menu_focal_len_desc[] = "Focal Len";
 
-static const PROGMEM int menu_focal_len_values[14] = {12, 14, 16, 20, 24, 35, 50, 70, 105, 200, 300, 400, 500, 640};
-static ListSelector menu_focal_len(menu_focal_len_desc, &focal, 35, 3 * sizeof(int), NULL, 14, menu_focal_len_values);
+static const PROGMEM int menu_focal_len_values[16] = {12, 14, 16, 20, 24, 28, 35, 50, 75, 105, 200, 300, 400, 450, 500, 600};
+static ListSelector menu_focal_len(menu_focal_len_desc, &focal, 35, 3 * sizeof(int), NULL, 16, menu_focal_len_values);
 
 // Shutter
 extern volatile int shutter;
 static const PROGMEM char menu_shutter_desc[] = "Shutter";
 static const PROGMEM char menu_shutter_name_0[] = "1/100";
-static const PROGMEM char menu_shutter_name_1[] = "1/20";
-static const PROGMEM char menu_shutter_name_2[] = "1/10";
-static const PROGMEM char menu_shutter_name_3[] = "1/4";
-static const PROGMEM char menu_shutter_name_4[] = "0.5s";
-static const PROGMEM char menu_shutter_name_5[] = "1s";
-static const PROGMEM char menu_shutter_name_6[] = "2s";
-static const PROGMEM char menu_shutter_name_7[] = "4s";
-static const PROGMEM char menu_shutter_name_8[] = "8s";
-static const PROGMEM char menu_shutter_name_9[] = "MANUAL";
+static const PROGMEM char menu_shutter_name_1[] = "1/50";
+static const PROGMEM char menu_shutter_name_2[] = "1/25";
+static const PROGMEM char menu_shutter_name_3[] = "1/10";
+static const PROGMEM char menu_shutter_name_4[] = "1/4";
+static const PROGMEM char menu_shutter_name_5[] = "0.5s";
+static const PROGMEM char menu_shutter_name_6[] = "1s";
+static const PROGMEM char menu_shutter_name_7[] = "2s";
+static const PROGMEM char menu_shutter_name_8[] = "4s";
+static const PROGMEM char menu_shutter_name_9[] = "8s";
+static const PROGMEM char menu_shutter_name_10[] = "MANUAL";
 
-static const PROGMEM char * const menu_shutter_names[10] = {menu_shutter_name_0, menu_shutter_name_1, menu_shutter_name_2, menu_shutter_name_3, menu_shutter_name_4, menu_shutter_name_5, menu_shutter_name_6, menu_shutter_name_7, menu_shutter_name_8, menu_shutter_name_9};
-static const PROGMEM int menu_shutter_values[10] = {10, 50, 100, 250, 500, 1000, 2000, 4000, 8000, 0};
-static NamedListSelector menu_shutter(menu_shutter_desc, &shutter, 10, 4 * sizeof(int), NULL, 10, menu_shutter_names, menu_shutter_values);
+static const PROGMEM char * const menu_shutter_names[11] = {menu_shutter_name_0, menu_shutter_name_1, menu_shutter_name_2, menu_shutter_name_3, menu_shutter_name_4, menu_shutter_name_5, menu_shutter_name_6, menu_shutter_name_7, menu_shutter_name_8, menu_shutter_name_9, menu_shutter_name_10};
+static const PROGMEM int menu_shutter_values[11] = {10, 20, 40, 100, 250, 500, 1000, 2000, 4000, 8000, 0};
+static NamedListSelector menu_shutter(menu_shutter_desc, &shutter, 10, 4 * sizeof(int), NULL, 11, menu_shutter_names, menu_shutter_values);
 
 // Delay
 extern volatile int pre_shutter;
@@ -82,24 +83,26 @@ static const PROGMEM char menu_delay_name_1[] = "0.5s";
 static const PROGMEM char menu_delay_name_2[] = "1s";
 static const PROGMEM char menu_delay_name_3[] = "2s";
 static const PROGMEM char menu_delay_name_4[] = "4s";
+static const PROGMEM char menu_delay_name_5[] = "8s";
 
-static const PROGMEM char * const menu_delay_names[5] = {menu_delay_name_0, menu_delay_name_1, menu_delay_name_2, menu_delay_name_3, menu_delay_name_4};
-static const PROGMEM int menu_delay_values[5] = {100, 500, 1000, 2000, 4000};
-static NamedListSelector menu_delay(menu_delay_desc, &pre_shutter, 100, 5 * sizeof(int), NULL, 5, menu_delay_names, menu_delay_values);
+static const PROGMEM char * const menu_delay_names[6] = {menu_delay_name_0, menu_delay_name_1, menu_delay_name_2, menu_delay_name_3, menu_delay_name_4, menu_delay_name_5};
+static const PROGMEM int menu_delay_values[6] = {100, 500, 1000, 2000, 4000, 8000};
+static NamedListSelector menu_delay(menu_delay_desc, &pre_shutter, 100, 5 * sizeof(int), NULL, 6, menu_delay_names, menu_delay_values);
 
 // Processing Wait
 extern volatile int post_wait;
 static const PROGMEM char menu_processing_wait_desc[] = "Processing Wait";
 static const PROGMEM char menu_processing_wait_name_0[] = "0.1s";
-static const PROGMEM char menu_processing_wait_name_1[] = "0.5s";
-static const PROGMEM char menu_processing_wait_name_2[] = "1s";
-static const PROGMEM char menu_processing_wait_name_3[] = "2s";
-static const PROGMEM char menu_processing_wait_name_4[] = "4s";
-static const PROGMEM char menu_processing_wait_name_5[] = "8s";
+static const PROGMEM char menu_processing_wait_name_1[] = "0.25s";
+static const PROGMEM char menu_processing_wait_name_2[] = "0.5s";
+static const PROGMEM char menu_processing_wait_name_3[] = "1s";
+static const PROGMEM char menu_processing_wait_name_4[] = "2s";
+static const PROGMEM char menu_processing_wait_name_5[] = "4s";
+static const PROGMEM char menu_processing_wait_name_6[] = "8s";
 
-static const PROGMEM char * const menu_processing_wait_names[6] = {menu_processing_wait_name_0, menu_processing_wait_name_1, menu_processing_wait_name_2, menu_processing_wait_name_3, menu_processing_wait_name_4, menu_processing_wait_name_5};
-static const PROGMEM int menu_processing_wait_values[6] = {100, 500, 1000, 2000, 4000, 8000};
-static NamedListSelector menu_processing_wait(menu_processing_wait_desc, &post_wait, 100, 6 * sizeof(int), NULL, 6, menu_processing_wait_names, menu_processing_wait_values);
+static const PROGMEM char * const menu_processing_wait_names[7] = {menu_processing_wait_name_0, menu_processing_wait_name_1, menu_processing_wait_name_2, menu_processing_wait_name_3, menu_processing_wait_name_4, menu_processing_wait_name_5, menu_processing_wait_name_6};
+static const PROGMEM int menu_processing_wait_values[7] = {100, 250, 500, 1000, 2000, 4000, 8000};
+static NamedListSelector menu_processing_wait(menu_processing_wait_desc, &post_wait, 100, 6 * sizeof(int), NULL, 7, menu_processing_wait_names, menu_processing_wait_values);
 
 // Shutter Mode
 extern volatile int long_pulse;
@@ -121,16 +124,11 @@ static RangeSelector menu_shots__(menu_shots___desc, &shots, 1, 8 * sizeof(int),
 extern volatile int aspect;
 static const PROGMEM char menu_aspect_desc[] = "Aspect";
 static const PROGMEM char menu_aspect_name_0[] = "P 2:3";
-static const PROGMEM char menu_aspect_name_1[] = "P 9:16";
-static const PROGMEM char menu_aspect_name_2[] = "P 3:4";
-static const PROGMEM char menu_aspect_name_3[] = "  1:1";
-static const PROGMEM char menu_aspect_name_4[] = "L 3:2";
-static const PROGMEM char menu_aspect_name_5[] = "L 16:9";
-static const PROGMEM char menu_aspect_name_6[] = "L 4:3";
+static const PROGMEM char menu_aspect_name_1[] = "L 3:2";
 
-static const PROGMEM char * const menu_aspect_names[7] = {menu_aspect_name_0, menu_aspect_name_1, menu_aspect_name_2, menu_aspect_name_3, menu_aspect_name_4, menu_aspect_name_5, menu_aspect_name_6};
-static const PROGMEM int menu_aspect_values[7] = {23, 916, 34, 11, 32, 169, 43};
-static NamedListSelector menu_aspect(menu_aspect_desc, &aspect, 23, 9 * sizeof(int), NULL, 7, menu_aspect_names, menu_aspect_values);
+static const PROGMEM char * const menu_aspect_names[2] = {menu_aspect_name_0, menu_aspect_name_1};
+static const PROGMEM int menu_aspect_values[2] = {23, 32};
+static NamedListSelector menu_aspect(menu_aspect_desc, &aspect, 23, 9 * sizeof(int), NULL, 2, menu_aspect_names, menu_aspect_values);
 
 // Test Shutter
 int onTestShutter(int);

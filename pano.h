@@ -10,7 +10,14 @@
 #define PANO_H_
 #include <BasicStepperDriver.h>
 #include "camera.h"
-#include "pano.h"
+#include "mpu.h"
+
+// Calculate maximum allowed movement at given focal length and shutter
+// =angular velocity that would cause a pixel to overlap next one within shot time
+#define STEADY_TARGET(fov, shutter, resolution) (100*1000/shutter*fov/resolution)
+// how long to wait for steady camera before giving up (ms)
+#define STEADY_TIMEOUT 10000
+#define CAMERA_RESOLUTION 4000
 
 #define Motor BasicStepperDriver
 // can do 60 @ 0.8A, 20 @ 0.3A & 1:16
@@ -30,6 +37,7 @@ protected:
     Motor& horiz_motor;
     Motor& vert_motor;
     Camera& camera;
+    MPU& mpu;
     int motors_pin;
     float horiz_move;
     float vert_move;
@@ -52,8 +60,10 @@ public:
     float horiz_home_offset = 0;
     float vert_home_offset = 0;
 
+    unsigned steady_delay_avg = 100;
+
     // configuration
-    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, int motors_pin);
+    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, int motors_pin);
     void setFOV(int horiz_angle, int vert_angle);
     void setShutter(unsigned shutter_delay, unsigned pre_delay, unsigned post_wait, bool long_pulse);
     void setShots(unsigned shots);
