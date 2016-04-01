@@ -217,8 +217,6 @@ void Pano::moveMotors(float h, float v){
         vert_motor.rotate(v * vert_gear_ratio);
         vert_home_offset += v;
     }
-    Serial.print("horiz_home_offset ");
-    Serial.println(horiz_home_offset);
 }
 
 /*
