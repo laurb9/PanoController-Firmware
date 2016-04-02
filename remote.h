@@ -13,10 +13,15 @@
 #include <IRremote.h>
 #include "hid.h"
 
+// the remote I have sends repeat code too quick
+// allow repeat code only after this many milliseconds
+#define REPEAT_DELAY 500
+
 class Remote : public HID {
 private:
     int pin;
-    int last_event;
+    unsigned last_event;
+    unsigned next_repeat_time;
     IRrecv* remote;
     decode_results remote_buffer;
 protected:
