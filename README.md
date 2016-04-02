@@ -7,6 +7,7 @@ panoramic platforms.
 Current state: fully functional prototype board, field-tested, frequently upgraded.
 
 <img src="images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
+<img src="images/pano-info.jpg" width="400" alt="Pano Controller Pano Information Screen">
 
 ## Features:
 ### Software
