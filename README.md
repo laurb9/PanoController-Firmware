@@ -4,24 +4,29 @@ Open Platform for high-resolution panoramic photography. Initially developed a b
 upgrade for the Gigapan EPIC 100, but designed to be flexible and support home-brew
 panoramic platforms.
 
-Current state: functional on prototype board, tested in the field.
+Current state: fully functional prototype board, field-tested, frequently upgraded.
 
 <img src="images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
 
 ## Features:
+### Software
+- **Zero-motion shutter delay!**
+  When gyro is connected, waits for platform to stabilize before triggering. Useful to compensate for tripod stability, platform's own movement or wind gusts.
+- Focal length presets from 12 to 600mm. Precise sub-degree movement control.
+- Seamless 360 pano option
+- Display:
+  - Estimated time left in minutes, taking into account average zero-motion wait time.
+  - Battery status
+  - Grid size and position
+- Precision movement control
+- Multiple delay options: pre-shutter and post-shutter, short or long shutter pulse (for bracketing).
+
+### Hardware
 - OLED 128x64 display
 - Joystick menu navigation and optional IR remote
-- Camera focal length presets from 12 to 680mm
-- 360 pano option
+- Camera focal length presets from 12 to 600mm
 - Can operate with battery voltage from 10V down to 6V
-- Lower power usage and later cutoff than original Gigapan
-- Status display during pano:
-  - photo number and total number of photos
-  - position on grid
-  - full grid size
-  - progress bar
-  - estimated time left in minutes
-  - battery status
+- Lower power usage and later voltage cutoff than original Gigapan
 
 ## Wiring map
 
@@ -32,24 +37,24 @@ Current state: functional on prototype board, tested in the field.
 - A1
 - A2 - Joystick Vx
 - A3 - Joystick Vy
-- A4 - SDA - Display and other I2C devices
-- A5 - SCL - Display and other I2C devices
+- A4 - SDA - Display and MPU-6050 board
+- A5 - SCL - Display and MPU-6050 board
 - A6
 - A7
-- D0/RX - camera focus
-- D1/TX - camera shutter
+- D0/RX - camera focus (active LOW)
+- D1/TX - camera shutter (active LOW)
 - D2(int) - Joystick SW
 - D3(int) - IR Remote In (AX-1838HS)
-- D4 - HMC5883L DRDY (future)
+- D4
 - D5 - StepperV DIR
 - D6 - StepperV STEP
-- D7 - GY-521 MPU INT (future)
+- D7 - MPU-6050 INT
 - D8 - StepperH DIR
 - D9 - StepperH STEP
 - D10- M0
 - D11- M1
 - D12
-- D13(led) - ~SLEEP (to both steppers) - indicates motors are on
+- D13(led) - ~SLEEP (to both steppers) - LED indicates motors are on
 
 ### Other
 
@@ -99,6 +104,7 @@ lower current even, if we reduce the speed.
 - 2-axis + switch analog joystick
 - 1834HS IR receiver with some remote - optional but recommended
   - Remote codes are hardcoded in remote.cpp if you have a different remote
+- GY-521 board with MPU-6050 6-axis accel/gyro (3.3V version)
 - Step-Down 3.3V converter (<a href="https://www.pololu.com/product/2842">Pololu D24V5F3</a>)
 - 47uF electrolytic capacitor 
 - 10K resistor
@@ -116,11 +122,13 @@ lower current even, if we reduce the speed.
 - 6AA battery holder
 
 ### Libraries
-- SSD1306
+- Adafruit_SSD1306
+- Adafruit_GFX
 - IRremote
+- Wire
 - <a href="https://github.com/laurb9/StepperDriver/releases">StepperDriver</a>
 
 ### Hardware
 
-Well, this is a controller, so it needs a pano bot to control. I used the Gigapan
+Well, this is a controller, so it needs a pano bot platform to control. I used the Gigapan
 Epic 100 but any platform with two motors (or even one, I suppose) can be used.
