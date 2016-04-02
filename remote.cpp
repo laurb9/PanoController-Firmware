@@ -16,6 +16,7 @@ Remote::Remote(int pin)
     remote->blink13(false);
     remote->enableIRIn();
     last_event = EVENT_NONE;
+    next_repeat_time = 0;
 }
 
 int Remote::clear(int timeout){
@@ -31,8 +32,7 @@ unsigned Remote::read(void){
         remote->resume();
         switch (code){
         case 0xFFFFFFFF: // repeat
-            // I have to turn this off for OK/Cancel, as most keys are repeated
-            if (!(last_event & (EVENT_OK|EVENT_CANCEL))){
+            if (millis() > next_repeat_time){
                 event = last_event;
             }
             break;
@@ -61,7 +61,10 @@ unsigned Remote::read(void){
             Serial.print("Unknown remote code ");
             Serial.println(code, HEX);
         };
-        last_event = event;
+        if (event && last_event != event){
+            last_event = event;
+            next_repeat_time = millis() + REPEAT_DELAY;
+        }
     }
     return event;
 }
