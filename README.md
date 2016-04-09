@@ -4,7 +4,7 @@ Open Platform for high-resolution panoramic photography. Initially developed a b
 upgrade for the Gigapan EPIC 100, but designed to be flexible and support home-brew
 panoramic platforms.
 
-Official Facebook page: https://www.facebook.com/panocontroller
+See the <a href="https://www.facebook.com/panocontroller">Official Facebook page</a> for demo videos and more progress photos.
 
 Current state: fully functional prototype board, field-tested, frequently upgraded.
 
@@ -13,7 +13,7 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 
 ## Features:
 ### Software
-- **Zero-motion shutter delay!**
+- **<a href="https://www.facebook.com/panocontroller/videos/1009260305834819/">Zero-motion shutter delay!</a>**
   When gyro is connected, waits for platform to stabilize before triggering. Useful to compensate for tripod stability, platform's own movement or wind gusts.
 - Focal length presets from 12 to 600mm. Precise sub-degree movement control.
 - Seamless 360 pano option
