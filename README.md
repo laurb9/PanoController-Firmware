@@ -4,6 +4,8 @@ Open Platform for high-resolution panoramic photography. Initially developed a b
 upgrade for the Gigapan EPIC 100, but designed to be flexible and support home-brew
 panoramic platforms.
 
+Official Facebook page: https://www.facebook.com/panocontroller
+
 Current state: fully functional prototype board, field-tested, frequently upgraded.
 
 <img src="images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
