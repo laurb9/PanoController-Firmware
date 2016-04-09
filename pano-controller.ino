@@ -155,6 +155,7 @@ void displayProgress(void){
         display.printf("%2ds ", (pano.steady_delay_avg+500)/1000);
         display.printf((pano.steady_delay_avg < 8000) ? "\x12" : "!");
     }
+    display.setTextCursor(7, 0);
     for (int i=(pano.position+1) * DISPLAY_COLS / photos; i > 0; i--){
         display.print('\xda');
     }
