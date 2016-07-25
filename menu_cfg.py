@@ -43,16 +43,13 @@ def buildMenu(menu, menu_name="menu", title="Main Menu"):
                     if menu_item["default"] == name:
                         default_val = value
     
-                    var_name = "%s_name_%d" % (menu_item_name, j)
-                    output.append('static const PROGMEM char %s[] = "%s";' % (var_name, name))
-                    names.append(var_name)
+                    names.append(name)
                     values.append(str(value))
                     
-                menu_item["names"] = ", ".join(names)
+                menu_item["names"] = '"' + '", "'.join(names) + '"'
+                menu_item["values"] = ", ".join(values)
                 output_fmt = """
-static const PROGMEM char * const %(name)s_names[%(size)d] = {%(names)s};
-static const PROGMEM int %(name)s_values[%(size)d] = {%(values)s};
-static NamedListSelector %(name)s("%(description)s", %(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(onselect)s, %(size)d, %(name)s_names, %(name)s_values);
+static NamedListSelector %(name)s("%(description)s", %(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(onselect)s, %(size)d,\n    (const PROGMEM char * const[]){%(names)s},\n    (const PROGMEM int[]){%(values)s});
 """
             else:
                 for j, value in enumerate(menu_item["options"]):
@@ -62,8 +59,7 @@ static NamedListSelector %(name)s("%(description)s", %(variable)s, %(default_val
                     values.append(str(value))
 
                 output_fmt = """
-static const PROGMEM int %(name)s_values[%(size)d] = {%(values)s};
-static ListSelector %(name)s("%(description)s", %(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(onselect)s, %(size)d, %(name)s_values);
+static ListSelector %(name)s("%(description)s", %(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(onselect)s, %(size)d,\n    (const PROGMEM int[]){%(values)s});
 """
             menu_item["default_val"] = default_val
             menu_item["size"] = len(values)
