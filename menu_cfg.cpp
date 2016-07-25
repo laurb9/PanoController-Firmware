@@ -43,10 +43,9 @@ static const PROGMEM char menu_manual_vert_fov_desc[] = "Manual Vert FOV";
 static RangeSelector menu_manual_vert_fov(menu_manual_vert_fov_desc, &vert, 90, 2 * sizeof(int), NULL, 10, 180, 10);
 
 
-static const PROGMEM union MenuItem menu_pano_opts[] = {&menu_new_pano, &menu_repeat_last, &menu_360_pano, &menu_last_pano_info, &menu_manual_horiz_fov, &menu_manual_vert_fov};
-static const PROGMEM int menu_pano_types[] = {OptionSelector::class_id, OptionSelector::class_id, OptionSelector::class_id, OptionSelector::class_id, RangeSelector::class_id, RangeSelector::class_id};
+static const PROGMEM BaseMenu * menu_pano_opts[] = {&menu_new_pano, &menu_repeat_last, &menu_360_pano, &menu_last_pano_info, &menu_manual_horiz_fov, &menu_manual_vert_fov};
 static const PROGMEM char menu_pano_desc[] = "Pano";
-Menu menu_pano(menu_pano_desc, 6, menu_pano_opts, menu_pano_types);
+Menu menu_pano(menu_pano_desc, 6, menu_pano_opts);
 
 // Camera
 // Focal Len
@@ -137,10 +136,9 @@ static const PROGMEM char menu_test_shutter_desc[] = "Test Shutter";
 static OptionSelector menu_test_shutter(menu_test_shutter_desc, NULL, 0, 0 * sizeof(int), onTestShutter);
 
 
-static const PROGMEM union MenuItem menu_camera_opts[] = {&menu_focal_len, &menu_shutter, &menu_delay, &menu_processing_wait, &menu_shutter_mode, &menu_shots__, &menu_aspect, &menu_test_shutter};
-static const PROGMEM int menu_camera_types[] = {ListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, NamedListSelector::class_id, RangeSelector::class_id, NamedListSelector::class_id, OptionSelector::class_id};
+static const PROGMEM BaseMenu * menu_camera_opts[] = {&menu_focal_len, &menu_shutter, &menu_delay, &menu_processing_wait, &menu_shutter_mode, &menu_shots__, &menu_aspect, &menu_test_shutter};
 static const PROGMEM char menu_camera_desc[] = "Camera";
-Menu menu_camera(menu_camera_desc, 8, menu_camera_opts, menu_camera_types);
+Menu menu_camera(menu_camera_desc, 8, menu_camera_opts);
 
 // Motors
 extern volatile int motors_enable;
@@ -163,8 +161,7 @@ static const PROGMEM int menu_display_values[2] = {0, 1};
 static NamedListSelector menu_display(menu_display_desc, &display_invert, 0, 0 * sizeof(int), NULL, 2, menu_display_names, menu_display_values);
 
 
-static const PROGMEM union MenuItem menu_opts[] = {&menu_pano, &menu_camera, &menu_motors, &menu_display};
-static const PROGMEM int menu_types[] = {Menu::class_id, Menu::class_id, NamedListSelector::class_id, NamedListSelector::class_id};
+static const PROGMEM BaseMenu * menu_opts[] = {&menu_pano, &menu_camera, &menu_motors, &menu_display};
 static const PROGMEM char menu_desc[] = "Main Menu";
-Menu menu(menu_desc, 4, menu_opts, menu_types);
+Menu menu(menu_desc, 4, menu_opts);
 

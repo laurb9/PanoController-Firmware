@@ -6,7 +6,6 @@ eeprom_idx = 0
 def buildMenu(menu, menu_name="menu", title="Main Menu"):
     output = []
     menus = []
-    menu_types = []
     eeprom_map = []
     global eeprom_idx
 
@@ -41,7 +40,6 @@ def buildMenu(menu, menu_name="menu", title="Main Menu"):
         
         if "options" in menu_item:
             if isinstance(menu_item["options"][0], dict):
-                menu_types.append("NamedListSelector::class_id")
                 for j, option in enumerate(menu_item["options"]):
                     name, value = option.items()[0]
                     if menu_item["default"] == name:
@@ -59,7 +57,6 @@ static const PROGMEM int %(name)s_values[%(size)d] = {%(values)s};
 static NamedListSelector %(name)s(%(name)s_desc, %(variable)s, %(default_val)d, %(eeprom)d * sizeof(int), %(onselect)s, %(size)d, %(name)s_names, %(name)s_values);
 """
             else:
-                menu_types.append("ListSelector::class_id")
                 for j, value in enumerate(menu_item["options"]):
                     if menu_item["default"] == value:
                         default_val = value
@@ -76,7 +73,6 @@ static ListSelector %(name)s(%(name)s_desc, %(variable)s, %(default_val)d, %(eep
             output.append(output_fmt % menu_item)
         
         elif "step" in menu_item:
-            menu_types.append("RangeSelector::class_id")
             output.append(
 """
 static RangeSelector %(name)s(%(name)s_desc, %(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(onselect)s, %(min)d, %(max)d, %(step)d);
@@ -84,10 +80,8 @@ static RangeSelector %(name)s(%(name)s_desc, %(variable)s, %(default)d, %(eeprom
             
         elif "menu" in menu_item:
             output += buildMenu(menu_item["menu"], menu_name=menu_item_name, title=menu_item["description"])
-            menu_types.append("Menu::class_id")
             
         else:
-            menu_types.append("OptionSelector::class_id")
             output.append(
 """
 static OptionSelector %(name)s(%(name)s_desc, %(variable)s, %(default)d, %(eeprom)d * sizeof(int), %(onselect)s);
@@ -98,14 +92,12 @@ static OptionSelector %(name)s(%(name)s_desc, %(variable)s, %(default)d, %(eepro
 
     output.append(
 """
-static const PROGMEM union MenuItem %s_opts[] = {&%s};
-static const PROGMEM int %s_types[] = {%s};
+static const PROGMEM BaseMenu * %s_opts[] = {&%s};
 static const PROGMEM char %s_desc[] = "%s";
-Menu %s(%s_desc, %d, %s_opts, %s_types);
+Menu %s(%s_desc, %d, %s_opts);
 """ % (menu_name, ", &".join(menus), 
-       menu_name, ", ".join(menu_types),
        menu_name, title, 
-       menu_name, menu_name, len(menus), menu_name, menu_name))
+       menu_name, menu_name, len(menus), menu_name))
 
     return output
 

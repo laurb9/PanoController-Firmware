@@ -17,10 +17,7 @@
  * OptionSelector: share functionality among the other menu classes
  */
 OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
-:description(description),
- value(value),
- eeprom(eeprom),
- onselect(onselect)
+:BaseMenu(description, value, eeprom, onselect)
 {
     active = false;
     // override default with eeprom value, if set
@@ -233,14 +230,17 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * Menu: this is a regular menu, nothing is set here.
  */
-Menu::Menu(const char *description, int count, const union MenuItem * const menus, const int *types)
+Menu::Menu(const char *description, int count, const BaseMenu* const *menus)
 :OptionSelector(description, NULL, 0, 0, NULL),
- menus(menus),
- types(types)
+ menus(menus)
 {
     pos = 0;
     this->count = count;
     drilldown = false;
+}
+
+BaseMenu * Menu::getBaseMenuAtPos(const int pos){
+    return FLASH_CAST_PTR(BaseMenu, menus, pos);
 }
 
 void Menu::open(void){
@@ -251,8 +251,8 @@ void Menu::open(void){
 void Menu::cancel(void){
     if (drilldown){
         invoke_method(pos, cancel);
-        if (FLASH_READ_INT(types, pos) != Menu::class_id
-            || ! FLASH_CAST_PTR(Menu, menus, pos)->active){
+        if (getBaseMenuAtPos(pos)->getClassID() != Menu::class_id
+            || ! ((Menu*)getBaseMenuAtPos(pos))->active){
             drilldown = false;
         }
     } else {
@@ -279,7 +279,7 @@ void Menu::select(void){
     } else {
         OptionSelector::select();
         drilldown = true;
-        if (FLASH_READ_INT(types, pos) != OptionSelector::class_id){
+        if (getBaseMenuAtPos(pos)->getClassID() != OptionSelector::class_id){
             invoke_method(pos, open);
         } else {
             // OptionSelector does not have any options to show
