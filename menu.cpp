@@ -246,9 +246,8 @@ void Menu::open(void){
 
 void Menu::cancel(void){
     if (drilldown){
-        invoke_method(pos, cancel);
-        if (menus[pos]->getClassID() != Menu::class_id
-            || ! ((Menu*)menus[pos])->active){
+        menus[pos]->cancel();
+        if (menus[pos]->getClassID() != Menu::class_id || ! menus[pos]->active){
             drilldown = false;
         }
     } else {
@@ -257,42 +256,42 @@ void Menu::cancel(void){
 }
 void Menu::next(void){
     if (drilldown){
-        invoke_method(pos, next);
+        menus[pos]->next();
     } else {
         OptionSelector::next();
     }
 }
 void Menu::prev(void){
     if (drilldown){
-        invoke_method(pos, prev);
+        menus[pos]->prev();
     } else {
         OptionSelector::prev();
     }
 }
 void Menu::select(void){
     if (drilldown){
-        invoke_method(pos, select);
+        menus[pos]->select();
     } else {
         OptionSelector::select();
         drilldown = true;
         if (menus[pos]->getClassID() != OptionSelector::class_id){
-            invoke_method(pos, open);
+            menus[pos]->open();
         } else {
             // OptionSelector does not have any options to show
-            invoke_method(pos, select);
+            menus[pos]->select();
         }
     }
 }
 void Menu::sync(void){
     for (int i=0; i<count; i++){
-        invoke_method(i, sync);
+        menus[i]->sync();
     }
 }
 int Menu::render(DISPLAY_DEVICE display, int rows){
     int start;
 
     if (drilldown){
-        rows = invoke_method(pos, render, display, rows);
+        rows = menus[pos]->render(display, rows);
         return rows;
     }
 
@@ -304,8 +303,8 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
             Serial.print(F(">"));
             display.setTextColor(BLACK, WHITE);
         }
-        Serial.println(((OptionSelector*)menus[i])->description);
-        display.println(((OptionSelector*)menus[i])->description);
+        Serial.println(menus[i]->description);
+        display.println(menus[i]->description);
         if (i == pointer){
             display.setTextColor(WHITE, BLACK);
         }

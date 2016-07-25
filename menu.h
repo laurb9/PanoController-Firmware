@@ -30,6 +30,7 @@ public:
     int default_val = 0;
     int eeprom = 0;
     int (*onselect)(int) = NULL;
+    bool active = false;      // flag indicating the menu is active
 
     virtual void cancel(void) = 0;
     virtual void open(void) = 0;
@@ -49,7 +50,6 @@ public:
     static const ClassID class_id = CLASS_OPTIONS;
     virtual const ClassID getClassID(void){ return class_id; };
     int count = 0;
-    bool active = false;      // flag indicating the option selector is active
     OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
     void cancel(void) override;
     void open(void) override;
@@ -112,22 +112,6 @@ public:
     void sync(void) override;
     int render(DISPLAY_DEVICE display, int rows) override;
 };
-
-/* ugliest code ever follows */
-
-/*
- * Hack to cast a MenuItem to the correct pointer type and invoke the requested method
- */
-#define invoke_method(pos, method, ...) \
-(menus[pos]->getClassID() == Menu::class_id) ? \
-    ((Menu*)menus[pos])->method(__VA_ARGS__) : (\
-(menus[pos]->getClassID() == NamedListSelector::class_id) ? \
-    ((NamedListSelector*)menus[pos])->method(__VA_ARGS__) : (\
-(menus[pos]->getClassID() == ListSelector::class_id) ? \
-    ((ListSelector*)menus[pos])->method(__VA_ARGS__) : (\
-(menus[pos]->getClassID() == RangeSelector::class_id) ? \
-    ((RangeSelector*)menus[pos])->method(__VA_ARGS__) : \
-    ((OptionSelector*)menus[pos])->method(__VA_ARGS__))));
 
 extern Menu menu;
 
