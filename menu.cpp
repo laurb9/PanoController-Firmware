@@ -33,9 +33,9 @@ OptionSelector::OptionSelector(const char *description, volatile int *value, int
 }
 
 int OptionSelector::render(DISPLAY_DEVICE display, int rows){
-    Serial.println(FLASH_STRING description);
+    Serial.println(description);
     Serial.println("---------------------");
-    display.println(FLASH_STRING description); rows--;
+    display.println(description); rows--;
     if (rows > 4){
         display.print("---------------------"); rows--;
     }
@@ -152,7 +152,7 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
     this->count = count;
     // find the position corresponding to the default value
     for (pos=count-1; pos > 0; pos--){
-        if (FLASH_READ_INT(values, pos) == this->default_val){
+        if (values[pos] == this->default_val){
             break;
         }
     }
@@ -160,13 +160,13 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
 };
 
 void ListSelector::select(void){
-    *value = FLASH_READ_INT(values, pointer);
+    *value = values[pointer];
     OptionSelector::select();
 }
 void ListSelector::sync(void){
     // find the position corresponding to the default value
     for (pos=count-1; pos > 0; pos--){
-        if (FLASH_READ_INT(values,pos) == *value){
+        if (values[pos] == *value){
             break;
         }
     }
@@ -182,7 +182,7 @@ int ListSelector::render(DISPLAY_DEVICE display, int rows){
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        snprintf(buf, sizeof(buf), "%d", FLASH_READ_INT(values, i));
+        snprintf(buf, sizeof(buf), "%d", values[i]);
 
         Serial.print((i==pointer) ? F(">") : F(" "));
         display.print((i==pointer) ? '\x10' : ' ');
@@ -218,8 +218,8 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
         display.print((i==pointer) ? '\x10' : ' ');
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
-        Serial.println(FLASH_READ_STR(names, i));
-        display.print(FLASH_READ_STR(names, i));
+        Serial.println(names[i]);
+        display.print(names[i]);
         if (i == pos) display.setTextColor(WHITE, BLACK);
 
         display.println((i==pointer) ? '\x11' : ' ');
@@ -230,17 +230,13 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * Menu: this is a regular menu, nothing is set here.
  */
-Menu::Menu(const char *description, int count, const BaseMenu* const *menus)
+Menu::Menu(const char *description, int count, BaseMenu* const *menus)
 :OptionSelector(description, NULL, 0, 0, NULL),
  menus(menus)
 {
     pos = 0;
     this->count = count;
     drilldown = false;
-}
-
-BaseMenu * Menu::getBaseMenuAtPos(const int pos){
-    return FLASH_CAST_PTR(BaseMenu, menus, pos);
 }
 
 void Menu::open(void){
@@ -251,8 +247,8 @@ void Menu::open(void){
 void Menu::cancel(void){
     if (drilldown){
         invoke_method(pos, cancel);
-        if (getBaseMenuAtPos(pos)->getClassID() != Menu::class_id
-            || ! ((Menu*)getBaseMenuAtPos(pos))->active){
+        if (menus[pos]->getClassID() != Menu::class_id
+            || ! ((Menu*)menus[pos])->active){
             drilldown = false;
         }
     } else {
@@ -279,7 +275,7 @@ void Menu::select(void){
     } else {
         OptionSelector::select();
         drilldown = true;
-        if (getBaseMenuAtPos(pos)->getClassID() != OptionSelector::class_id){
+        if (menus[pos]->getClassID() != OptionSelector::class_id){
             invoke_method(pos, open);
         } else {
             // OptionSelector does not have any options to show
@@ -308,8 +304,8 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
             Serial.print(F(">"));
             display.setTextColor(BLACK, WHITE);
         }
-        Serial.println(FLASH_STRING FLASH_CAST_PTR(OptionSelector, menus, i)->description);
-        display.println(FLASH_STRING FLASH_CAST_PTR(OptionSelector, menus, i)->description);
+        Serial.println(((OptionSelector*)menus[i])->description);
+        display.println(((OptionSelector*)menus[i])->description);
         if (i == pointer){
             display.setTextColor(WHITE, BLACK);
         }

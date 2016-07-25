@@ -8,7 +8,6 @@
  */
 #ifndef MENU_H_
 #define MENU_H_
-#include <avr/pgmspace.h>
 #include <Adafruit_GFX.h>
 
 #define DISPLAY_DEVICE Adafruit_GFX&
@@ -103,9 +102,8 @@ protected:
 public:
     static const ClassID class_id = CLASS_MENU;
     virtual const ClassID getClassID(void){ return class_id; };
-    const BaseMenu* const *menus;
-    Menu(const char *description, int count, const BaseMenu* const *menus);
-    BaseMenu * getBaseMenuAtPos(const int pos);
+    BaseMenu* const *menus;
+    Menu(const char *description, int count, BaseMenu* const *menus);
     void cancel(void) override;
     void open(void) override;
     void next(void) override;
@@ -117,32 +115,19 @@ public:
 
 /* ugliest code ever follows */
 
-#if defined(__AVR__)
-    #define FLASH_STRING (const __FlashStringHelper *)
-    #define FLASH_READ_INT(ptr, idx) pgm_read_word_near(&(ptr[idx]))
-    #define FLASH_CAST_PTR(cls, ptr, idx) ((cls*)FLASH_READ_INT(ptr, idx))
-    #define FLASH_READ_STR(ptr, idx) FLASH_STRING FLASH_READ_INT(ptr, idx)
-#else
-    #define FLASH_STRING
-    #define FLASH_READ_INT(ptr, idx) ptr[idx]
-    #define FLASH_CAST_PTR(cls, ptr, idx) (((cls**)ptr)[idx])
-    #define FLASH_READ_STR(ptr, idx) FLASH_CAST_PTR(char, ptr, idx)
-#endif /* __AVR__ */
-
 /*
  * Hack to cast a MenuItem to the correct pointer type and invoke the requested method
  */
 #define invoke_method(pos, method, ...) \
-(getBaseMenuAtPos(pos)->getClassID() == Menu::class_id) ? \
-    FLASH_CAST_PTR(Menu, menus, pos)->method(__VA_ARGS__) : (\
-(getBaseMenuAtPos(pos)->getClassID() == NamedListSelector::class_id) ? \
-    FLASH_CAST_PTR(NamedListSelector, menus, pos)->method(__VA_ARGS__) : (\
-(getBaseMenuAtPos(pos)->getClassID() == ListSelector::class_id) ? \
-    FLASH_CAST_PTR(ListSelector, menus, pos)->method(__VA_ARGS__) : (\
-(getBaseMenuAtPos(pos)->getClassID() == RangeSelector::class_id) ? \
-    FLASH_CAST_PTR(RangeSelector, menus, pos)->method(__VA_ARGS__) : \
-    FLASH_CAST_PTR(OptionSelector, menus, pos)->method(__VA_ARGS__))));
-
+(menus[pos]->getClassID() == Menu::class_id) ? \
+    ((Menu*)menus[pos])->method(__VA_ARGS__) : (\
+(menus[pos]->getClassID() == NamedListSelector::class_id) ? \
+    ((NamedListSelector*)menus[pos])->method(__VA_ARGS__) : (\
+(menus[pos]->getClassID() == ListSelector::class_id) ? \
+    ((ListSelector*)menus[pos])->method(__VA_ARGS__) : (\
+(menus[pos]->getClassID() == RangeSelector::class_id) ? \
+    ((RangeSelector*)menus[pos])->method(__VA_ARGS__) : \
+    ((OptionSelector*)menus[pos])->method(__VA_ARGS__))));
 
 extern Menu menu;
 
