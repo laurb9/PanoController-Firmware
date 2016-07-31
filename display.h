@@ -27,10 +27,6 @@ public:
     void clearDisplay();
     int printf(const char *format, ...);
     void setTextCursor(uint8_t row, uint8_t col);
-#ifdef F // F() macro is available
-    int printf(const __FlashStringHelper *format, ...);
-#endif
-
 };
 
 #endif /* DISPLAY_H_ */

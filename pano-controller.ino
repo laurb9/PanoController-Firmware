@@ -108,7 +108,7 @@ void setup() {
     display.setTextCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
-    Serial.println(F("Ready\n"));
+    Serial.println("Ready\n");
 }
 
 int readBattery(void){
@@ -125,7 +125,7 @@ void displayBatteryStatus(void){
     if (battmV < LOW_BATTERY && millis() & 1024){
         display.setTextColor(BLACK, WHITE);
     }
-    display.printf(F("%d.%dV"), battmV/1000, (battmV % 1000)/100);
+    display.printf("%d.%dV", battmV/1000, (battmV % 1000)/100);
     display.setTextColor(WHITE, BLACK);
 }
 
@@ -136,8 +136,8 @@ void displayPanoStatus(void){
     display.clearDisplay();
     display.setTextCursor(0,0);
 
-    display.printf(F("Photo %d of %d\n"), pano.position+1, pano.getHorizShots()*pano.getVertShots());
-    display.printf(F("At %d x %d\n"), 1+pano.getCurRow(), 1+pano.getCurCol());
+    display.printf("Photo %d of %d\n", pano.position+1, pano.getHorizShots()*pano.getVertShots());
+    display.printf("At %d x %d\n", 1+pano.getCurRow(), 1+pano.getCurCol());
     displayPanoSize();
     displayBatteryStatus();
     displayProgress();
@@ -169,13 +169,13 @@ void displayPanoInfo(void){
     float vert_fov = camera.getVertFOV();
     display.clearDisplay();
     display.setTextCursor(0,0);
-    display.printf(F("Lens: %dmm\n"), focal);
-    display.printf(F("      %d.%d x %d.%d\n"),
+    display.printf("Lens: %dmm\n", focal);
+    display.printf("      %d.%d x %d.%d\n",
                    int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
                    int(vert_fov), round(10*(vert_fov-int(vert_fov))));
-    display.printf(F("Pano FOV %d x %d \n"), pano.horiz_fov, pano.vert_fov);
+    display.printf("Pano FOV %d x %d \n", pano.horiz_fov, pano.vert_fov);
     displayPanoSize();
-    display.printf(F("%d photos\n"), pano.getHorizShots()*pano.getVertShots());
+    display.printf("%d photos\n", pano.getHorizShots()*pano.getVertShots());
     displayProgress();
     displayBatteryStatus();
     display.display();
@@ -185,7 +185,7 @@ void displayPanoInfo(void){
  * Display the panorama grid size
  */
 void displayPanoSize(){
-    display.printf(F("Grid %d x %d \n"), pano.getVertShots(), pano.getHorizShots());
+    display.printf("Grid %d x %d \n", pano.getVertShots(), pano.getHorizShots());
 }
 
 /*
@@ -193,9 +193,9 @@ void displayPanoSize(){
  */
 void displayArrows(){
     display.setTextCursor(3, 0);
-    display.println(F("          \x1e         \n"
-                      " [X]     \x11+\x10    [OK]\n"
-                      "          \x1f         "));
+    display.println("          \x1e         \n"
+                    " [X]     \x11+\x10    [OK]\n"
+                    "          \x1f         ");
     display.display();
 }
 
@@ -267,10 +267,10 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
                         abs(pano.vert_home_offset) + camera.getVertFOV());
             pano.computeGrid();
             display.setTextCursor(6, 0);
-            display.print(F("          "));
+            display.print("          ");
             display.setTextCursor(6, 0);
             displayPanoSize();
-            display.printf(F("FOV %d x %d "), pano.horiz_fov, pano.vert_fov);
+            display.printf("FOV %d x %d ", pano.horiz_fov, pano.vert_fov);
             displayBatteryStatus();
             display.display();
         }

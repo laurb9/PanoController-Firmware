@@ -184,7 +184,7 @@ int ListSelector::render(DISPLAY_DEVICE display, int rows){
     for (int i=start; i<start+rows && i<count; i++){
         snprintf(buf, sizeof(buf), "%d", values[i]);
 
-        Serial.print((i==pointer) ? F(">") : F(" "));
+        Serial.print((i==pointer) ? ">" : " ");
         display.print((i==pointer) ? '\x10' : ' ');
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
@@ -214,7 +214,7 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        Serial.print((i==pointer) ? F(">") : F(" "));
+        Serial.print((i==pointer) ? ">" : " ");
         display.print((i==pointer) ? '\x10' : ' ');
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
@@ -300,7 +300,7 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
 
     for (int i=start; i<start+rows && i<count; i++){
         if (i == pointer){
-            Serial.print(F(">"));
+            Serial.print(">");
             display.setTextColor(BLACK, WHITE);
         }
         Serial.println(menus[i]->description);
