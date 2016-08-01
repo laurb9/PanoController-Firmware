@@ -12,55 +12,64 @@
 
 #define DISPLAY_DEVICE Adafruit_GFX&
 
-enum ClassID { CLASS_OPTIONS, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
+enum ClassID { CLASS_SINGLE, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
 
+/*
+ * Do not use directly.
+ * Abstract base class for all menu options.
+ */
 class BaseMenu {
 protected:
-    BaseMenu(const char *description, volatile int *value, int eeprom, int(*onselect)(int))
-    :description(description),
-     value(value),
-     eeprom(eeprom),
-     onselect(onselect)
-    {};
+    int (*onselect)(int) = NULL;    // callback when option selected
+    BaseMenu(const char *description, int(*onselect)(int));
 
 public:
     virtual const ClassID getClassID(void) = 0;
     const char* description = NULL;
-    volatile int *value = NULL;
-    int default_val = 0;
-    int eeprom = 0;
-    int (*onselect)(int) = NULL;
     bool active = false;      // flag indicating the menu is active
 
-    virtual void cancel(void) = 0;
-    virtual void open(void) = 0;
-    virtual void next(void) = 0;
-    virtual void prev(void) = 0;
-    virtual void select(void) = 0;
-    virtual void sync(void) = 0;
-    virtual int render(DISPLAY_DEVICE display, int rows) = 0;
+    virtual void cancel(void);
+    virtual void open(void);
+    virtual void select(void);
+    virtual void sync(void);
+    virtual int render(DISPLAY_DEVICE display, int rows);
 };
 
-class OptionSelector : public BaseMenu {
+class MultiSelect : public BaseMenu {
 protected:
-    int pointer = 0;
-    int pos = 0;
-    int calc_start(int rows);
+    volatile int *value = NULL;     // store current option value here
+    int default_val = 0;            // default option value
+    int eeprom = 0;                 // EEPROM save location (0 = no save)
+    int pointer = 0;                // currently selected entry
+    int pos = 0;                    // currently highlighted entry
+    int count = 0;                  // number of entries
+    int calc_start(int rows);       // helper method
+
+    MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
+
 public:
-    static const ClassID class_id = CLASS_OPTIONS;
-    virtual const ClassID getClassID(void){ return class_id; };
-    int count = 0;
-    OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
-    void cancel(void) override;
-    void open(void) override;
-    void next(void) override;
-    void prev(void) override;
-    void select(void) override;
-    void sync(void) override;
-    int render(DISPLAY_DEVICE display, int rows) override;
+    virtual void cancel(void) override;
+    virtual void open(void) override;
+    virtual void next(void);
+    virtual void prev(void);
+    virtual void select(void) override;
+    virtual void sync(void) override;
 };
 
-class RangeSelector : public OptionSelector {
+/*
+ * Chooses a single option (i.e. "do something")
+ */
+class ActionItem : public BaseMenu {
+public:
+    static const ClassID class_id = CLASS_SINGLE;
+    const ClassID getClassID(void) override { return class_id; };
+    ActionItem(const char *description, int(*onselect)(int));
+};
+
+/*
+ * Selects a value from a given range, with a predefined step
+ */
+class RangeSelector : public MultiSelect {
 public:
     static const ClassID class_id = CLASS_RANGE;
     virtual const ClassID getClassID(void){ return class_id; };
@@ -74,7 +83,10 @@ public:
     int render(DISPLAY_DEVICE display, int rows) override;
 };
 
-class ListSelector : public OptionSelector {
+/*
+ * Selects a numeric value from a list
+ */
+class ListSelector : public MultiSelect {
 public:
     static const ClassID class_id = CLASS_LIST;
     virtual const ClassID getClassID(void){ return class_id; };
@@ -86,6 +98,9 @@ public:
     int render(DISPLAY_DEVICE display, int rows) override;
 };
 
+/*
+ * Selects a numeric value from list by its name (needs a corresponding list of names)
+ */
 class NamedListSelector : public ListSelector {
 public:
     static const ClassID class_id = CLASS_NAMES;
@@ -96,9 +111,12 @@ public:
     int render(DISPLAY_DEVICE display, int rows) override;
 };
 
-class Menu : public OptionSelector {
+/*
+ * (Sub)Menu handler, selects from a bunch of MultiSelect items
+ */
+class Menu : public MultiSelect {
 protected:
-    bool drilldown = false;   // flag indicating that selected menu option is active
+    MultiSelect* active_submenu = NULL;   // active submenu
 public:
     static const ClassID class_id = CLASS_MENU;
     virtual const ClassID getClassID(void){ return class_id; };

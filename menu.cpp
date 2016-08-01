@@ -14,12 +14,56 @@
 #define INVERSE 2
 
 /*
- * OptionSelector: share functionality among the other menu classes
+ * BaseMenu: shared functionality
  */
-OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
-:BaseMenu(description, value, eeprom, onselect)
+BaseMenu::BaseMenu(const char *description, int(*onselect)(int))
+:onselect(onselect),
+ description(description)
 {
     active = false;
+};
+
+void BaseMenu::cancel(void){
+    active = false;
+}
+
+void BaseMenu::open(void){
+    active = true;
+}
+
+void BaseMenu::select(void){
+    if (onselect){
+        onselect(0);
+    }
+}
+
+void BaseMenu::sync(void){
+}
+
+int BaseMenu::render(DISPLAY_DEVICE display, int rows){
+    Serial.println(description);
+    Serial.println("---------------------");
+    display.println(description); rows--;
+    if (rows > 4){
+        display.print("---------------------"); rows--;
+    }
+    return rows;
+}
+
+ActionItem::ActionItem(const char *description, int(*onselect)(int))
+:BaseMenu(description, onselect)
+{
+};
+
+/*
+ * MultiSelect: share functionality among the other menu classes
+ */
+MultiSelect::MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
+:BaseMenu(description, onselect),
+ value(value),
+ default_val(default_val),
+ eeprom(eeprom)
+{
     // override default with eeprom value, if set
     if (eeprom){
         EEPROM.get(eeprom, this->default_val);
@@ -32,50 +76,40 @@ OptionSelector::OptionSelector(const char *description, volatile int *value, int
     }
 }
 
-int OptionSelector::render(DISPLAY_DEVICE display, int rows){
-    Serial.println(description);
-    Serial.println("---------------------");
-    display.println(description); rows--;
-    if (rows > 4){
-        display.print("---------------------"); rows--;
-    }
-    return rows;
-}
-
-void OptionSelector::cancel(void){
+void MultiSelect::cancel(void){
     pointer = pos;
     active = false;
 }
 
-void OptionSelector::open(void){
+void MultiSelect::open(void){
     pointer = pos;
     active = true;
 }
 
-void OptionSelector::next(void){
+void MultiSelect::next(void){
     if (pointer < count-1){
         pointer++;
     }
 }
-void OptionSelector::prev(void){
+void MultiSelect::prev(void){
     if (pointer > 0){
         pointer--;
     }
 }
-void OptionSelector::select(void){
+void MultiSelect::select(void){
     pos = pointer;
-    OptionSelector::sync();
+    MultiSelect::sync();
     if (onselect){
         onselect(*value);
     }
 }
-void OptionSelector::sync(void){
+void MultiSelect::sync(void){
     if (eeprom){
         EEPROM.put(eeprom, *value);
     }
 }
 
-int OptionSelector::calc_start(int rows){
+int MultiSelect::calc_start(int rows){
     int start = 0;
     if (count > rows && pointer > rows/2){
         if (pointer < count - rows/2){
@@ -90,10 +124,9 @@ int OptionSelector::calc_start(int rows){
 /*
  * RangeSelector: a number with up/down controls
  */
-
 RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                              int min_val, int max_val, int step)
-:OptionSelector(description, value, default_val, eeprom, onselect),
+:MultiSelect(description, value, default_val, eeprom, onselect),
  min_val(min_val), max_val(max_val), step(step)
 {
     pointer = this->default_val;
@@ -112,19 +145,19 @@ void RangeSelector::prev(void){
 }
 void RangeSelector::select(void){
     *value = pointer;
-    OptionSelector::select();
+    MultiSelect::select();
 }
 void RangeSelector::sync(void){
     pointer = *value % step;
     if (pointer > max_val) pointer = max_val;
     if (pointer < min_val) pointer = min_val;
     pos = pointer;
-    OptionSelector::sync();
+    MultiSelect::sync();
 }
 
 int RangeSelector::render(DISPLAY_DEVICE display, int rows){
     const char *marker;
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
 
     marker = (pointer < max_val) ? " \x1e": "";
     display.println(marker); rows--;
@@ -146,7 +179,7 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
  */
 ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                            int count, const int values[])
-:OptionSelector(description, value, default_val, eeprom, onselect),
+:MultiSelect(description, value, default_val, eeprom, onselect),
  values(values)
 {
     this->count = count;
@@ -161,7 +194,7 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
 
 void ListSelector::select(void){
     *value = values[pointer];
-    OptionSelector::select();
+    MultiSelect::select();
 }
 void ListSelector::sync(void){
     // find the position corresponding to the default value
@@ -171,14 +204,14 @@ void ListSelector::sync(void){
         }
     }
     pointer = pos;
-    OptionSelector::sync();
+    MultiSelect::sync();
 }
 
 int ListSelector::render(DISPLAY_DEVICE display, int rows){
     char buf[16];
     int start;
 
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
@@ -210,7 +243,7 @@ NamedListSelector::NamedListSelector(const char *description, volatile int *valu
 int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
     int start;
 
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
@@ -231,53 +264,53 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
  * Menu: this is a regular menu, nothing is set here.
  */
 Menu::Menu(const char *description, int count, BaseMenu* const *menus)
-:OptionSelector(description, NULL, 0, 0, NULL),
+:MultiSelect(description, NULL, 0, 0, NULL),
  menus(menus)
 {
     pos = 0;
     this->count = count;
-    drilldown = false;
+    active_submenu = NULL;
 }
 
 void Menu::open(void){
-    OptionSelector::open();
-    drilldown = false;
+    MultiSelect::open();
+    active_submenu = NULL;
 }
 
 void Menu::cancel(void){
-    if (drilldown){
-        menus[pos]->cancel();
-        if (menus[pos]->getClassID() != Menu::class_id || ! menus[pos]->active){
-            drilldown = false;
+    if (active_submenu){
+        active_submenu->cancel();
+        if (active_submenu->getClassID() != Menu::class_id || !active_submenu->active){
+            active_submenu = NULL;
         }
     } else {
-        OptionSelector::cancel();
+        MultiSelect::cancel();
     }
 }
 void Menu::next(void){
-    if (drilldown){
-        menus[pos]->next();
+    if (active_submenu){
+        active_submenu->next();
     } else {
-        OptionSelector::next();
+        MultiSelect::next();
     }
 }
 void Menu::prev(void){
-    if (drilldown){
-        menus[pos]->prev();
+    if (active_submenu){
+        active_submenu->prev();
     } else {
-        OptionSelector::prev();
+        MultiSelect::prev();
     }
 }
 void Menu::select(void){
-    if (drilldown){
-        menus[pos]->select();
+    if (active_submenu){
+        active_submenu->select();
     } else {
-        OptionSelector::select();
-        drilldown = true;
-        if (menus[pos]->getClassID() != OptionSelector::class_id){
-            menus[pos]->open();
+        MultiSelect::select();
+        if (menus[pos]->getClassID() != ActionItem::class_id){
+            active_submenu = (MultiSelect*)menus[pos];
+            active_submenu->open();
         } else {
-            // OptionSelector does not have any options to show
+            // ActionItem does not have any options to show
             menus[pos]->select();
         }
     }
@@ -290,12 +323,12 @@ void Menu::sync(void){
 int Menu::render(DISPLAY_DEVICE display, int rows){
     int start;
 
-    if (drilldown){
-        rows = menus[pos]->render(display, rows);
+    if (active_submenu){
+        rows = active_submenu->render(display, rows);
         return rows;
     }
 
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){

@@ -14,6 +14,7 @@ int onRepeat(int);
 int on360(int);
 int onPanoInfo(int);
 int onTestShutter(int);
+int onAboutPanoController(int);
 
 // variables updated directly by menus
 extern volatile int horiz;
@@ -39,13 +40,16 @@ int assignEEPROM(){
     return ++location * sizeof(int);
 }
 
-Menu menu("Main Menu", 4, new BaseMenu* const[4] {
+/*
+ *
+ */
+Menu menu("Main Menu", 5, new BaseMenu* const[5] {
 
     new Menu("Pano", 6, new BaseMenu* const[6]{
-        new OptionSelector("New Pano", NULL, 0, NO_EEPROM, onStart),
-        new OptionSelector("Repeat Last", NULL, 0, NO_EEPROM, onRepeat),
-        new OptionSelector("360 Pano", NULL, 0, NO_EEPROM, on360),
-        new OptionSelector("Last Pano Info", NULL, 0, NO_EEPROM, onPanoInfo),
+        new ActionItem("New Pano", onStart),
+        new ActionItem("Repeat Last", onRepeat),
+        new ActionItem("360 Pano", on360),
+        new ActionItem("Last Pano Info", onPanoInfo),
         new RangeSelector("Manual Horiz FOV", &horiz, 120, USE_EEPROM, NULL, 10, 360, 10),
         new RangeSelector("Manual Vert FOV", &vert, 90, USE_EEPROM, NULL, 10, 180, 10)
     }),
@@ -69,7 +73,7 @@ Menu menu("Main Menu", 4, new BaseMenu* const[4] {
         new NamedListSelector("Aspect", &aspect, 23, USE_EEPROM, NULL, 2,
             (const char * const[]){"P 2:3", "L 3:2"},
             (const int[]){23, 32}),
-        new OptionSelector("Test Shutter", NULL, 0, NO_EEPROM, onTestShutter)
+        new ActionItem("Test Shutter", onTestShutter)
     }),
 
     new NamedListSelector("Motors", &motors_enable, 0, NO_EEPROM, NULL, 2,
