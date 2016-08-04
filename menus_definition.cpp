@@ -43,7 +43,7 @@ int assignEEPROM(){
 /*
  *
  */
-Menu menu("Main Menu", 5, new BaseMenu* const[5] {
+Menu menu("Main Menu", 4, new BaseMenu* const[4] {
 
     new Menu("Pano", 6, new BaseMenu* const[6]{
         new ActionItem("New Pano", onStart),

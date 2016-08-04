@@ -302,7 +302,6 @@ void displayMenu(void){
     int event;
     int last_event = millis();
 
-    menu.open();
     display.clearDisplay();
     display.setTextCursor(0,0);
     menu.render(display, DISPLAY_ROWS);

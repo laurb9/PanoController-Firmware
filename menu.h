@@ -17,6 +17,15 @@ enum ClassID { CLASS_SINGLE, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
 /*
  * Do not use directly.
  * Abstract base class for all menu options.
+ *
+ * Class hierarchy
+ * BaseMenu
+ *     ActionItem
+ *     MultiSelect
+ *           RangeSelector
+ *           ListSelector
+ *                NamedListSelector
+ *           Menu
  */
 class BaseMenu {
 protected:
@@ -26,10 +35,8 @@ protected:
 public:
     virtual const ClassID getClassID(void) = 0;
     const char* description = NULL;
-    bool active = false;      // flag indicating the menu is active
 
     virtual void cancel(void);
-    virtual void open(void);
     virtual void select(void);
     virtual void sync(void);
     virtual int render(DISPLAY_DEVICE display, int rows);
@@ -48,12 +55,13 @@ protected:
     MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
 
 public:
+    bool active = false;            // flag indicating the menu is active
     virtual void cancel(void) override;
-    virtual void open(void) override;
     virtual void next(void);
     virtual void prev(void);
     virtual void select(void) override;
     virtual void sync(void) override;
+    int render(DISPLAY_DEVICE display, int rows);
 };
 
 /*
@@ -123,7 +131,6 @@ public:
     BaseMenu* const *menus;
     Menu(const char *description, int count, BaseMenu* const *menus);
     void cancel(void) override;
-    void open(void) override;
     void next(void) override;
     void prev(void) override;
     void select(void) override;

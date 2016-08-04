@@ -14,21 +14,26 @@
 #define INVERSE 2
 
 /*
+ * Class hierarchy
+ * BaseMenu
+ *     ActionItem
+ *     MultiSelect
+ *           RangeSelector
+ *           ListSelector
+ *                NamedListSelector
+ *           Menu
+ */
+
+/*
  * BaseMenu: shared functionality
  */
 BaseMenu::BaseMenu(const char *description, int(*onselect)(int))
 :onselect(onselect),
  description(description)
 {
-    active = false;
 };
 
 void BaseMenu::cancel(void){
-    active = false;
-}
-
-void BaseMenu::open(void){
-    active = true;
 }
 
 void BaseMenu::select(void){
@@ -77,13 +82,8 @@ MultiSelect::MultiSelect(const char *description, volatile int *value, int defau
 }
 
 void MultiSelect::cancel(void){
-    pointer = pos;
+    //pointer = pos;
     active = false;
-}
-
-void MultiSelect::open(void){
-    pointer = pos;
-    active = true;
 }
 
 void MultiSelect::next(void){
@@ -119,6 +119,11 @@ int MultiSelect::calc_start(int rows){
         }
     }
     return start;
+}
+
+int MultiSelect::render(DISPLAY_DEVICE display, int rows){
+    active = true;
+    return BaseMenu::render(display, rows);
 }
 
 /*
@@ -261,7 +266,8 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
 }
 
 /*
- * Menu: this is a regular menu, nothing is set here.
+ * Menu: this is regular navigation menu, nothing is set here
+ * but all events are passed down to active children
  */
 Menu::Menu(const char *description, int count, BaseMenu* const *menus)
 :MultiSelect(description, NULL, 0, 0, NULL),
@@ -272,58 +278,78 @@ Menu::Menu(const char *description, int count, BaseMenu* const *menus)
     active_submenu = NULL;
 }
 
-void Menu::open(void){
-    MultiSelect::open();
-    active_submenu = NULL;
-}
-
+/*
+ * CANCEL action, should go back one level
+ */
 void Menu::cancel(void){
-    if (active_submenu){
+    if (active_submenu){         // passthrough
         active_submenu->cancel();
+        // check if submenu is still active,
+        // as the cancel action may have propagated more than one level
         if (active_submenu->getClassID() != Menu::class_id || !active_submenu->active){
             active_submenu = NULL;
         }
     } else {
+        // not resetting pos via MultiSelect::cancel() allows us to return to same menu position
         MultiSelect::cancel();
     }
 }
+
+/*
+ * Move selector to next item in list
+ */
 void Menu::next(void){
-    if (active_submenu){
+    if (active_submenu){         // passthrough
         active_submenu->next();
     } else {
         MultiSelect::next();
     }
 }
+
+/*
+ * Move selector to previous item in list
+ */
 void Menu::prev(void){
-    if (active_submenu){
+    if (active_submenu){         // passthrough
         active_submenu->prev();
     } else {
         MultiSelect::prev();
     }
 }
+
+/*
+ * Open the currently selected item
+ * which can be a submenu, a selection list or action
+ */
 void Menu::select(void){
-    if (active_submenu){
+    if (active_submenu){        // passthrough
         active_submenu->select();
     } else {
         MultiSelect::select();
         if (menus[pos]->getClassID() != ActionItem::class_id){
             active_submenu = (MultiSelect*)menus[pos];
-            active_submenu->open();
         } else {
-            // ActionItem does not have any options to show
             menus[pos]->select();
         }
     }
 }
+
+/*
+ * cascade sync (write all current settings to EEPROM)
+ */
 void Menu::sync(void){
     for (int i=0; i<count; i++){
         menus[i]->sync();
     }
 }
+
+/*
+ * Display either the menu or active submenu/selection
+ */
 int Menu::render(DISPLAY_DEVICE display, int rows){
     int start;
 
-    if (active_submenu){
+    if (active_submenu){        // passthrough
         rows = active_submenu->render(display, rows);
         return rows;
     }
