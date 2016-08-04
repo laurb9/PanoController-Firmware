@@ -508,6 +508,22 @@ int onTestShutter(int __){
     return __;
 }
 
+/*
+ * Menu callback for displaying About... info
+ */
+int onAboutPanoController(int __){
+    display.clearDisplay();
+    display.setTextCursor(2, 0);
+    display.print("Pano Controller\n\n"
+                  "Built " __DATE__ "\n"
+                  __TIME__ "\n");
+    display.display();
+    while (!(joystick.read() || remote.read()));
+    joystick.clear(4000);
+    remote.clear(4000);
+    return __;
+}
+
 void loop() {
     displayMenu();
     menu.sync();

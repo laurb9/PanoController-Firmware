@@ -43,7 +43,7 @@ int assignEEPROM(){
 /*
  *
  */
-Menu menu("Main Menu", 4, new BaseMenu* const[4] {
+Menu menu("Main Menu", 5, new BaseMenu* const[5] {
 
     new Menu("Pano", 6, new BaseMenu* const[6]{
         new ActionItem("New Pano", onStart),
@@ -82,5 +82,7 @@ Menu menu("Main Menu", 4, new BaseMenu* const[4] {
 
     new NamedListSelector("Display", &display_invert, 0, NO_EEPROM, NULL, 2,
         (const char * const[]){"Dark", "Bright"},
-        (const int[]){0, 1})
+        (const int[]){0, 1}),
+
+    new ActionItem("About", onAboutPanoController)
 });
