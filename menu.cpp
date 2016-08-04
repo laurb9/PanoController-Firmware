@@ -151,6 +151,7 @@ void RangeSelector::prev(void){
 void RangeSelector::select(void){
     *value = pointer;
     MultiSelect::select();
+    cancel();
 }
 void RangeSelector::sync(void){
     pointer = *value % step;
@@ -200,6 +201,7 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
 void ListSelector::select(void){
     *value = values[pointer];
     MultiSelect::select();
+    cancel();
 }
 void ListSelector::sync(void){
     // find the position corresponding to the default value
@@ -324,6 +326,9 @@ void Menu::prev(void){
 void Menu::select(void){
     if (active_submenu){        // passthrough
         active_submenu->select();
+        if (!active_submenu->active){
+            active_submenu = NULL;
+        }
     } else {
         MultiSelect::select();
         if (menus[pos]->getClassID() != ActionItem::class_id){
