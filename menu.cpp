@@ -105,7 +105,8 @@ void MultiSelect::select(void){
 }
 void MultiSelect::sync(void){
     if (eeprom){
-        EEPROM.put(eeprom, *value);
+        int v = *value;
+        EEPROM.put(eeprom, v);
     }
 }
 
