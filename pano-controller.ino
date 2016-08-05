@@ -102,7 +102,7 @@ void setup() {
     vert_motor.setMicrostep(32);
     delay(1000); // wait for serial
     delay(100);  // give time for display to init; if display blank increase delay
-    display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS);
+    display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
     display.setRotation(2);
     display.clearDisplay();
     display.setTextCursor(0,0);
