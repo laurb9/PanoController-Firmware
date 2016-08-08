@@ -49,4 +49,25 @@ public:
     }
 };
 
+/*
+ * Input mixer, aggregates events from all input sources
+ */
+class AllHID : public HID {
+protected:
+    HID* const *inputs;
+    int count;
+public:
+    AllHID(const int count, HID* const *inputs)
+    :inputs(inputs),
+     count(count)
+    {};
+    unsigned read(void) override {
+        unsigned event = 0;
+        for (int i=0; i < count; i++){
+            event |= inputs[i]->read();
+        }
+        return event;
+    };
+};
+
 #endif /* HID_H_ */

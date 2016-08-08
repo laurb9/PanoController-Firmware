@@ -379,11 +379,11 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
  * This must be called in a loop.
  */
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
-                 HID& joystick, HID& remote, void(*onMenuLoop)(void)){
+                 HID& hid, void(*onMenuLoop)(void)){
     int event;
     static int last_event = 0;
 
-    event = joystick.read() | remote.read();
+    event = hid.read();
     if (!event && last_event){
         if (millis() - last_event > DISPLAY_SLEEP){
             display.clearDisplay();

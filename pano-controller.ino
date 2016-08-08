@@ -10,6 +10,7 @@
 #include <DRV8834.h>
 #include "pano.h"
 #include "camera.h"
+#include "hid.h"
 #include "joystick.h"
 #include "remote.h"
 #include "menu.h"
@@ -53,6 +54,9 @@ static Joystick joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
 // IR remote
 #define REMOTE_IN 3
 static Remote remote(REMOTE_IN);
+
+// HID (Human Interface Device) Combined joystick+remote
+static AllHID hid(2, new HID* const[2] {&joystick, &remote});
 
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
@@ -218,7 +222,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
     }
 
     while (true){
-        event = joystick.read() | remote.read();
+        event = hid.read();
         if (HID::isEventOk(event) || HID::isEventCancel(event)) break;
 
         pos_x = joystick.getPositionX();
@@ -306,7 +310,7 @@ void executePano(void){
 
 
     button_clicked = false;
-    joystick.clear(4000), remote.clear(4000);
+    hid.clear(4000);
     pano.start();
     attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
 
@@ -322,13 +326,13 @@ void executePano(void){
         }
 
         if (button_clicked || remote.read()){
-            joystick.clear(1000), remote.clear(1000);
+            hid.clear(1000);
             // button was clicked mid-pano or we are in manual shutter mode
             int event;
             displayPanoStatus();
             displayArrows();
             while (running){
-                event=joystick.read() | remote.read();
+                event=hid.read();
                 if (!event) continue;
                 if (HID::isEventLeft(event)) pano.prev();
                 else if (HID::isEventRight(event)) pano.next();
@@ -355,12 +359,11 @@ void executePano(void){
     pano.end();
 
     int wait = 8000;
-    while (wait && !joystick.read() && !remote.read()){
+    while (wait && !hid.read()){
         delay(20);
         wait -= 20;
     }
-    joystick.clear(4000);
-    remote.clear(4000);
+    hid.clear(4000);
 }
 
 /*
@@ -443,9 +446,8 @@ int onPanoInfo(int __){
     pano.setFOV(horiz, vert);
     pano.computeGrid();
     displayPanoInfo();
-    while (!(joystick.read() || remote.read()));
-    joystick.clear(4000);
-    remote.clear(4000);
+    while (!hid.read());
+    hid.clear(4000);
     return __;
 }
 
@@ -468,9 +470,8 @@ int onAboutPanoController(int __){
                   "Built " __DATE__ "\n"
                   __TIME__ "\n");
     display.display();
-    while (!(joystick.read() || remote.read()));
-    joystick.clear(4000);
-    remote.clear(4000);
+    while (!hid.read());
+    hid.clear(4000);
     return __;
 }
 
@@ -481,5 +482,5 @@ void onMenuLoop(void){
 }
 
 void loop() {
-    displayMenu(menu, display, DISPLAY_ROWS, joystick, remote, onMenuLoop);
+    displayMenu(menu, display, DISPLAY_ROWS, hid, onMenuLoop);
 }
