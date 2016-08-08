@@ -29,11 +29,6 @@ teensyLC: BOARD = teensy:avr:teensyLC
 uno teensyLC: $(SOURCES) $(TMPDIR)
 	$(ARDUINO) --upload $< --board $(BOARD) --pref build.path=$(TMPDIR)
 
-#
-# Menu definition generation
-#
-menu_cfg.cpp: menu_cfg.py menu_cfg.json
-	python menu_cfg.py menu_cfg.json > $@
 	
 $(TMPDIR):
 	mkdir -p $(TMPDIR)

@@ -10,6 +10,14 @@
 #include <Arduino.h>
 #include "joystick.h"
 
+/*
+ * Interrupt handler triggered by joystick button click
+ */
+volatile static int button_clicked = false;
+void button_click(){
+    button_clicked = true;
+}
+
 Joystick::Joystick(int sw_pin, int x_pin, int y_pin)
 :sw_pin(sw_pin),
  x_pin(x_pin),
@@ -22,6 +30,12 @@ Joystick::Joystick(int sw_pin, int x_pin, int y_pin)
     x_state = 0;
     y_state = 0;
     read();
+    attachInterrupt(digitalPinToInterrupt(sw_pin), button_click, FALLING);
+}
+
+Joystick::~Joystick(void){
+    // clean up
+    detachInterrupt(digitalPinToInterrupt(sw_pin));
 }
 
 unsigned Joystick::read(void){
@@ -32,9 +46,8 @@ unsigned Joystick::read(void){
         return EVENT_NONE;
     }
 
-
     // read click switch
-    current_state = digitalRead(sw_pin);
+    current_state = (button_clicked) ? LOW : digitalRead(sw_pin);
     if (current_state != sw_state){
         sw_state = current_state;
         if (sw_state == LOW){
@@ -43,6 +56,7 @@ unsigned Joystick::read(void){
                 delay(10);
             };
         }
+        button_clicked = false;
     }
 
     // read X position

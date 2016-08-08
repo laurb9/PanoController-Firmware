@@ -9,20 +9,62 @@
 #include <EEPROM.h>
 #include "menu.h"
 
-#define BLACK 0
-#define WHITE 1
-#define INVERSE 2
+/*
+ * Class hierarchy
+ * BaseMenu
+ *     ActionItem
+ *     MultiSelect
+ *           RangeSelector
+ *           ListSelector
+ *                NamedListSelector
+ *           Menu
+ */
 
 /*
- * OptionSelector: share functionality among the other menu classes
+ * BaseMenu: shared functionality
  */
-OptionSelector::OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
-:description(description),
- value(value),
- eeprom(eeprom),
- onselect(onselect)
+BaseMenu::BaseMenu(const char *description, int(*onselect)(int))
+:onselect(onselect),
+ description(description)
 {
-    active = false;
+};
+
+void BaseMenu::cancel(void){
+}
+
+void BaseMenu::select(void){
+    if (onselect){
+        onselect(0);
+    }
+}
+
+void BaseMenu::sync(void){
+}
+
+int BaseMenu::render(DISPLAY_DEVICE display, int rows){
+    Serial.println(description);
+    Serial.println("---------------------");
+    display.println(description); rows--;
+    if (rows > 4){
+        display.print("---------------------"); rows--;
+    }
+    return rows;
+}
+
+ActionItem::ActionItem(const char *description, int(*onselect)(int))
+:BaseMenu(description, onselect)
+{
+};
+
+/*
+ * MultiSelect: share functionality among the other menu classes
+ */
+MultiSelect::MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
+:BaseMenu(description, onselect),
+ value(value),
+ default_val(default_val),
+ eeprom(eeprom)
+{
     // override default with eeprom value, if set
     if (eeprom){
         EEPROM.get(eeprom, this->default_val);
@@ -35,50 +77,36 @@ OptionSelector::OptionSelector(const char *description, volatile int *value, int
     }
 }
 
-int OptionSelector::render(DISPLAY_DEVICE display, int rows){
-    Serial.println(FLASH_STRING description);
-    Serial.println("---------------------");
-    display.println(FLASH_STRING description); rows--;
-    if (rows > 4){
-        display.print("---------------------"); rows--;
-    }
-    return rows;
-}
-
-void OptionSelector::cancel(void){
-    pointer = pos;
+void MultiSelect::cancel(void){
+    //pointer = pos;
     active = false;
 }
 
-void OptionSelector::open(void){
-    pointer = pos;
-    active = true;
-}
-
-void OptionSelector::next(void){
+void MultiSelect::next(void){
     if (pointer < count-1){
         pointer++;
     }
 }
-void OptionSelector::prev(void){
+void MultiSelect::prev(void){
     if (pointer > 0){
         pointer--;
     }
 }
-void OptionSelector::select(void){
+void MultiSelect::select(void){
     pos = pointer;
-    OptionSelector::sync();
+    MultiSelect::sync();
     if (onselect){
         onselect(*value);
     }
 }
-void OptionSelector::sync(void){
+void MultiSelect::sync(void){
     if (eeprom){
-        EEPROM.put(eeprom, *value);
+        int v = *value;
+        EEPROM.put(eeprom, v);
     }
 }
 
-int OptionSelector::calc_start(int rows){
+int MultiSelect::calc_start(int rows){
     int start = 0;
     if (count > rows && pointer > rows/2){
         if (pointer < count - rows/2){
@@ -90,13 +118,17 @@ int OptionSelector::calc_start(int rows){
     return start;
 }
 
+int MultiSelect::render(DISPLAY_DEVICE display, int rows){
+    active = true;
+    return BaseMenu::render(display, rows);
+}
+
 /*
  * RangeSelector: a number with up/down controls
  */
-
 RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                              int min_val, int max_val, int step)
-:OptionSelector(description, value, default_val, eeprom, onselect),
+:MultiSelect(description, value, default_val, eeprom, onselect),
  min_val(min_val), max_val(max_val), step(step)
 {
     pointer = this->default_val;
@@ -115,19 +147,20 @@ void RangeSelector::prev(void){
 }
 void RangeSelector::select(void){
     *value = pointer;
-    OptionSelector::select();
+    MultiSelect::select();
+    cancel();
 }
 void RangeSelector::sync(void){
     pointer = *value % step;
     if (pointer > max_val) pointer = max_val;
     if (pointer < min_val) pointer = min_val;
     pos = pointer;
-    OptionSelector::sync();
+    MultiSelect::sync();
 }
 
 int RangeSelector::render(DISPLAY_DEVICE display, int rows){
     const char *marker;
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
 
     marker = (pointer < max_val) ? " \x1e": "";
     display.println(marker); rows--;
@@ -149,13 +182,13 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
  */
 ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                            int count, const int values[])
-:OptionSelector(description, value, default_val, eeprom, onselect),
+:MultiSelect(description, value, default_val, eeprom, onselect),
  values(values)
 {
     this->count = count;
     // find the position corresponding to the default value
     for (pos=count-1; pos > 0; pos--){
-        if (FLASH_READ_INT(values, pos) == this->default_val){
+        if (values[pos] == this->default_val){
             break;
         }
     }
@@ -163,31 +196,32 @@ ListSelector::ListSelector(const char *description, volatile int *value, int def
 };
 
 void ListSelector::select(void){
-    *value = FLASH_READ_INT(values, pointer);
-    OptionSelector::select();
+    *value = values[pointer];
+    MultiSelect::select();
+    cancel();
 }
 void ListSelector::sync(void){
     // find the position corresponding to the default value
     for (pos=count-1; pos > 0; pos--){
-        if (FLASH_READ_INT(values,pos) == *value){
+        if (values[pos] == *value){
             break;
         }
     }
     pointer = pos;
-    OptionSelector::sync();
+    MultiSelect::sync();
 }
 
 int ListSelector::render(DISPLAY_DEVICE display, int rows){
     char buf[16];
     int start;
 
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        snprintf(buf, sizeof(buf), "%d", FLASH_READ_INT(values, i));
+        snprintf(buf, sizeof(buf), "%d", values[i]);
 
-        Serial.print((i==pointer) ? F(">") : F(" "));
+        Serial.print((i==pointer) ? ">" : " ");
         display.print((i==pointer) ? '\x10' : ' ');
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
@@ -213,16 +247,16 @@ NamedListSelector::NamedListSelector(const char *description, volatile int *valu
 int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
     int start;
 
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
-        Serial.print((i==pointer) ? F(">") : F(" "));
+        Serial.print((i==pointer) ? ">" : " ");
         display.print((i==pointer) ? '\x10' : ' ');
 
         if (i == pos) display.setTextColor(BLACK, WHITE);
-        Serial.println(FLASH_READ_STR(names, i));
-        display.print(FLASH_READ_STR(names, i));
+        Serial.println(names[i]);
+        display.print(names[i]);
         if (i == pos) display.setTextColor(WHITE, BLACK);
 
         display.println((i==pointer) ? '\x11' : ' ');
@@ -231,88 +265,145 @@ int NamedListSelector::render(DISPLAY_DEVICE display, int rows){
 }
 
 /*
- * Menu: this is a regular menu, nothing is set here.
+ * Menu: this is regular navigation menu, nothing is set here
+ * but all events are passed down to active children
  */
-Menu::Menu(const char *description, int count, const union MenuItem * const menus, const int *types)
-:OptionSelector(description, NULL, 0, 0, NULL),
- menus(menus),
- types(types)
+Menu::Menu(const char *description, int count, BaseMenu* const *menus)
+:MultiSelect(description, NULL, 0, 0, NULL),
+ menus(menus)
 {
     pos = 0;
     this->count = count;
-    drilldown = false;
+    active_submenu = NULL;
 }
 
-void Menu::open(void){
-    OptionSelector::open();
-    drilldown = false;
-}
-
+/*
+ * CANCEL action, should go back one level
+ */
 void Menu::cancel(void){
-    if (drilldown){
-        invoke_method(pos, cancel);
-        if (FLASH_READ_INT(types, pos) != Menu::class_id
-            || ! FLASH_CAST_PTR(Menu, menus, pos)->active){
-            drilldown = false;
+    if (active_submenu){         // passthrough
+        active_submenu->cancel();
+        // check if submenu is still active,
+        // as the cancel action may have propagated more than one level
+        if (active_submenu->getClassID() != Menu::class_id || !active_submenu->active){
+            active_submenu = NULL;
         }
     } else {
-        OptionSelector::cancel();
+        // not resetting pos via MultiSelect::cancel() allows us to return to same menu position
+        MultiSelect::cancel();
     }
 }
+
+/*
+ * Move selector to next item in list
+ */
 void Menu::next(void){
-    if (drilldown){
-        invoke_method(pos, next);
+    if (active_submenu){         // passthrough
+        active_submenu->next();
     } else {
-        OptionSelector::next();
+        MultiSelect::next();
     }
 }
+
+/*
+ * Move selector to previous item in list
+ */
 void Menu::prev(void){
-    if (drilldown){
-        invoke_method(pos, prev);
+    if (active_submenu){         // passthrough
+        active_submenu->prev();
     } else {
-        OptionSelector::prev();
+        MultiSelect::prev();
     }
 }
+
+/*
+ * Open the currently selected item
+ * which can be a submenu, a selection list or action
+ */
 void Menu::select(void){
-    if (drilldown){
-        invoke_method(pos, select);
+    if (active_submenu){        // passthrough
+        active_submenu->select();
+        if (!active_submenu->active){
+            active_submenu = NULL;
+        }
     } else {
-        OptionSelector::select();
-        drilldown = true;
-        if (FLASH_READ_INT(types, pos) != OptionSelector::class_id){
-            invoke_method(pos, open);
+        MultiSelect::select();
+        if (menus[pos]->getClassID() != ActionItem::class_id){
+            active_submenu = (MultiSelect*)menus[pos];
         } else {
-            // OptionSelector does not have any options to show
-            invoke_method(pos, select);
+            menus[pos]->select();
         }
     }
 }
+
+/*
+ * cascade sync (write all current settings to EEPROM)
+ */
 void Menu::sync(void){
     for (int i=0; i<count; i++){
-        invoke_method(i, sync);
+        menus[i]->sync();
     }
 }
+
+/*
+ * Display either the menu or active submenu/selection
+ */
 int Menu::render(DISPLAY_DEVICE display, int rows){
     int start;
 
-    if (drilldown){
-        rows = invoke_method(pos, render, display, rows);
+    if (active_submenu){        // passthrough
+        rows = active_submenu->render(display, rows);
         return rows;
     }
 
-    rows = OptionSelector::render(display, rows);
+    rows = MultiSelect::render(display, rows);
     start = calc_start(rows);
 
     for (int i=start; i<start+rows && i<count; i++){
         if (i == pointer){
-            Serial.print(F(">"));
+            Serial.print(">");
             display.setTextColor(BLACK, WHITE);
         }
-        Serial.println(FLASH_STRING FLASH_CAST_PTR(OptionSelector, menus, i)->description);
-        display.println(FLASH_STRING FLASH_CAST_PTR(OptionSelector, menus, i)->description);
+        Serial.println(menus[i]->description);
+        display.println(menus[i]->description);
         if (i == pointer){
             display.setTextColor(WHITE, BLACK);
         }
     }
     return 0;
+}
+
+/*
+ * Main entry point for menu.
+ * Check HID inputs, display and navigate main menu
+ * This must be called in a loop.
+ */
+void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
+                 AllHID& hid, void(*onMenuLoop)(void)){
+    static int last_event_timestamp = 0;
+
+    if (!hid.read() && last_event_timestamp){
+        if (millis() - last_event_timestamp > DISPLAY_SLEEP){
+            display.clearDisplay();
+            display.display();
+        } else {
+            if (onMenuLoop) onMenuLoop();
+            display.display();
+        }
+        return;
+    }
+
+    if (hid.isLastEventLeft() || hid.isLastEventCancel()) menu.cancel();
+    else if (hid.isLastEventRight() || hid.isLastEventOk()) menu.select();
+    else if (hid.isLastEventDown()) menu.next();
+    else if (hid.isLastEventUp()) menu.prev();
+
+    last_event_timestamp = millis();
+    Serial.println();
+    display.clearDisplay();
+    display.setTextCursor(0,0);
+    menu.render(display, rows);
+    if (onMenuLoop) onMenuLoop();
+    display.display();
+    delay(100);
 }
