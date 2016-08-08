@@ -296,23 +296,13 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
 }
 
 /*
- * Interrupt handler triggered by button click
- */
-volatile static int button_clicked = false;
-void button_click(){
-    button_clicked = true;
-}
-/*
  * Execute panorama from start to finish.
  * Button click interrupts.
  */
 void executePano(void){
 
-
-    button_clicked = false;
     hid.clear(4000);
     pano.start();
-    attachInterrupt(digitalPinToInterrupt(JOYSTICK_SW), button_click, FALLING);
 
     while (running){
         displayPanoStatus();
@@ -321,11 +311,9 @@ void executePano(void){
         }
         if (shutter > 0){
             pano.shutter();
-        } else {
-            button_clicked = true;
         }
 
-        if (button_clicked || remote.read()){
+        if (shutter == 0 || hid.read()){
             hid.clear(1000);
             // button was clicked mid-pano or we are in manual shutter mode
             int event;
@@ -346,13 +334,10 @@ void executePano(void){
                 displayPanoStatus();
                 displayArrows();
             }
-            button_clicked = false;
         }
         running = running && pano.next();
     };
 
-    // clean up
-    detachInterrupt(digitalPinToInterrupt(JOYSTICK_SW));
     running = false;
     displayPanoStatus();
 

@@ -24,6 +24,7 @@ public:
     int autorepeat_repeat;
     unsigned read(void) override;
     Joystick(int sw_pin, int x_pin, int y_pin);
+    ~Joystick(void);
     int getPositionX(void);
     int getPositionY(void);
     bool getButtonState(void);
