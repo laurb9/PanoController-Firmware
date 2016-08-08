@@ -208,7 +208,6 @@ void displayArrows(){
  */
 bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
     int pos_x, pos_y;
-    unsigned event;
     int horiz_rpm, vert_rpm;
 
     display.clearDisplay();
@@ -222,14 +221,14 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
     }
 
     while (true){
-        event = hid.read();
-        if (HID::isEventOk(event) || HID::isEventCancel(event)) break;
+        hid.read();
+        if (hid.isLastEventOk() || hid.isLastEventCancel()) break;
 
         pos_x = joystick.getPositionX();
         horiz_rpm = DYNAMIC_HORIZ_RPM(camera.getHorizFOV());
         if (pos_x == 0){
-            if (HID::isEventRight(event)) pos_x = 1;
-            if (HID::isEventLeft(event)) pos_x = -1;
+            if (hid.isLastEventRight()) pos_x = 1;
+            if (hid.isLastEventLeft()) pos_x = -1;
             horiz_rpm /= 3;
         } else {
             // proportional speed control
@@ -247,8 +246,8 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
         pos_y = joystick.getPositionY();
         vert_rpm = DYNAMIC_VERT_RPM(camera.getVertFOV());
         if (pos_y == 0){
-            if (HID::isEventUp(event)) pos_y = 1;
-            if (HID::isEventDown(event)) pos_y = -1;
+            if (hid.isLastEventUp()) pos_y = 1;
+            if (hid.isLastEventDown()) pos_y = -1;
             vert_rpm /= 3;
         } else {
             // proportional speed control
@@ -292,7 +291,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
         }
         pano.moveMotorsHome();
     }
-    return (HID::isEventOk(event));
+    return (hid.isLastEventOk());
 }
 
 /*
@@ -316,18 +315,16 @@ void executePano(void){
         if (shutter == 0 || hid.read()){
             hid.clear(1000);
             // button was clicked mid-pano or we are in manual shutter mode
-            int event;
             displayPanoStatus();
             displayArrows();
             while (running){
-                event=hid.read();
-                if (!event) continue;
-                if (HID::isEventLeft(event)) pano.prev();
-                else if (HID::isEventRight(event)) pano.next();
-                else if (HID::isEventUp(event)) pano.moveTo(pano.getCurRow() - 1, pano.getCurCol());
-                else if (HID::isEventDown(event)) pano.moveTo(pano.getCurRow() + 1, pano.getCurCol());
-                else if (HID::isEventOk(event)) break;
-                else if (HID::isEventCancel(event)){
+                if (!hid.read()) continue;
+                else if (hid.isLastEventLeft()) pano.prev();
+                else if (hid.isLastEventRight()) pano.next();
+                else if (hid.isLastEventUp()) pano.moveTo(pano.getCurRow() - 1, pano.getCurCol());
+                else if (hid.isLastEventDown()) pano.moveTo(pano.getCurRow() + 1, pano.getCurCol());
+                else if (hid.isLastEventOk()) break;
+                else if (hid.isLastEventCancel()){
                     running = false;
                     break;
                 }
@@ -345,8 +342,8 @@ void executePano(void){
 
     int wait = 8000;
     while (wait && !hid.read()){
-        delay(20);
-        wait -= 20;
+        delay(100);
+        wait -= 100;
     }
     hid.clear(4000);
 }

@@ -379,13 +379,11 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
  * This must be called in a loop.
  */
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
-                 HID& hid, void(*onMenuLoop)(void)){
-    int event;
-    static int last_event = 0;
+                 AllHID& hid, void(*onMenuLoop)(void)){
+    static int last_event_timestamp = 0;
 
-    event = hid.read();
-    if (!event && last_event){
-        if (millis() - last_event > DISPLAY_SLEEP){
+    if (!hid.read() && last_event_timestamp){
+        if (millis() - last_event_timestamp > DISPLAY_SLEEP){
             display.clearDisplay();
             display.display();
         } else {
@@ -395,12 +393,12 @@ void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
         return;
     }
 
-    if (HID::isEventLeft(event) || HID::isEventCancel(event)) menu.cancel();
-    else if (HID::isEventRight(event) || HID::isEventOk(event)) menu.select();
-    else if (HID::isEventDown(event)) menu.next();
-    else if (HID::isEventUp(event)) menu.prev();
+    if (hid.isLastEventLeft() || hid.isLastEventCancel()) menu.cancel();
+    else if (hid.isLastEventRight() || hid.isLastEventOk()) menu.select();
+    else if (hid.isLastEventDown()) menu.next();
+    else if (hid.isLastEventUp()) menu.prev();
 
-    last_event = millis();
+    last_event_timestamp = millis();
     Serial.println();
     display.clearDisplay();
     display.setTextCursor(0,0);

@@ -145,6 +145,6 @@ public:
 extern Menu menu;
 
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
-                 HID& hid, void(*onMenuLoop)(void)=NULL);
+                 AllHID& hid, void(*onMenuLoop)(void)=NULL);
 
 #endif /* MENU_H_ */

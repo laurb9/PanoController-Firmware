@@ -56,17 +56,36 @@ class AllHID : public HID {
 protected:
     HID* const *inputs;
     int count;
+    unsigned last_event;
 public:
     AllHID(const int count, HID* const *inputs)
     :inputs(inputs),
      count(count)
     {};
     unsigned read(void) override {
-        unsigned event = 0;
+        last_event = EVENT_NONE;
         for (int i=0; i < count; i++){
-            event |= inputs[i]->read();
-        }
-        return event;
+            last_event |= inputs[i]->read();
+        };
+        return last_event;
+    };
+    bool isLastEventUp(void){
+        return isEventUp(last_event);
+    };
+    bool isLastEventDown(void){
+        return isEventDown(last_event);
+    };
+    bool isLastEventLeft(void){
+        return isEventLeft(last_event);
+    };
+    bool isLastEventRight(void){
+        return isEventRight(last_event);
+    };
+    bool isLastEventOk(void){
+        return isEventOk(last_event);
+    };
+    bool isLastEventCancel(void){
+        return isEventCancel(last_event);
     };
 };
 
