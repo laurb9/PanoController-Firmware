@@ -8,9 +8,13 @@
  */
 #ifndef MENU_H_
 #define MENU_H_
-#include <Adafruit_GFX.h>
+#include "display.h"
+#include "hid.h"
 
-#define DISPLAY_DEVICE Adafruit_GFX&
+#define DISPLAY_DEVICE Display&
+
+// inactivity time to turn display off (ms)
+#define DISPLAY_SLEEP 5*60*1000
 
 enum ClassID { CLASS_SINGLE, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
 
@@ -139,5 +143,8 @@ public:
 };
 
 extern Menu menu;
+
+void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
+                 HID& joystick, HID& remote, void(*onMenuLoop)(void)=NULL);
 
 #endif /* MENU_H_ */

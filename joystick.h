@@ -22,7 +22,7 @@ public:
     static const int range = (1024/2) >> sensitivity;
     int autorepeat_delay;
     int autorepeat_repeat;
-    unsigned read(void);
+    unsigned read(void) override;
     Joystick(int sw_pin, int x_pin, int y_pin);
     int getPositionX(void);
     int getPositionY(void);

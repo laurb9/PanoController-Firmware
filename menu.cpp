@@ -9,10 +9,6 @@
 #include <EEPROM.h>
 #include "menu.h"
 
-#define BLACK 0
-#define WHITE 1
-#define INVERSE 2
-
 /*
  * Class hierarchy
  * BaseMenu
@@ -375,4 +371,41 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
         }
     }
     return 0;
+}
+
+/*
+ * Main entry point for menu.
+ * Check HID inputs, display and navigate main menu
+ * This must be called in a loop.
+ */
+void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
+                 HID& joystick, HID& remote, void(*onMenuLoop)(void)){
+    int event;
+    static int last_event = 0;
+
+    event = joystick.read() | remote.read();
+    if (!event && last_event){
+        if (millis() - last_event > DISPLAY_SLEEP){
+            display.clearDisplay();
+            display.display();
+        } else {
+            if (onMenuLoop) onMenuLoop();
+            display.display();
+        }
+        return;
+    }
+
+    if (HID::isEventLeft(event) || HID::isEventCancel(event)) menu.cancel();
+    else if (HID::isEventRight(event) || HID::isEventOk(event)) menu.select();
+    else if (HID::isEventDown(event)) menu.next();
+    else if (HID::isEventUp(event)) menu.prev();
+
+    last_event = millis();
+    Serial.println();
+    display.clearDisplay();
+    display.setTextCursor(0,0);
+    menu.render(display, rows);
+    if (onMenuLoop) onMenuLoop();
+    display.display();
+    delay(100);
 }

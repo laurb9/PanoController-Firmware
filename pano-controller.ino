@@ -16,9 +16,6 @@
 #include "display.h"
 #include "mpu.h"
 
-// inactivity time to turn display off (ms)
-#define DISPLAY_SLEEP 5*60*1000
-
 // Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
 #define DISPLAY_I2C_ADDRESS 0x3C
@@ -295,53 +292,6 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
 }
 
 /*
- * Display and navigate main menu
- * Only way to exit is by starting the panorama which sets running=true
- */
-void displayMenu(void){
-    int event;
-    int last_event = millis();
-
-    display.clearDisplay();
-    display.setTextCursor(0,0);
-    menu.render(display, DISPLAY_ROWS);
-    display.display();
-
-    while (!running){
-        event = joystick.read() | remote.read();
-        if (!event){
-            displayBatteryStatus();
-            display.display();
-            if (millis() - last_event > DISPLAY_SLEEP){
-                display.clearDisplay();
-                display.display();
-                last_event = millis();
-            }
-            continue;
-        }
-
-        last_event = millis();
-        if (HID::isEventLeft(event) || HID::isEventCancel(event)) menu.cancel();
-        else if (HID::isEventRight(event) || HID::isEventOk(event)) menu.select();
-        else if (HID::isEventDown(event)) menu.next();
-        else if (HID::isEventUp(event)) menu.prev();
-
-        Serial.println();
-        display.clearDisplay();
-        display.setTextCursor(0,0);
-        menu.render(display, DISPLAY_ROWS);
-        displayBatteryStatus();
-        display.display();
-        delay(100);
-
-        display.invertDisplay(display_invert);
-
-        pano.motorsEnable(motors_enable);
-    }
-    menu.cancel(); // go back to main menu to avoid re-triggering
-}
-
-/*
  * Interrupt handler triggered by button click
  */
 volatile static int button_clicked = false;
@@ -524,7 +474,12 @@ int onAboutPanoController(int __){
     return __;
 }
 
+void onMenuLoop(void){
+    displayBatteryStatus();
+    display.invertDisplay(display_invert);
+    pano.motorsEnable(motors_enable);
+}
+
 void loop() {
-    displayMenu();
-    menu.sync();
+    displayMenu(menu, display, DISPLAY_ROWS, joystick, remote, onMenuLoop);
 }

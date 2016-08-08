@@ -21,10 +21,8 @@ protected:
         EVENT_CANCEL= 0b100000
     };
 public:
-    unsigned read(void){
-        return EVENT_NONE;
-    }
-    int clear(int timeout){
+    virtual unsigned read(void) = 0;
+    virtual int clear(int timeout){
         while (read() && timeout){
             delay(20);
             timeout -= 20;

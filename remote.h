@@ -27,7 +27,7 @@ private:
 protected:
 public:
     Remote(int pin);
-    unsigned read(void);
+    unsigned read(void) override;
     int clear(int timeout);
 };
 
