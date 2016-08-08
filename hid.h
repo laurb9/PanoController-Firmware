@@ -21,11 +21,9 @@ protected:
         EVENT_CANCEL= 0b100000
     };
 public:
-    unsigned read(void){
-        return EVENT_NONE;
-    }
-    int clear(int timeout){
-        while (read() && timeout){
+    virtual unsigned read(void) = 0;
+    virtual int clear(int timeout){
+        while (read() && timeout > 0){
             delay(20);
             timeout -= 20;
         }
@@ -48,6 +46,53 @@ public:
     };
     static bool isEventCancel(unsigned event){
         return (event & EVENT_CANCEL);
+    }
+};
+
+/*
+ * Input mixer, aggregates events from all input sources
+ */
+class AllHID : public HID {
+protected:
+    HID* const *inputs;
+    int count;
+    unsigned last_event;
+public:
+    AllHID(const int count, HID* const *inputs)
+    :inputs(inputs),
+     count(count)
+    {};
+    unsigned read(void) override {
+        last_event = EVENT_NONE;
+        for (int i=0; i < count; i++){
+            last_event |= inputs[i]->read();
+        };
+        return last_event;
+    };
+    bool isLastEventUp(void){
+        return isEventUp(last_event);
+    };
+    bool isLastEventDown(void){
+        return isEventDown(last_event);
+    };
+    bool isLastEventLeft(void){
+        return isEventLeft(last_event);
+    };
+    bool isLastEventRight(void){
+        return isEventRight(last_event);
+    };
+    bool isLastEventOk(void){
+        return isEventOk(last_event);
+    };
+    bool isLastEventCancel(void){
+        return isEventCancel(last_event);
+    };
+    void waitAnyKey(int read_timeout=30000, const int clear_timeout=4000){
+        while (!read() && read_timeout > 0){
+            delay(50);
+            read_timeout -= 50;
+        }
+        clear(clear_timeout);
     }
 };
 

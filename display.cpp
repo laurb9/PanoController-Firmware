@@ -40,22 +40,6 @@ int Display::printf(const char *format, ...){
     return strlen(buf);
 };
 
-#ifdef F // F() macro is available
-int Display::printf(const __FlashStringHelper *format, ...){
-    char buf[PRINTF_BUF];
-    va_list ap;
-    va_start(ap, format);
-#ifdef __AVR__
-    vsnprintf_P(buf, sizeof(buf), (const char *)format, ap); // progmem for AVR
-#else
-    vsnprintf(buf, sizeof(buf), (const char *)format, ap); // for the rest of the world
-#endif
-    va_end(ap);
-    Display::print(buf);
-    return strlen(buf);
-};
-#endif
-
 /*
  * Helper function to move cursor at text positions
  */

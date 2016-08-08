@@ -8,124 +8,143 @@
  */
 #ifndef MENU_H_
 #define MENU_H_
-#include <avr/pgmspace.h>
-#include <Adafruit_GFX.h>
+#include "display.h"
+#include "hid.h"
 
-#define DISPLAY_DEVICE Adafruit_GFX&
+#define DISPLAY_DEVICE Display&
 
-enum ClassID { CLASS_OPTIONS, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
+// inactivity time to turn display off (ms)
+#define DISPLAY_SLEEP 5*60*1000
 
-class OptionSelector {
+enum ClassID { CLASS_SINGLE, CLASS_RANGE, CLASS_LIST, CLASS_NAMES, CLASS_MENU };
+
+/*
+ * Do not use directly.
+ * Abstract base class for all menu options.
+ *
+ * Class hierarchy
+ * BaseMenu
+ *     ActionItem
+ *     MultiSelect
+ *           RangeSelector
+ *           ListSelector
+ *                NamedListSelector
+ *           Menu
+ */
+class BaseMenu {
 protected:
-    int pointer = 0;
-    int pos = 0;
-    int calc_start(int rows);
+    int (*onselect)(int) = NULL;    // callback when option selected
+    BaseMenu(const char *description, int(*onselect)(int));
+
 public:
-    static const ClassID class_id = CLASS_OPTIONS;
-    const char* description;
-    volatile int *value;
-    int default_val;
-    int eeprom = 0;
-    int (*onselect)(int);
-    int count = 0;
-    bool active = false;      // flag indicating the option selector is active
-    OptionSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
-    void cancel(void);
-    void open(void);
-    void next(void);
-    void prev(void);
-    void select(void);
-    void sync(void);
+    virtual const ClassID getClassID(void) = 0;
+    const char* description = NULL;
+
+    virtual void cancel(void);
+    virtual void select(void);
+    virtual void sync(void);
+    virtual int render(DISPLAY_DEVICE display, int rows);
+};
+
+class MultiSelect : public BaseMenu {
+protected:
+    volatile int *value = NULL;     // store current option value here
+    int default_val = 0;            // default option value
+    int eeprom = 0;                 // EEPROM save location (0 = no save)
+    int pointer = 0;                // currently selected entry
+    int pos = 0;                    // currently highlighted entry
+    int count = 0;                  // number of entries
+    int calc_start(int rows);       // helper method
+
+    MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
+
+public:
+    bool active = false;            // flag indicating the menu is active
+    virtual void cancel(void) override;
+    virtual void next(void);
+    virtual void prev(void);
+    virtual void select(void) override;
+    virtual void sync(void) override;
     int render(DISPLAY_DEVICE display, int rows);
 };
 
-class RangeSelector : public OptionSelector {
+/*
+ * Chooses a single option (i.e. "do something")
+ */
+class ActionItem : public BaseMenu {
+public:
+    static const ClassID class_id = CLASS_SINGLE;
+    const ClassID getClassID(void) override { return class_id; };
+    ActionItem(const char *description, int(*onselect)(int));
+};
+
+/*
+ * Selects a value from a given range, with a predefined step
+ */
+class RangeSelector : public MultiSelect {
 public:
     static const ClassID class_id = CLASS_RANGE;
+    virtual const ClassID getClassID(void){ return class_id; };
     int min_val, max_val, step;
     RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                   int min_val, int max_val, int step);
-    void next(void);
-    void prev(void);
-    void select(void);
-    void sync(void);
-    int render(DISPLAY_DEVICE display, int rows);
+    void next(void) override;
+    void prev(void) override;
+    void select(void) override;
+    void sync(void) override;
+    int render(DISPLAY_DEVICE display, int rows) override;
 };
 
-class ListSelector : public OptionSelector {
+/*
+ * Selects a numeric value from a list
+ */
+class ListSelector : public MultiSelect {
 public:
     static const ClassID class_id = CLASS_LIST;
+    virtual const ClassID getClassID(void){ return class_id; };
     const int *values;
     ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                  int count, const int values[]);
-    void select(void);
-    void sync(void);
-    int render(DISPLAY_DEVICE display, int rows);
+    void select(void) override;
+    void sync(void) override;
+    int render(DISPLAY_DEVICE display, int rows) override;
 };
 
+/*
+ * Selects a numeric value from list by its name (needs a corresponding list of names)
+ */
 class NamedListSelector : public ListSelector {
 public:
     static const ClassID class_id = CLASS_NAMES;
+    virtual const ClassID getClassID(void){ return class_id; };
     const char* const *names;
     NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
                       int count, const char * const names[], const int values[]);
-    int render(DISPLAY_DEVICE display, int rows);
+    int render(DISPLAY_DEVICE display, int rows) override;
 };
-
-class Menu : public OptionSelector {
-protected:
-    bool drilldown = false;   // flag indicating that selected menu option is active
-public:
-    static const ClassID class_id = CLASS_MENU;
-    const union MenuItem *menus;
-    const int *types;
-    Menu(const char *description, int count, const union MenuItem * const menus, const int *types);
-    void open(void);
-    void cancel(void);
-    void next(void);
-    void prev(void);
-    void select(void);
-    void sync(void);
-    int render(DISPLAY_DEVICE display, int rows);
-};
-
-union MenuItem {
-    OptionSelector *option;
-    RangeSelector *slider;
-    ListSelector *values;
-    NamedListSelector *names;
-    Menu *menu;
-};
-
-/* ugliest code ever follows */
-
-#if defined(__AVR__)
-    #define FLASH_STRING (const __FlashStringHelper *)
-    #define FLASH_READ_INT(ptr, idx) pgm_read_word_near(&(ptr[idx]))
-    #define FLASH_CAST_PTR(cls, ptr, idx) ((cls*)FLASH_READ_INT(ptr, idx))
-    #define FLASH_READ_STR(ptr, idx) FLASH_STRING FLASH_READ_INT(ptr, idx)
-#else
-    #define FLASH_STRING
-    #define FLASH_READ_INT(ptr, idx) ptr[idx]
-    #define FLASH_CAST_PTR(cls, ptr, idx) (((cls**)ptr)[idx])
-    #define FLASH_READ_STR(ptr, idx) FLASH_CAST_PTR(char, ptr, idx)
-#endif /* __AVR__ */
 
 /*
- * Hack to cast a MenuItem to the correct pointer type and invoke the requested method
+ * (Sub)Menu handler, selects from a bunch of MultiSelect items
  */
-#define invoke_method(pos, method, ...) \
-(FLASH_READ_INT(types, pos) == Menu::class_id) ? \
-    FLASH_CAST_PTR(Menu, menus, pos)->method(__VA_ARGS__) : (\
-(FLASH_READ_INT(types, pos) == NamedListSelector::class_id) ? \
-    FLASH_CAST_PTR(NamedListSelector, menus, pos)->method(__VA_ARGS__) : (\
-(FLASH_READ_INT(types, pos) == ListSelector::class_id) ? \
-    FLASH_CAST_PTR(ListSelector, menus, pos)->method(__VA_ARGS__) : (\
-(FLASH_READ_INT(types, pos) == RangeSelector::class_id) ? \
-    FLASH_CAST_PTR(RangeSelector, menus, pos)->method(__VA_ARGS__) : \
-    FLASH_CAST_PTR(OptionSelector, menus, pos)->method(__VA_ARGS__))));
-
+class Menu : public MultiSelect {
+protected:
+    MultiSelect* active_submenu = NULL;   // active submenu
+public:
+    static const ClassID class_id = CLASS_MENU;
+    virtual const ClassID getClassID(void){ return class_id; };
+    BaseMenu* const *menus;
+    Menu(const char *description, int count, BaseMenu* const *menus);
+    void cancel(void) override;
+    void next(void) override;
+    void prev(void) override;
+    void select(void) override;
+    void sync(void) override;
+    int render(DISPLAY_DEVICE display, int rows) override;
+};
 
 extern Menu menu;
+
+void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
+                 AllHID& hid, void(*onMenuLoop)(void)=NULL);
 
 #endif /* MENU_H_ */
