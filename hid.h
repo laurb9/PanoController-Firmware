@@ -23,7 +23,7 @@ protected:
 public:
     virtual unsigned read(void) = 0;
     virtual int clear(int timeout){
-        while (read() && timeout){
+        while (read() && timeout > 0){
             delay(20);
             timeout -= 20;
         }
