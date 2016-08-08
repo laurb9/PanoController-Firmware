@@ -67,6 +67,7 @@ unsigned Remote::read(void){
                 event = EVENT_NONE;
             } else {
                 next_repeat_time = millis() + REPEAT_DELAY;
+                last_event = event;
             }
         }
     }
