@@ -61,9 +61,13 @@ unsigned Remote::read(void){
             Serial.print("Unknown remote code ");
             Serial.println(code, HEX);
         };
-        if (event && last_event != event){
-            last_event = event;
-            next_repeat_time = millis() + REPEAT_DELAY;
+        // detect and ignore a too-fast repeat of same key
+        if (event){
+            if (last_event == event && millis() < next_repeat_time){
+                event = EVENT_NONE;
+            } else {
+                next_repeat_time = millis() + REPEAT_DELAY;
+            }
         }
     }
     return event;
