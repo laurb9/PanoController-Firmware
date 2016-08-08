@@ -340,12 +340,7 @@ void executePano(void){
 
     pano.end();
 
-    int wait = 8000;
-    while (wait && !hid.read()){
-        delay(100);
-        wait -= 100;
-    }
-    hid.clear(4000);
+    hid.waitAnyKey();
 }
 
 /*
@@ -428,8 +423,7 @@ int onPanoInfo(int __){
     pano.setFOV(horiz, vert);
     pano.computeGrid();
     displayPanoInfo();
-    while (!hid.read());
-    hid.clear(4000);
+    hid.waitAnyKey();
     return __;
 }
 
@@ -452,8 +446,7 @@ int onAboutPanoController(int __){
                   "Built " __DATE__ "\n"
                   __TIME__ "\n");
     display.display();
-    while (!hid.read());
-    hid.clear(4000);
+    hid.waitAnyKey();
     return __;
 }
 

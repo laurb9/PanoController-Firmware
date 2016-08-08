@@ -87,6 +87,13 @@ public:
     bool isLastEventCancel(void){
         return isEventCancel(last_event);
     };
+    void waitAnyKey(int read_timeout=30000, const int clear_timeout=4000){
+        while (!read() && read_timeout > 0){
+            delay(50);
+            read_timeout -= 50;
+        }
+        clear(clear_timeout);
+    }
 };
 
 #endif /* HID_H_ */
