@@ -34,6 +34,7 @@ public:
 };
 
 #else /* defined(ARDUINO_SAMD_ZERO) */
+#warning "IR remote not supported, see https://github.com/z3t0/Arduino-IRremote/issues/274"
 
 class Remote : public HID {
 public:
