@@ -15,8 +15,6 @@
 
 #include <Arduino.h>
 #include <IRremote.h>
-#include <IRremoteInt.h>
-#include <IRremoteTools.h>
 
 // the remote I have sends repeat code too quick
 // allow repeat code only after this many milliseconds
