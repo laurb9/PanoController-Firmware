@@ -9,6 +9,8 @@
 #ifndef HID_H_
 #define HID_H_
 
+#include <Arduino.h>
+
 class HID {
 protected:
     enum Event {
