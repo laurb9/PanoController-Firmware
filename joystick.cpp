@@ -82,11 +82,11 @@ unsigned Joystick::read(void){
 }
 
 int Joystick::getPositionX(void){
-    return (analogRead(x_pin)-512+(1<<(sensitivity-1))) >> sensitivity;
+    return ((int)analogRead(x_pin)-512+(1<<(sensitivity-1))) >> sensitivity;
 }
 
 int Joystick::getPositionY(void){
-    return (512-analogRead(y_pin)+(1<<(sensitivity-1))) >> sensitivity;
+    return (512-(int)analogRead(y_pin)+(1<<(sensitivity-1))) >> sensitivity;
 }
 
 bool Joystick::getButtonState(void){

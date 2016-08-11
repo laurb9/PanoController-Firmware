@@ -8,6 +8,7 @@
  */
 
 #include "remote.h"
+#if !defined(ARDUINO_SAMD_ZERO)
 
 Remote::Remote(int pin)
 :pin(pin)
@@ -73,3 +74,4 @@ unsigned Remote::read(void){
     }
     return event;
 }
+#endif /* !defined(ARDUINO_SAMD_ZERO) */
