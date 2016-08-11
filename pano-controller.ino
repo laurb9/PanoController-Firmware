@@ -47,7 +47,7 @@ void setup() {
     delay(1000); // wait for serial
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
-    display.setRotation(2);
+    //display.setRotation(2);
     display.clearDisplay();
     display.setTextCursor(0,0);
     display.setTextColor(WHITE);
@@ -88,12 +88,12 @@ int readBattery(void){
  */
 void displayBatteryStatus(void){
     int battmV = readBattery();
-    display.setTextCursor(0, (17-battmV/10000));
+    display.setTextCursor(0, 16);
     // poor attempt at blinking
     if (battmV < LOW_BATTERY && millis() & 1024){
         display.setTextColor(BLACK, WHITE);
     }
-    display.printf("%d.%dV", battmV/1000, (battmV % 1000)/100);
+    display.printf("%2d.%dV", battmV/1000, (battmV % 1000)/100);
     display.setTextColor(WHITE, BLACK);
 }
 

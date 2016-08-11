@@ -25,19 +25,20 @@
 #define BATT_R1 9980
 #define BATT_R2 46500
 #define BATT_RANGE (VCC * (BATT_R1 + BATT_R2) / BATT_R1)
-#define BATTERY A0
+#define BATTERY A1
 
 // Joystick inputs
-#define JOYSTICK_X A3
-#define JOYSTICK_Y A2
+#define JOYSTICK_X A2
+#define JOYSTICK_Y A3
 #define JOYSTICK_SW A4
 
-// IR remote
-#define REMOTE_IN A5
+// IR remote is not supported on Feather M0
+// https://github.com/z3t0/Arduino-IRremote/issues/274
+#define REMOTE_IN -1
 
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
-#define MPU_INT 10
+#define MPU_INT 12
 
 // Future devices
 #define COMPASS_DRDY 11
