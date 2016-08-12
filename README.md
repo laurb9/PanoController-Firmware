@@ -25,10 +25,9 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - Multiple delay options: pre-shutter and post-shutter, short or long shutter pulse (for bracketing).
 
 ### Hardware
-- Teensy (LC or 3.x) or other 32-bit platform (8-bit AVR such as Arduino UNO *do not work*)
+- 32-bit ARM controller board
 - OLED 128x64 display
 - Joystick menu navigation and optional IR remote
-- Camera focal length presets from 12 to 600mm
 - Can operate with battery voltage from 10V down to 6V
 - Lower power usage and later voltage cutoff than original Gigapan
 
@@ -69,6 +68,8 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 ## Notes
 
 - *Atmega328-based boards are not supported*, see issue #57
+- IR remote not supported on Adafruit Feather M0, see issue #59
+- Settings memory not supported on Feather M0 (no EEPROM)
 - Future rewiring plan
   - M0, M1 can be hardwired (M0=Vcc, M1 unconnected for 1:32 mode)
   - DIR should be shared (it is only sampled on STEP)
@@ -102,8 +103,12 @@ lower current even, if we reduce the speed.
 
 ### Electronics
 
-- <a href="http://www.pjrc.com/store/teensylc.html">Teensy LC</a> 
-  (or <a href="http://www.pjrc.com/store/teensy32.html">Teensy 3.1+</a>) from PJRC
+- Microcontroller, one of below
+  - PJRC <a href="http://www.pjrc.com/store/teensylc.html">Teensy LC</a> 
+  - PJRC <a href="http://www.pjrc.com/store/teensy32.html">Teensy 3.1+</a>
+  - Adafruit <a href="https://learn.adafruit.com/adafruit-feather-m0-basic-proto/">Feather M0</a> (no IR remote)
+  - Adafruit <a href="https://learn.adafruit.com/adafruit-feather-m0-bluefruit-le/overview">Feather M0 Bluefruit</a> (no IR remote)
+  - (untested but same Cortex M0 as above) <a href="https://www.adafruit.com/products/2843">Arduino Zero</a>
 - 2 x <a href="https://www.pololu.com/product/2134">DRV8834 Low-Voltage Stepper Motor Driver</a> from Pololu
 - <a href="http://www.amazon.com/Yellow-Serial-128X64-Display-Arduino/dp/B00O2LLT30">128x64 OLED display, SSD1306 I2C</a> from anywhere
 - 2-axis + switch analog joystick
