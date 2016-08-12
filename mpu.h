@@ -9,7 +9,7 @@
  */
 #ifndef MPU_H_
 #define MPU_H_
-
+#include <Arduino.h>
 #include <Wire.h>
 
 // for gyro_scale=25000 (in 1/100deg) 15 = 0.15
