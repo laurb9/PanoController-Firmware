@@ -59,7 +59,7 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - D12
 - D13(led) - ~SLEEP (to both steppers) - LED indicates motors are on
 
-### Feather M0 pin allocation worksheet
+### Feather M0 / Bluefruit
 
 - A0
 - A1 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND

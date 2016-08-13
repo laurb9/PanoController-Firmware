@@ -17,6 +17,7 @@
 #include "hid.h"
 #include "joystick.h"
 #include "remote.h"
+#include "ble_remote.h"
 #include "menu.h"
 #include "display.h"
 #include "mpu.h"
@@ -32,6 +33,7 @@ Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_
 static Camera* camera;
 static Joystick* joystick;
 static Remote* remote;
+static BLERemote* ble_remote;
 // HID (Human Interface Device) Combined joystick+remote
 static AllHID* hid;
 static MPU* mpu;
@@ -45,7 +47,12 @@ void setup() {
     delay(1000); // wait for serial
 
     ble.begin(true);
+    ble.echo(false);     // disable command echo
     ble.info();
+    ble.verbose(false);  // turn off debug info
+
+    // LED Activity command is only supported from 0.6.6
+    ble.sendCommandCheckOK("AT+HWModeLED=MODE");
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
     //display.setRotation(2);
@@ -57,8 +64,9 @@ void setup() {
     camera = new Camera(CAMERA_FOCUS, CAMERA_SHUTTER);
     joystick = new Joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
     remote = new Remote(REMOTE_IN);
+    ble_remote = new BLERemote(ble);
     // HID (Human Interface Device) Combined joystick+remote
-    hid = new AllHID(2, new HID* const[2] {joystick, remote});
+    hid = new AllHID(3, new HID* const[3] {joystick, remote, ble_remote});
 
     mpu = new MPU(MPU_I2C_ADDRESS, MPU_INT);
     mpu->init();
@@ -86,9 +94,11 @@ int readBattery(void){
 }
 
 /*
- * Print battery voltage at cursor, format is #.#V (4 chars)
+ * Add a status overlay (currently battery and bluetooth status)
  */
-void displayBatteryStatus(void){
+void displayStatusOverlay(void){
+
+    // Print battery voltage at cursor, format is #.#V (4 chars)
     int battmV = readBattery();
     display.setTextCursor(0, 16);
     // poor attempt at blinking
@@ -97,6 +107,12 @@ void displayBatteryStatus(void){
     }
     display.printf("%2d.%dV", battmV/1000, (battmV % 1000)/100);
     display.setTextColor(WHITE, BLACK);
+
+    // show a character indicating bluetooth is connected
+    if (ble_remote->active){
+        display.setTextCursor(0,15);
+        display.print("\xe8");
+    }
 }
 
 /*
@@ -109,7 +125,7 @@ void displayPanoStatus(void){
     display.printf("Photo %d of %d\n", pano->position+1, pano->getHorizShots()*pano->getVertShots());
     display.printf("At %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
     displayPanoSize();
-    displayBatteryStatus();
+    displayStatusOverlay();
     displayProgress();
     display.display();
 }
@@ -147,7 +163,7 @@ void displayPanoInfo(void){
     displayPanoSize();
     display.printf("%d photos\n", pano->getHorizShots()*pano->getVertShots());
     displayProgress();
-    displayBatteryStatus();
+    displayStatusOverlay();
     display.display();
 }
 
@@ -240,7 +256,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             display.setTextCursor(6, 0);
             displayPanoSize();
             display.printf("FOV %d x %d ", pano->horiz_fov, pano->vert_fov);
-            displayBatteryStatus();
+            displayStatusOverlay();
             display.display();
         }
 
@@ -420,7 +436,7 @@ int onAboutPanoController(int __){
 }
 
 void onMenuLoop(void){
-    displayBatteryStatus();
+    displayStatusOverlay();
     display.invertDisplay(display_invert);
     pano->motorsEnable(motors_enable);
 }
