@@ -25,7 +25,7 @@
 #define MPU_INT 12
 
 // Future devices
-#define COMPASS_DRDY 11
+//#define COMPASS_DRDY 11
 
 // Stepper motors and drivers
 #define MOTOR_STEPS 200
@@ -38,3 +38,34 @@
 
 // this should be hooked up to nSLEEP on both drivers
 #define MOTORS_ON 13
+
+/*
+### Feather M0 pin allocation worksheet
+
+A0
+A1              BATTERY
+A2              JOYSTICK_X
+A3              JOYSTICK_Y
+A4              JOYSTICK_SW
+A5
+SCK[BLE]
+MOSI[BLE]
+MISO[BLE]
+RX/0            CAMERA_FOCUS
+TX/1            CAMERA_SHUTTER
+
+-4[BLE] CS  (internally connected)
+-7[BLE] IRQ (internally connected)
+-8[BLE] RST (internally connected)
+
+SDA/20
+SCL/21
+5               DIR
+6               VERT_STEP
+9[A7]           HORIZ_STEP
+10              DRV_M0
+11              DRV_M1
+12              MPU_INT
+13[LED]         MOTORS_ON
+
+ */
