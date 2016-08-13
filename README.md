@@ -71,7 +71,7 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - IR remote not supported on Adafruit Feather M0, see issue #59
 - Settings memory not supported on Feather M0 (no EEPROM)
 - Future rewiring plan
-  - M0, M1 can be hardwired (M0=Vcc, M1 unconnected for 1:32 mode)
+  - M0, M1 can be hardwired (M1=Vcc, M0 unconnected for 1:32 mode)
   - DIR should be shared (it is only sampled on STEP)
   - Tie all ~EN together to ground
   - Tie all ~SLEEP together to D13 (LED indicates motors are on)
