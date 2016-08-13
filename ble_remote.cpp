@@ -12,6 +12,9 @@
 #define PACKET_BUTTON_LEN               (5)
 #define READ_BUFSIZE                    (20)
 
+#define BUTTON_ID(code) (code & 0x0f)
+#define IS_PRESSED(code) (code >> 4)
+
 BLERemote::BLERemote(Adafruit_BluefruitLE_SPI& ble)
 :ble(ble)
 {}
@@ -33,8 +36,8 @@ unsigned BLERemote::read(void){
 
     uint8_t buttonCode = readButtonCode();
 
-    if (buttonCode >> 4){
-        switch (buttonCode & 0x0f){
+    if (IS_PRESSED(buttonCode)){
+        switch (BUTTON_ID(buttonCode)){
         case 1:
             event |= EVENT_OK;
             break;
@@ -53,6 +56,18 @@ unsigned BLERemote::read(void){
         case 8:
             event |= EVENT_RIGHT;
             break;
+        }
+
+        next_repeat_time = millis() + REPEAT_DELAY;
+        last_event = event;
+
+    } else if (BUTTON_ID(buttonCode)){    // button depressed
+        last_event = EVENT_NONE;
+
+    } else if (last_event){            // button currently remaining pressed
+        if (millis() > next_repeat_time && !isEventOk(last_event) && !isEventCancel(last_event)){
+            event = last_event;
+            next_repeat_time = millis() + REPEAT_INTERVAL;
         }
     }
     return event;

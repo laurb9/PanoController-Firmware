@@ -16,6 +16,8 @@ class BLERemote : public HID {
 private:
     Adafruit_BluefruitLE_SPI& ble;
     uint8_t readButtonCode(void);
+    unsigned last_event = EVENT_NONE;
+    unsigned next_repeat_time;
 
 public:
     bool active = false;
