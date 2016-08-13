@@ -49,32 +49,58 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - D2(int) - Joystick SW
 - D3(int) - IR Remote In (AX-1838HS)
 - D4
-- D5 - StepperV DIR
+- D5 - DIR (both)
 - D6 - StepperV STEP
 - D7 - MPU-6050 INT
-- D8 - StepperH DIR
+- D8
 - D9 - StepperH STEP
-- D10- M0
-- D11- M1
+- D10
+- D11
 - D12
 - D13(led) - ~SLEEP (to both steppers) - LED indicates motors are on
+
+### Feather M0 pin allocation worksheet
+
+- A0
+- A1 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
+- A2 - Joystick Vx
+- A3 - Joystick Vy
+- A4 - Joystick SW
+- A5
+- SCK[BLE]
+- MOSI[BLE]
+- MISO[BLE]
+- RX/0 - camera focus (active LOW)
+- TX/1 - camera shutter (active LOW)
+
+- 4[BLE] CS  (internally connected)
+- 7[BLE] IRQ (internally connected)
+- 8[BLE] RST (internally connected)
+
+- SDA/20 - Display and MPU-6050 board
+- SCL/21 - Display and MPU-6050 board
+- 5 - DIR (both)
+- 6 - StepperV STEP
+- 9[A7] - StepperH STEP
+- 10
+- 11
+- 12 - MPU-6050 INT
+- 13[LED] - ~SLEEP (both) - LED indicates motors are on
 
 ### Other
 
 - All ~EN tied to GND
 - All VMOT tied to Vin
+- All M1 tied to Vcc      (1:32 mode)
+- All M0 left unconnected (1:32 mode)
 - 3.3V step-down adapter from Vin to Vcc
 
 ## Notes
 
 - *Atmega328-based boards are not supported*, see issue #57
 - IR remote not supported on Adafruit Feather M0, see issue #59
-- Settings memory not supported on Feather M0 (no EEPROM)
+- Settings memory on Feather M0 only works with Bluefruit (M0 has no EEPROM itself)
 - Future rewiring plan
-  - M0, M1 can be hardwired (M1=Vcc, M0 unconnected for 1:32 mode)
-  - DIR should be shared (it is only sampled on STEP)
-  - Tie all ~EN together to ground
-  - Tie all ~SLEEP together to D13 (LED indicates motors are on)
   - if we ever want to use ESP-12, need to reduce pins. ESP-12 only has 11: 
     (0,2,4,5,12,13,14,15,16,RXD,TXD,ADC)
   - Adafruit Feather M0 BLE uses 4, 7, 8 as Bluefruit RESET, IRQ and CS. 
@@ -127,6 +153,7 @@ lower current even, if we reduce the speed.
 ### Libraries
 - Adafruit_SSD1306
 - Adafruit_GFX
+- Adafruit Bluefruit nRF51
 - IRremote
 - Wire
 - <a href="https://github.com/laurb9/StepperDriver/releases">StepperDriver</a>
@@ -145,3 +172,4 @@ The only thing required of the platform is the two horiz/vert stepper motors.
   - Notes: 
     - the DRV8834 current limit must be set according to motor spec
     - reduction gear settings are hardcoded in pano.h
+

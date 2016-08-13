@@ -63,8 +63,8 @@ void setup() {
     mpu = new MPU(MPU_I2C_ADDRESS, MPU_INT);
     mpu->init();
 
-    horiz_motor = new DRV8834(MOTOR_STEPS, HORIZ_DIR, HORIZ_STEP, DRV_M0, DRV_M1);
-    vert_motor = new DRV8834(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
+    horiz_motor = new DRV8834(MOTOR_STEPS, DIR, HORIZ_STEP);
+    vert_motor = new DRV8834(MOTOR_STEPS, DIR, VERT_STEP);
     horiz_motor->setMicrostep(32);
     vert_motor->setMicrostep(32);
 
