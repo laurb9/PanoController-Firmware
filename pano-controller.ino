@@ -7,7 +7,10 @@
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 #include <Arduino.h>
+#include <SPI.h>
 #include <DRV8834.h>
+#include <Adafruit_BLE.h>
+#include <Adafruit_BluefruitLE_SPI.h>
 #include "pano.h"
 #include "camera.h"
 #include "hid.h"
@@ -25,6 +28,11 @@
 #include "config_feather_m0.h"
 #endif
 
+#define BLUEFRUIT_SPI_CS               8
+#define BLUEFRUIT_SPI_IRQ              7
+#define BLUEFRUIT_SPI_RST              4    // Optional but recommended, set to -1 if unused
+Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
+
 // these variables are modified by the menu
 volatile int focal, shutter, pre_shutter, post_wait, long_pulse,
              orientation, aspect, shots, motors_enable, display_invert,
@@ -41,10 +49,14 @@ static MPU* mpu;
 static DRV8834* horiz_motor;
 static DRV8834* vert_motor;
 static Pano* pano;
+static Menu* menu;
 
 void setup() {
     Serial.begin(38400);
     delay(1000); // wait for serial
+
+    ble.begin(true);
+    ble.info();
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
     //display.setRotation(2);
@@ -77,6 +89,7 @@ void setup() {
     analogReadAveraging(32);
 #endif
 
+    menu = getMainMenu();
 }
 
 int readBattery(void){
@@ -314,7 +327,7 @@ void executePano(void){
  * Update common camera and pano settings from external vars
  */
 void setPanoParams(void){
-    menu.cancel();
+    menu->cancel();
     camera->setAspect(aspect);
     camera->setFocalLength(focal);
     pano->setShutter(shutter, pre_shutter, post_wait, long_pulse);
@@ -338,7 +351,7 @@ int onStart(int __){
         return false;
     }
     running = true;
-    menu.sync();
+    menu->sync();
     executePano();
     return __;
 }
@@ -354,7 +367,7 @@ int onRepeat(int __){
         return false;
     }
     running = true;
-    menu.sync();
+    menu->sync();
     executePano();
     return __;
 }
@@ -377,7 +390,7 @@ int on360(int __){
         return false;
     }
     running = true;
-    menu.sync();
+    menu->sync();
     executePano();
     return __;
 }
@@ -424,5 +437,5 @@ void onMenuLoop(void){
 }
 
 void loop() {
-    displayMenu(menu, display, DISPLAY_ROWS, *hid, onMenuLoop);
+    displayMenu(*menu, display, DISPLAY_ROWS, *hid, onMenuLoop);
 }
