@@ -12,11 +12,6 @@
 #include "config_feather_m0.h"
 #endif
 
-// All boards can use this (Bluefruit internal, others as add-on, same pins)
-#define BLUEFRUIT_SPI_CS               8
-#define BLUEFRUIT_SPI_IRQ              7
-#define BLUEFRUIT_SPI_RST              4    // Optional but recommended, set to -1 if unused
-
 // Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
 // and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
 #define DISPLAY_I2C_ADDRESS 0x3C
@@ -36,3 +31,6 @@
 
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
+
+// Stepper motors steps per revolution
+#define MOTOR_STEPS 200
