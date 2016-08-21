@@ -9,14 +9,12 @@
 
 #include "pano.h"
 
-Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, int motors_pin)
+Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu)
 :horiz_motor(horiz_motor),
  vert_motor(vert_motor),
  camera(camera),
- mpu(mpu),
- motors_pin(motors_pin)
+ mpu(mpu)
 {
-    pinMode(motors_pin, OUTPUT);
     motorsEnable(false);
 
     setFOV(360,180);
@@ -232,7 +230,6 @@ void Pano::moveMotorsHome(void){
 }
 
 void Pano::motorsEnable(bool on){
-    digitalWrite(motors_pin, (on) ? HIGH : LOW);
+    (on) ? horiz_motor.enable() : horiz_motor.disable();
     delay(1);
-
 }

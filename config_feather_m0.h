@@ -33,6 +33,5 @@
 #define VERT_STEP 6
 #define HORIZ_STEP 9
 
-// this should be hooked up to nSLEEP on both drivers
-#define MOTORS_ON 13
-
+// this should be hooked up to nENABLE on both drivers
+#define nENABLE 10

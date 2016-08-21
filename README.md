@@ -42,11 +42,11 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - A3 - Joystick Vy
 - A4 - SDA - Display and MPU-6050 board
 - A5 - SCL - Display and MPU-6050 board
-- A6
+- A6 - Joystick SW
 - A7
 - D0/RX - camera focus (active LOW)
 - D1/TX - camera shutter (active LOW)
-- D2(int) - Joystick SW
+- D2
 - D3(int) - IR Remote In (AX-1838HS)
 - D4
 - D5 - DIR (both)
@@ -54,10 +54,10 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - D7 - MPU-6050 INT
 - D8
 - D9 - StepperH STEP
-- D10
+- D10 - ~ENABLE (both)
 - D11
 - D12
-- D13(led) - ~SLEEP (to both steppers) - LED indicates motors are on
+- D13[LED]
 
 ### Feather M0 / Bluefruit
 
@@ -82,10 +82,10 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - 5 - DIR (both)
 - 6 - StepperV STEP
 - 9[A7] - StepperH STEP
-- 10
+- 10 - ~ENABLE (both)
 - 11
 - 12 - MPU-6050 INT
-- 13[LED] - ~SLEEP (both) - LED indicates motors are on
+- 13[LED]
 
 ### Other
 

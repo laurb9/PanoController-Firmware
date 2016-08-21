@@ -14,9 +14,9 @@
 #define BATTERY A0
 
 // Joystick inputs
-#define JOYSTICK_X A3
-#define JOYSTICK_Y A2
-#define JOYSTICK_SW 2
+#define JOYSTICK_X A2
+#define JOYSTICK_Y A3
+#define JOYSTICK_SW 20 /* A6 */
 
 // IR remote
 #define REMOTE_IN 3
@@ -33,6 +33,5 @@
 #define VERT_STEP 6
 #define HORIZ_STEP 9
 
-// this should be hooked up to nSLEEP on both drivers
-#define MOTORS_ON 13
-
+// this should be hooked up to nENABLE on both drivers
+#define nENABLE 10

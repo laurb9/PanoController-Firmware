@@ -71,12 +71,12 @@ void setup() {
     mpu = new MPU(MPU_I2C_ADDRESS, MPU_INT);
     mpu->init();
 
-    horiz_motor = new DRV8834(MOTOR_STEPS, DIR, HORIZ_STEP);
+    horiz_motor = new DRV8834(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
     vert_motor = new DRV8834(MOTOR_STEPS, DIR, VERT_STEP);
     horiz_motor->setMicrostep(32);
     vert_motor->setMicrostep(32);
 
-    pano = new Pano(*horiz_motor, *vert_motor, *camera, *mpu, MOTORS_ON);
+    pano = new Pano(*horiz_motor, *vert_motor, *camera, *mpu);
 
     //pinMode(COMPASS_DRDY, INPUT_PULLUP);
 
