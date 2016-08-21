@@ -38,12 +38,27 @@ Joystick::~Joystick(void){
     detachInterrupt(digitalPinToInterrupt(sw_pin));
 }
 
+bool Joystick::isConnected(void){
+    // if joystick is not center at start, it is not connected
+    if (!connected){
+        if (getPositionX(false) == 0 && getPositionY(false) == 0){
+            connected || Serial.println("Joystick connected.");
+            connected = true;
+        }
+    }
+    return connected;
+}
+
 unsigned Joystick::read(void){
     unsigned event = EVENT_NONE;
     int current_state;
 
     if (millis() - last_read < 100){
         return EVENT_NONE;
+    }
+
+    if (!isConnected()){
+        return event;
     }
 
     // read click switch
@@ -81,11 +96,17 @@ unsigned Joystick::read(void){
     return event;
 }
 
-int Joystick::getPositionX(void){
+int Joystick::getPositionX(bool if_connected){
+    if (if_connected && !isConnected()){
+        return 0;
+    }
     return ((int)analogRead(x_pin)-512+(1<<(sensitivity-1))) >> sensitivity;
 }
 
-int Joystick::getPositionY(void){
+int Joystick::getPositionY(bool if_connected){
+    if (if_connected && !isConnected()){
+        return 0;
+    }
     return (512-(int)analogRead(y_pin)+(1<<(sensitivity-1))) >> sensitivity;
 }
 
