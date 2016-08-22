@@ -23,17 +23,16 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
   - Grid size and position
 - Precision movement control
 - Multiple delay options: pre-shutter and post-shutter, short or long shutter pulse (for bracketing).
+- Bluetooth joystick control via phone
 
 ### Hardware
 - 32-bit ARM controller board
 - OLED 128x64 display
-- Joystick menu navigation and optional IR remote
+- Joystick menu navigation, optional IR remote
 - Can operate with battery voltage from 10V down to 6V
 - Lower power usage and later voltage cutoff than original Gigapan
 
 ## Wiring map
-
-<img src="images/connection-diagram.png" width="870" alt="Breadboard setup with Teensy LC">
 
 ### Teensy LC / 3.x
 - A0 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
@@ -89,7 +88,7 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 
 ### Other
 
-- All ~EN tied to GND
+- All ~SLEEP tied to Vcc
 - All VMOT tied to Vin
 - All M1 tied to Vcc      (1:32 mode)
 - All M0 left unconnected (1:32 mode)
@@ -137,6 +136,7 @@ lower current even, if we reduce the speed.
   - (untested but same Cortex M0 as above) <a href="https://www.adafruit.com/products/2843">Arduino Zero</a>
 - 2 x <a href="https://www.pololu.com/product/2134">DRV8834 Low-Voltage Stepper Motor Driver</a> from Pololu
 - <a href="http://www.amazon.com/Yellow-Serial-128X64-Display-Arduino/dp/B00O2LLT30">128x64 OLED display, SSD1306 I2C</a> from anywhere
+- Adafruit <a href="https://learn.adafruit.com/introducing-the-adafruit-bluefruit-spi-breakout">Bluefruit SPI Breakout</a> (if not onboard) - provides Bluetooth LE 4.1 joystick control - optional
 - 2-axis + switch analog joystick
 - 1834HS IR receiver with some remote - optional but recommended
   - Remote codes are hardcoded in remote.cpp if you have a different remote

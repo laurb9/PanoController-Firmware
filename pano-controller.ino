@@ -54,7 +54,7 @@ void setup() {
 
     // LED Activity command is only supported from 0.6.6
     ble.sendCommandCheckOK("AT+HWModeLED=BLEUART");
-    ble.sendCommandCheckOK("AT+GAPDEVNAME=Pano Controller")
+    ble.sendCommandCheckOK("AT+GAPDEVNAME=Pano Controller");
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
     //display.setRotation(2);
