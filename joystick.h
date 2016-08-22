@@ -18,6 +18,7 @@ protected:
     int sw_pin, x_pin, y_pin;
     int sw_state = 0, x_state = 0, y_state = 0;
     int last_read;
+    bool connected = false;
 public:
     static const int range = (1024/2) >> sensitivity;
     int autorepeat_delay;
@@ -25,9 +26,10 @@ public:
     unsigned read(void) override;
     Joystick(int sw_pin, int x_pin, int y_pin);
     ~Joystick(void);
-    int getPositionX(void);
-    int getPositionY(void);
+    int getPositionX(bool if_connected=true);
+    int getPositionY(bool if_connected=true);
     bool getButtonState(void);
+    bool isConnected(void);
 };
 
 #endif /* JOYSTICK_H_ */

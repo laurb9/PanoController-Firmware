@@ -23,58 +23,83 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
   - Grid size and position
 - Precision movement control
 - Multiple delay options: pre-shutter and post-shutter, short or long shutter pulse (for bracketing).
+- Bluetooth joystick control via phone
 
 ### Hardware
 - 32-bit ARM controller board
 - OLED 128x64 display
-- Joystick menu navigation and optional IR remote
+- Joystick menu navigation, optional IR remote
 - Can operate with battery voltage from 10V down to 6V
 - Lower power usage and later voltage cutoff than original Gigapan
 
 ## Wiring map
 
-<img src="images/connection-diagram.png" width="870" alt="Breadboard setup with Teensy LC">
-
 ### Teensy LC / 3.x
 - A0 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
-- A1
-- A2 - Joystick Vx
-- A3 - Joystick Vy
+- A1 - Joystick SW
+- A2 - Joystick Vy
+- A3 - Joystick Vx
 - A4 - SDA - Display and MPU-6050 board
 - A5 - SCL - Display and MPU-6050 board
 - A6
 - A7
 - D0/RX - camera focus (active LOW)
 - D1/TX - camera shutter (active LOW)
-- D2(int) - Joystick SW
+- D2 - MPU-6050 INT
 - D3(int) - IR Remote In (AX-1838HS)
-- D4
-- D5 - StepperV DIR
+- D4 - BLE RST
+- D5 - DIR (both)
 - D6 - StepperV STEP
-- D7 - MPU-6050 INT
-- D8 - StepperH DIR
+- D7 - BLE INT
+- D8 - BLE CS
 - D9 - StepperH STEP
-- D10- M0
-- D11- M1
-- D12
-- D13(led) - ~SLEEP (to both steppers) - LED indicates motors are on
+- D10 - ~ENABLE (both)
+- D11 - SPI MOSI[BLE]
+- D12 - SPI MISO[BLE]
+- D13[LED] - SPI SCK[BLE]
+
+### Feather M0 / Bluefruit
+
+- A0
+- A1 - Joystick SW
+- A2 - Joystick Vy
+- A3 - Joystick Vx
+- A4 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
+- A5
+- SCK[BLE]
+- MOSI[BLE]
+- MISO[BLE]
+- RX/0 - camera focus (active LOW)
+- TX/1 - camera shutter (active LOW)
+
+- 4[BLE] CS  (internally connected)
+- 7[BLE] IRQ (internally connected)
+- 8[BLE] RST (internally connected)
+
+- SDA/20 - Display and MPU-6050 board
+- SCL/21 - Display and MPU-6050 board
+- 5 - DIR (both)
+- 6 - StepperV STEP
+- 9[A7] - StepperH STEP
+- 10 - ~ENABLE (both)
+- 11
+- 12 - MPU-6050 INT
+- 13[LED]
 
 ### Other
 
-- All ~EN tied to GND
+- All ~SLEEP tied to Vcc
 - All VMOT tied to Vin
+- All M1 tied to Vcc      (1:32 mode)
+- All M0 left unconnected (1:32 mode)
 - 3.3V step-down adapter from Vin to Vcc
 
 ## Notes
 
 - *Atmega328-based boards are not supported*, see issue #57
 - IR remote not supported on Adafruit Feather M0, see issue #59
-- Settings memory not supported on Feather M0 (no EEPROM)
+- Settings memory on Feather M0 only works with Bluefruit (M0 has no EEPROM itself)
 - Future rewiring plan
-  - M0, M1 can be hardwired (M0=Vcc, M1 unconnected for 1:32 mode)
-  - DIR should be shared (it is only sampled on STEP)
-  - Tie all ~EN together to ground
-  - Tie all ~SLEEP together to D13 (LED indicates motors are on)
   - if we ever want to use ESP-12, need to reduce pins. ESP-12 only has 11: 
     (0,2,4,5,12,13,14,15,16,RXD,TXD,ADC)
   - Adafruit Feather M0 BLE uses 4, 7, 8 as Bluefruit RESET, IRQ and CS. 
@@ -111,6 +136,7 @@ lower current even, if we reduce the speed.
   - (untested but same Cortex M0 as above) <a href="https://www.adafruit.com/products/2843">Arduino Zero</a>
 - 2 x <a href="https://www.pololu.com/product/2134">DRV8834 Low-Voltage Stepper Motor Driver</a> from Pololu
 - <a href="http://www.amazon.com/Yellow-Serial-128X64-Display-Arduino/dp/B00O2LLT30">128x64 OLED display, SSD1306 I2C</a> from anywhere
+- Adafruit <a href="https://learn.adafruit.com/introducing-the-adafruit-bluefruit-spi-breakout">Bluefruit SPI Breakout</a> (if not onboard) - provides Bluetooth LE 4.1 joystick control - optional
 - 2-axis + switch analog joystick
 - 1834HS IR receiver with some remote - optional but recommended
   - Remote codes are hardcoded in remote.cpp if you have a different remote
@@ -127,6 +153,7 @@ lower current even, if we reduce the speed.
 ### Libraries
 - Adafruit_SSD1306
 - Adafruit_GFX
+- Adafruit Bluefruit nRF51
 - IRremote
 - Wire
 - <a href="https://github.com/laurb9/StepperDriver/releases">StepperDriver</a>
@@ -145,3 +172,4 @@ The only thing required of the platform is the two horiz/vert stepper motors.
   - Notes: 
     - the DRV8834 current limit must be set according to motor spec
     - reduction gear settings are hardcoded in pano.h
+

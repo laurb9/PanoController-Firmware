@@ -11,6 +11,11 @@
 
 #include <Arduino.h>
 
+// wait at least this many ms befor auto repeat
+#define REPEAT_DELAY 500
+// auto repeat interval (ms)
+#define REPEAT_INTERVAL 150
+
 class HID {
 protected:
     enum Event {

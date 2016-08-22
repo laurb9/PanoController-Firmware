@@ -7,23 +7,20 @@
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 #include <Arduino.h>
+#include <SPI.h>
 #include <DRV8834.h>
+#include <Adafruit_BLE.h>
+#include <Adafruit_BluefruitLE_SPI.h>
+#include "config.h"
 #include "pano.h"
 #include "camera.h"
 #include "hid.h"
 #include "joystick.h"
 #include "remote.h"
+#include "ble_remote.h"
 #include "menu.h"
 #include "display.h"
 #include "mpu.h"
-
-#if defined(__AVR__)
-#error "AVR is not supported"
-#elif !defined(ARDUINO_SAMD_FEATHER_M0)
-#include "config_teensy.h"
-#else
-#include "config_feather_m0.h"
-#endif
 
 // these variables are modified by the menu
 volatile int focal, shutter, pre_shutter, post_wait, long_pulse,
@@ -31,20 +28,33 @@ volatile int focal, shutter, pre_shutter, post_wait, long_pulse,
              horiz, vert, running;
 
 static Display display(OLED_RESET);
+Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 
 static Camera* camera;
 static Joystick* joystick;
 static Remote* remote;
+static BLERemote* ble_remote;
 // HID (Human Interface Device) Combined joystick+remote
 static AllHID* hid;
 static MPU* mpu;
 static DRV8834* horiz_motor;
 static DRV8834* vert_motor;
 static Pano* pano;
+static Menu* menu;
 
 void setup() {
     Serial.begin(38400);
     delay(1000); // wait for serial
+
+    ble.begin(true);
+    ble.echo(false);     // disable command echo
+    ble.factoryReset();
+    ble.info();
+    ble.verbose(false);  // turn off debug info
+
+    // LED Activity command is only supported from 0.6.6
+    ble.sendCommandCheckOK("AT+HWModeLED=BLEUART");
+    ble.sendCommandCheckOK("AT+GAPDEVNAME=Pano Controller");
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
     //display.setRotation(2);
@@ -56,18 +66,19 @@ void setup() {
     camera = new Camera(CAMERA_FOCUS, CAMERA_SHUTTER);
     joystick = new Joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
     remote = new Remote(REMOTE_IN);
+    ble_remote = new BLERemote(ble);
     // HID (Human Interface Device) Combined joystick+remote
-    hid = new AllHID(2, new HID* const[2] {joystick, remote});
+    hid = new AllHID(3, new HID* const[3] {joystick, remote, ble_remote});
 
     mpu = new MPU(MPU_I2C_ADDRESS, MPU_INT);
     mpu->init();
 
-    horiz_motor = new DRV8834(MOTOR_STEPS, HORIZ_DIR, HORIZ_STEP, DRV_M0, DRV_M1);
-    vert_motor = new DRV8834(MOTOR_STEPS, VERT_DIR, VERT_STEP, DRV_M0, DRV_M1);
+    horiz_motor = new DRV8834(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
+    vert_motor = new DRV8834(MOTOR_STEPS, DIR, VERT_STEP);
     horiz_motor->setMicrostep(32);
     vert_motor->setMicrostep(32);
 
-    pano = new Pano(*horiz_motor, *vert_motor, *camera, *mpu, MOTORS_ON);
+    pano = new Pano(*horiz_motor, *vert_motor, *camera, *mpu);
 
     //pinMode(COMPASS_DRDY, INPUT_PULLUP);
 
@@ -77,6 +88,7 @@ void setup() {
     analogReadAveraging(32);
 #endif
 
+    menu = getMainMenu();
 }
 
 int readBattery(void){
@@ -84,9 +96,11 @@ int readBattery(void){
 }
 
 /*
- * Print battery voltage at cursor, format is #.#V (4 chars)
+ * Add a status overlay (currently battery and bluetooth status)
  */
-void displayBatteryStatus(void){
+void displayStatusOverlay(void){
+
+    // Print battery voltage at cursor, format is #.#V (4 chars)
     int battmV = readBattery();
     display.setTextCursor(0, 16);
     // poor attempt at blinking
@@ -95,6 +109,12 @@ void displayBatteryStatus(void){
     }
     display.printf("%2d.%dV", battmV/1000, (battmV % 1000)/100);
     display.setTextColor(WHITE, BLACK);
+
+    // show a character indicating bluetooth is connected
+    if (ble_remote->active){
+        display.setTextCursor(0,15);
+        display.print("\xe8");
+    }
 }
 
 /*
@@ -107,7 +127,7 @@ void displayPanoStatus(void){
     display.printf("Photo %d of %d\n", pano->position+1, pano->getHorizShots()*pano->getVertShots());
     display.printf("At %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
     displayPanoSize();
-    displayBatteryStatus();
+    displayStatusOverlay();
     displayProgress();
     display.display();
 }
@@ -145,7 +165,7 @@ void displayPanoInfo(void){
     displayPanoSize();
     display.printf("%d photos\n", pano->getHorizShots()*pano->getVertShots());
     displayProgress();
-    displayBatteryStatus();
+    displayStatusOverlay();
     display.display();
 }
 
@@ -238,7 +258,7 @@ bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
             display.setTextCursor(6, 0);
             displayPanoSize();
             display.printf("FOV %d x %d ", pano->horiz_fov, pano->vert_fov);
-            displayBatteryStatus();
+            displayStatusOverlay();
             display.display();
         }
 
@@ -314,7 +334,7 @@ void executePano(void){
  * Update common camera and pano settings from external vars
  */
 void setPanoParams(void){
-    menu.cancel();
+    menu->cancel();
     camera->setAspect(aspect);
     camera->setFocalLength(focal);
     pano->setShutter(shutter, pre_shutter, post_wait, long_pulse);
@@ -338,7 +358,7 @@ int onStart(int __){
         return false;
     }
     running = true;
-    menu.sync();
+    menu->sync();
     executePano();
     return __;
 }
@@ -354,7 +374,7 @@ int onRepeat(int __){
         return false;
     }
     running = true;
-    menu.sync();
+    menu->sync();
     executePano();
     return __;
 }
@@ -377,7 +397,7 @@ int on360(int __){
         return false;
     }
     running = true;
-    menu.sync();
+    menu->sync();
     executePano();
     return __;
 }
@@ -418,11 +438,11 @@ int onAboutPanoController(int __){
 }
 
 void onMenuLoop(void){
-    displayBatteryStatus();
+    displayStatusOverlay();
     display.invertDisplay(display_invert);
     pano->motorsEnable(motors_enable);
 }
 
 void loop() {
-    displayMenu(menu, display, DISPLAY_ROWS, *hid, onMenuLoop);
+    displayMenu(*menu, display, DISPLAY_ROWS, *hid, onMenuLoop);
 }

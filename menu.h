@@ -142,7 +142,7 @@ public:
     int render(DISPLAY_DEVICE display, int rows) override;
 };
 
-extern Menu menu;
+Menu* getMainMenu(void);
 
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
                  AllHID& hid, void(*onMenuLoop)(void)=NULL);
