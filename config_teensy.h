@@ -6,51 +6,40 @@
  * - Teensy 3.2
  */
 
-// Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
-// and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
-#define DISPLAY_I2C_ADDRESS 0x3C
-#define OLED_RESET 12
-#define TEXT_SIZE 1
-#define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
-#define DISPLAY_COLS SSD1306_LCDWIDTH/6/TEXT_SIZE
+// Bluetooth module SPI
+#define BLUEFRUIT_SPI_CS    8
+#define BLUEFRUIT_SPI_IRQ   7
+#define BLUEFRUIT_SPI_RST   4   // Optional but recommended, set to -1 if unused
+
+#define SPI_MOSI           11
+#define SPI_MISO           12
+#define SPI_SCK            13
 
 // Camera shutter controls
 #define CAMERA_FOCUS 0
 #define CAMERA_SHUTTER 1
 
-// Battery measurement settings
-#define VCC 3300
-#define LOW_BATTERY 7000
-// R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vin)
-// measure resistors and enter actual values for a more accurate voltage
-#define BATT_R1 9980
-#define BATT_R2 46500
-#define BATT_RANGE (VCC * (BATT_R1 + BATT_R2) / BATT_R1)
+// Battery measurement pin R1/R2
 #define BATTERY A0
 
 // Joystick inputs
 #define JOYSTICK_X A3
 #define JOYSTICK_Y A2
-#define JOYSTICK_SW 2
+#define JOYSTICK_SW A1
 
 // IR remote
 #define REMOTE_IN 3
 
 // MPU (accel/gyro)
-#define MPU_I2C_ADDRESS 0x68
-#define MPU_INT 7
+#define MPU_INT 2
 
 // Future devices
-#define COMPASS_DRDY 4
+//#define COMPASS_DRDY 4
 
-// Stepper motors and drivers
-#define MOTOR_STEPS 200
-#define VERT_DIR 5
+// Stepper drivers control
+#define DIR 5
 #define VERT_STEP 6
-#define HORIZ_DIR 8
 #define HORIZ_STEP 9
-#define DRV_M0 10
-#define DRV_M1 11
 
-// this should be hooked up to nSLEEP on both drivers
-#define MOTORS_ON 13
+// this should be hooked up to nENABLE on both drivers
+#define nENABLE 10

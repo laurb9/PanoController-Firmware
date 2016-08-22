@@ -16,10 +16,6 @@
 #include <Arduino.h>
 #include <IRremote.h>
 
-// the remote I have sends repeat code too quick
-// allow repeat code only after this many milliseconds
-#define REPEAT_DELAY 500
-
 class Remote : public HID {
 private:
     int pin;

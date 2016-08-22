@@ -38,7 +38,6 @@ protected:
     Motor& vert_motor;
     Camera& camera;
     MPU& mpu;
-    int motors_pin;
     float horiz_move;
     float vert_move;
     int horiz_count;
@@ -63,7 +62,7 @@ public:
     unsigned steady_delay_avg = 100;
 
     // configuration
-    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, int motors_pin);
+    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu);
     void setFOV(int horiz_angle, int vert_angle);
     void setShutter(unsigned shutter_delay, unsigned pre_delay, unsigned post_wait, bool long_pulse);
     void setShots(unsigned shots);
