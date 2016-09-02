@@ -11,6 +11,7 @@
 #include <BasicStepperDriver.h>
 #include "camera.h"
 #include "mpu.h"
+#include "pano_settings.h"
 
 // Calculate maximum allowed movement at given focal length and shutter
 // =angular velocity that would cause a pixel to overlap next one within shot time

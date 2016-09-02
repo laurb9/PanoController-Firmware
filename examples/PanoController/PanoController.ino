@@ -23,9 +23,7 @@
 #include "mpu.h"
 
 // these variables are modified by the menu
-volatile int focal, shutter, pre_shutter, post_wait, long_pulse,
-             orientation, aspect, shots, motors_enable, display_invert,
-             horiz, vert, running;
+PanoSettings settings;
 
 static Display display(OLED_RESET);
 Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
@@ -88,7 +86,7 @@ void setup() {
     analogReadAveraging(32);
 #endif
 
-    menu = getMainMenu();
+    menu = getMainMenu(settings);
 }
 
 int readBattery(void){
@@ -157,7 +155,7 @@ void displayPanoInfo(void){
     float vert_fov = camera->getVertFOV();
     display.clearDisplay();
     display.setTextCursor(0,0);
-    display.printf("Lens: %dmm\n", focal);
+    display.printf("Lens: %dmm\n", settings.focal);
     display.printf("      %d.%d x %d.%d\n",
                    int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
                    int(vert_fov), round(10*(vert_fov-int(vert_fov))));
@@ -290,21 +288,21 @@ void executePano(void){
     hid->clear(4000);
     pano->start();
 
-    while (running){
+    while (settings.running){
         displayPanoStatus();
         if (!pano->position){
             delay(2000);
         }
-        if (shutter > 0){
+        if (settings.shutter > 0){
             pano->shutter();
         }
 
-        if (shutter == 0 || hid->read()){
+        if (settings.shutter == 0 || hid->read()){
             hid->clear(1000);
             // button was clicked mid-pano or we are in manual shutter mode
             displayPanoStatus();
             displayArrows();
-            while (running){
+            while (settings.running){
                 if (!hid->read()) continue;
                 else if (hid->isLastEventLeft()) pano->prev();
                 else if (hid->isLastEventRight()) pano->next();
@@ -312,17 +310,17 @@ void executePano(void){
                 else if (hid->isLastEventDown()) pano->moveTo(pano->getCurRow() + 1, pano->getCurCol());
                 else if (hid->isLastEventOk()) break;
                 else if (hid->isLastEventCancel()){
-                    running = false;
+                    settings.running = false;
                     break;
                 }
                 displayPanoStatus();
                 displayArrows();
             }
         }
-        running = running && pano->next();
+        settings.running = settings.running && pano->next();
     };
 
-    running = false;
+    settings.running = false;
     displayPanoStatus();
 
     pano->end();
@@ -335,10 +333,10 @@ void executePano(void){
  */
 void setPanoParams(void){
     menu->cancel();
-    camera->setAspect(aspect);
-    camera->setFocalLength(focal);
-    pano->setShutter(shutter, pre_shutter, post_wait, long_pulse);
-    pano->setShots(shots);
+    camera->setAspect(settings.aspect);
+    camera->setFocalLength(settings.focal);
+    pano->setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
+    pano->setShots(settings.shots);
 }
 
 /*
@@ -349,15 +347,15 @@ int onStart(int __){
 
     // set panorama FOV
     if (!positionCamera("Set Top Left", NULL, NULL) ||
-        !positionCamera("Set Bottom Right", &horiz, &vert)){
+        !positionCamera("Set Bottom Right", &settings.horiz, &settings.vert)){
         return false;
     }
 
-    pano->setFOV(horiz, vert);
+    pano->setFOV(settings.horiz, settings.vert);
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
-    running = true;
+    settings.running = true;
     menu->sync();
     executePano();
     return __;
@@ -369,11 +367,11 @@ int onStart(int __){
 int onRepeat(int __){
     setPanoParams();
 
-    pano->setFOV(horiz, vert);
+    pano->setFOV(settings.horiz, settings.vert);
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
-    running = true;
+    settings.running = true;
     menu->sync();
     executePano();
     return __;
@@ -386,17 +384,17 @@ int on360(int __){
     setPanoParams();
 
     // set panorama FOV
-    horiz = 360;
+    settings.horiz = 360;
     if (!positionCamera("Set Top", NULL, NULL) ||
-        !positionCamera("Set Bottom", NULL, &vert)){
+        !positionCamera("Set Bottom", NULL, &settings.vert)){
         return false;
     }
 
-    pano->setFOV(horiz, vert);
+    pano->setFOV(settings.horiz, settings.vert);
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
-    running = true;
+    settings.running = true;
     menu->sync();
     executePano();
     return __;
@@ -407,7 +405,7 @@ int on360(int __){
  */
 int onPanoInfo(int __){
     setPanoParams();
-    pano->setFOV(horiz, vert);
+    pano->setFOV(settings.horiz, settings.vert);
     pano->computeGrid();
     displayPanoInfo();
     hid->waitAnyKey();
@@ -439,8 +437,8 @@ int onAboutPanoController(int __){
 
 void onMenuLoop(void){
     displayStatusOverlay();
-    display.invertDisplay(display_invert);
-    pano->motorsEnable(motors_enable);
+    display.invertDisplay(settings.display_invert);
+    pano->motorsEnable(settings.motors_enable);
 }
 
 void loop() {

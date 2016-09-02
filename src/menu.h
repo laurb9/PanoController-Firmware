@@ -10,6 +10,7 @@
 #define MENU_H_
 #include "display.h"
 #include "hid.h"
+#include "pano_settings.h"
 
 #define DISPLAY_DEVICE Display&
 
@@ -142,7 +143,7 @@ public:
     int render(DISPLAY_DEVICE display, int rows) override;
 };
 
-Menu* getMainMenu(void);
+Menu* getMainMenu(PanoSettings& settings);
 
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
                  AllHID& hid, void(*onMenuLoop)(void)=NULL);
