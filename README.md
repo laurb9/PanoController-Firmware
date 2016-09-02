@@ -8,8 +8,8 @@ See the <a href="https://www.facebook.com/panocontroller">Official Facebook page
 
 Current state: fully functional prototype board, field-tested, frequently upgraded.
 
-<img src="images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
-<img src="images/pano-info.jpg" width="400" alt="Pano Controller Pano Information Screen">
+<img src="extras/images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
+<img src="extras/images/pano-info.jpg" width="400" alt="Pano Controller Pano Information Screen">
 
 ## Features:
 ### Software
@@ -106,7 +106,7 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
     Should use same pinout for connecting to external BLE board (SPI).
   - nrf24 library hardcodes pin 13 so if we plan to use it, we'll have to rewire.
 
-<img src="images/breadboard.jpg" width="500" alt="Breadboard setup with Teensy LC">
+<img src="extras/images/breadboard.jpg" width="500" alt="Breadboard setup with Teensy LC">
 
 ## Setting DRV8834 reference
 

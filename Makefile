@@ -7,7 +7,7 @@ ARDUINO := arduino --verbose --preserve-temp-files
 #ARDUINO := Arduino.app/Contents/MacOS/Arduino --verbose --preserve-temp-files
 TMPDIR := /tmp/pano-controller-build
 
-SOURCES := pano-controller.ino *.cpp *.h
+SOURCES := examples/PanoController/PanoController.ino src/*.cpp src/*.h
 
 #
 # Specify which of the below targets to build (default teensyLC)
