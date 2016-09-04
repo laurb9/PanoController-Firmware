@@ -59,7 +59,7 @@ ActionItem::ActionItem(const char *description, int(*onselect)(int))
 /*
  * MultiSelect: share functionality among the other menu classes
  */
-MultiSelect::MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
+MultiSelect::MultiSelect(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int))
 :BaseMenu(description, onselect),
  value(value),
  default_val(default_val),
@@ -126,7 +126,7 @@ int MultiSelect::render(DISPLAY_DEVICE display, int rows){
 /*
  * RangeSelector: a number with up/down controls
  */
-RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+RangeSelector::RangeSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                              int min_val, int max_val, int step)
 :MultiSelect(description, value, default_val, eeprom, onselect),
  min_val(min_val), max_val(max_val), step(step)
@@ -180,7 +180,7 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * ListSelector: list of numeric options
  */
-ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+ListSelector::ListSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                            int count, const int values[])
 :MultiSelect(description, value, default_val, eeprom, onselect),
  values(values)
@@ -237,7 +237,7 @@ int ListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * NamedListSelector: list of named numeric options
  */
-NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+NamedListSelector::NamedListSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                                      int count, const char * const names[], const int values[])
 :ListSelector(description, value, default_val, eeprom, onselect, count, values),
  names(names)

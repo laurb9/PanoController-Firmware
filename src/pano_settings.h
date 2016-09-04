@@ -9,20 +9,22 @@
 #ifndef PANO_SETTINGS_H_
 #define PANO_SETTINGS_H_
 
-// This does not really belong here
+typedef volatile uint16_t settings_t;
+
 typedef struct {
-    volatile int focal = 35,
-                 shutter = 100,
-                 pre_shutter = 100,
-                 post_wait = 500,
-                 long_pulse = 0,
-                 aspect = 1,
-                 shots = 1,
-                 motors_enable = 0,
-                 display_invert = 0,
-                 horiz = 360,
-                 vert = 160,
-                 running = 0;
+    settings_t
+    focal = 35,
+    shutter = 100,
+    pre_shutter = 100,
+    post_wait = 500,
+    long_pulse = 0,
+    aspect = 1,
+    shots = 1,
+    motors_enable = 0,
+    display_invert = 0,
+    horiz = 360,
+    vert = 160,
+    running = 0;
 } PanoSettings;
 
 #endif /* PANO_SETTINGS_H_ */

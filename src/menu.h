@@ -49,7 +49,7 @@ public:
 
 class MultiSelect : public BaseMenu {
 protected:
-    volatile int *value = NULL;     // store current option value here
+    settings_t *value = NULL;     // store current option value here
     int default_val = 0;            // default option value
     int eeprom = 0;                 // EEPROM save location (0 = no save)
     int pointer = 0;                // currently selected entry
@@ -57,7 +57,7 @@ protected:
     int count = 0;                  // number of entries
     int calc_start(int rows);       // helper method
 
-    MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int));
+    MultiSelect(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int));
 
 public:
     bool active = false;            // flag indicating the menu is active
@@ -87,7 +87,7 @@ public:
     static const ClassID class_id = CLASS_RANGE;
     virtual const ClassID getClassID(void){ return class_id; };
     int min_val, max_val, step;
-    RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+    RangeSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                   int min_val, int max_val, int step);
     void next(void) override;
     void prev(void) override;
@@ -104,7 +104,7 @@ public:
     static const ClassID class_id = CLASS_LIST;
     virtual const ClassID getClassID(void){ return class_id; };
     const int *values;
-    ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+    ListSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                  int count, const int values[]);
     void select(void) override;
     void sync(void) override;
@@ -119,7 +119,7 @@ public:
     static const ClassID class_id = CLASS_NAMES;
     virtual const ClassID getClassID(void){ return class_id; };
     const char* const *names;
-    NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+    NamedListSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                       int count, const char * const names[], const int values[]);
     int render(DISPLAY_DEVICE display, int rows) override;
 };

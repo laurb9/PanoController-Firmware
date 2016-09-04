@@ -191,7 +191,7 @@ void displayArrows(){
  * @param horiz: pointer to store horizontal movement
  * @param vert:  pointer to store vertical movement
  */
-bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
+bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
     int pos_x, pos_y;
     int horiz_rpm, vert_rpm;
 
