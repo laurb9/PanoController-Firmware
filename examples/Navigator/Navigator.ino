@@ -17,11 +17,13 @@
 #include "remote.h"
 #include "menu.h"
 #include "display.h"
+#include "radio.h"
 
 // these variables are modified by the menu
 PanoSettings settings;
 
 static Display display(OLED_RESET);
+static Radio radio(NRF24_CE, NRF24_CSN);
 
 static Camera* camera;
 static Joystick* joystick;
@@ -41,6 +43,8 @@ void setup() {
     display.setTextCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
+
+    radio.begin();
 
     camera = new Camera(PIN_UNCONNECTED, PIN_UNCONNECTED);
     joystick = new Joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
@@ -150,7 +154,7 @@ void displayArrows(){
  * @param horiz: pointer to store horizontal movement
  * @param vert:  pointer to store vertical movement
  */
-bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
+bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
     int pos_x, pos_y;
     int horiz_rpm, vert_rpm;
     float horiz_offset = 0, vert_offset = 0;
@@ -396,4 +400,6 @@ void onMenuLoop(void){
 
 void loop() {
     displayMenu(*menu, display, DISPLAY_ROWS, *hid, onMenuLoop);
+    delay(10);
+    radio.write_type_data('S', &settings, sizeof(settings));
 }

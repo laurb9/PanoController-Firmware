@@ -22,3 +22,7 @@
 
 // IR remote
 #define REMOTE_IN 3
+
+// NRF24 radio
+#define NRF24_CE A6
+#define NRF24_CSN A7

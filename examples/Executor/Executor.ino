@@ -19,11 +19,13 @@
 #include "remote.h"
 #include "display.h"
 #include "mpu.h"
+#include "radio.h"
 
 // these variables are modified by the menu
 PanoSettings settings;
 
 static Display display(OLED_RESET);
+static Radio radio(NRF24_CE, NRF24_CSN);
 
 static Camera* camera;
 static Joystick* joystick;
@@ -45,6 +47,8 @@ void setup() {
     display.setTextCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
+
+    radio.begin();
 
     camera = new Camera(CAMERA_FOCUS, CAMERA_SHUTTER);
     joystick = new Joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
@@ -165,7 +169,7 @@ void displayArrows(){
  * @param horiz: pointer to store horizontal movement
  * @param vert:  pointer to store vertical movement
  */
-bool positionCamera(const char *msg, volatile int *horiz, volatile int *vert){
+bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
     int pos_x, pos_y;
     int horiz_rpm, vert_rpm;
 
@@ -379,7 +383,7 @@ int onPanoInfo(int __){
     pano->setFOV(settings.horiz, settings.vert);
     pano->computeGrid();
     displayPanoInfo();
-    hid->waitAnyKey();
+    //hid->waitAnyKey();
     return __;
 }
 
@@ -413,8 +417,17 @@ void onMenuLoop(void){
 }
 
 void loop() {
+    uint8_t type = 0, len = 0;
+    void *buffer;
+    len = radio.read_type_data(type, buffer);
+    if (len){
+        switch(type){
+        case 'S':
+            memcpy(&settings, buffer, sizeof(settings));
+        }
+    }
     Serial.println("Display Pano Info");
     onPanoInfo(0);
-    Serial.println("Starting Pano");
-    onRepeat(0);
+    //Serial.println("Starting Pano");
+    //onRepeat(0);
 }

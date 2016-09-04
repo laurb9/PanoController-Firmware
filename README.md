@@ -41,8 +41,8 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - A3 - Joystick Vx
 - A4 - SDA - Display and MPU-6050 board
 - A5 - SCL - Display and MPU-6050 board
-- A6
-- A7
+- A6 - NRF24 CE
+- A7 - NRF24 CSN
 - D0/RX - camera focus (active LOW)
 - D1/TX - camera shutter (active LOW)
 - D2 - MPU-6050 INT
@@ -54,9 +54,9 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - D8 - BLE CS
 - D9 - StepperH STEP
 - D10 - ~ENABLE (both)
-- D11 - SPI MOSI[BLE]
-- D12 - SPI MISO[BLE]
-- D13[LED] - SPI SCK[BLE]
+- D11 - SPI MOSI BLE and NRF24
+- D12 - SPI MISO BLE and NRF24
+- D13 - SPI SCK and NRF24
 
 ### Feather M0 / Bluefruit
 
@@ -65,10 +65,10 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - A2 - Joystick Vy
 - A3 - Joystick Vx
 - A4 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
-- A5
-- SCK[BLE]
-- MOSI[BLE]
-- MISO[BLE]
+- A5 - NRF24 CE
+- SCK - BLE(internal) and NRF24
+- MOSI - BLE(internal) and NRF24
+- MISO - BLE(internal) and NRF24
 - RX/0 - camera focus (active LOW)
 - TX/1 - camera shutter (active LOW)
 
@@ -82,7 +82,7 @@ Current state: fully functional prototype board, field-tested, frequently upgrad
 - 6 - StepperV STEP
 - 9[A7] - StepperH STEP
 - 10 - ~ENABLE (both)
-- 11
+- 11 - NRF24 CSN
 - 12 - MPU-6050 INT
 - 13[LED]
 

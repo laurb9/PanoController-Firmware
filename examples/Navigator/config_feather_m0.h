@@ -18,3 +18,7 @@
 // IR remote is not supported on Feather M0
 // https://github.com/z3t0/Arduino-IRremote/issues/274
 #define REMOTE_IN -1
+
+// NRF24 radio
+#define NRF24_CE A5
+#define NRF24_CSN 11

@@ -10,6 +10,10 @@
 #define BLUEFRUIT_SPI_IRQ   7
 #define BLUEFRUIT_SPI_RST   4
 
+// NRF24 radio
+#define NRF24_CE A5
+#define NRF24_CSN 11
+
 // Camera shutter controls
 #define CAMERA_FOCUS 0
 #define CAMERA_SHUTTER 1
