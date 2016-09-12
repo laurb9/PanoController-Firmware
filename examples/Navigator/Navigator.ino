@@ -22,6 +22,10 @@
 // these variables are modified by the menu
 PanoSettings settings;
 
+// This is the panorama engine state
+// should technically be in the Pano object
+PanoState state;
+
 static Display display(OLED_RESET);
 static Radio radio(NRF24_CE, NRF24_CSN);
 
@@ -57,24 +61,65 @@ void setup() {
     menu = getMainMenu(settings);
 }
 
-int readBattery(void){
-    return 0;
+/*
+ * Send settings to remote execution unit
+ */
+static void sendSettings(Radio& radio, PanoSettings& settings){
+    radio.write_type_data('C', &settings, sizeof(settings));
+}
+/*
+ * Read state from remote execution unit
+ */
+static bool readState(Radio& radio, PanoState& state){
+    uint8_t type = 0;
+    uint8_t len = 0;
+    if (radio.available()){
+        void *buffer;
+        len = radio.read_type_data(type, buffer);
+        if (len){
+            switch(type){
+
+            case 'T': // State information
+                memcpy(&state, buffer, sizeof(state));
+                setPanoParams();
+            }
+        }
+    }
+    return (type != 0);
 }
 
 /*
- * Add a status overlay (currently battery and bluetooth status)
+ * Add a status overlay (currently battery and radio status)
  */
 void displayStatusOverlay(void){
 
-    // Print battery voltage at cursor, format is #.#V (4 chars)
-    int battmV = readBattery();
-    display.setTextCursor(0, 16);
-    display.printf("%2d.%dV", battmV/1000, (battmV % 1000)/100);
+    // motors active
+    if (state.running){
+        display.setTextCursor(0,14);
+        display.print("*");
+    }
 
-    // show a character indicating bluetooth is connected
-    if (true){
-        display.setTextCursor(0,15);
-        display.print("\xe8");
+    // show a character indicating radio is connected
+    display.setTextCursor(0,15);
+    if (radio.connected){
+        display.print("^");
+    } else {
+        display.print("X");
+    }
+
+    if (!radio.connected){
+        return;
+    }
+
+    // Print battery voltage at cursor, format is #.#V (4 chars)
+    display.setTextCursor(0, 16);
+    if (state.battery){
+        // poor attempt at blinking
+        if (state.battery < 0 && millis() & 1024){
+            display.setTextColor(BLACK, WHITE);
+        }
+        display.printf("%2d.%dV", abs(state.battery)/1000, (abs(state.battery) % 1000)/100);
+        display.setTextColor(WHITE, BLACK);
     }
 }
 
@@ -85,8 +130,12 @@ void displayPanoStatus(void){
     display.clearDisplay();
     display.setTextCursor(0,0);
 
-    display.printf("Photo %d of %d\n", pano->position+1, pano->getHorizShots()*pano->getVertShots());
-    display.printf("At %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
+    if (state.running){
+        display.printf("# %d of %d\n", pano->position+1, pano->getHorizShots()*pano->getVertShots());
+        display.printf("at %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
+    } else {
+        display.printf("%d photos\n\n", pano->getHorizShots()*pano->getVertShots());
+    }
     displayPanoSize();
     displayStatusOverlay();
     displayProgress();
@@ -98,17 +147,20 @@ void displayPanoStatus(void){
 void displayProgress(void){
     int photos = pano->getHorizShots() * pano->getVertShots();
     display.setTextCursor(6, 0);
-    display.printf("%d minutes ", pano->getTimeLeft()/60);
+    if (state.position + 1 < photos){
+        display.printf("%d minutes ", pano->getTimeLeft()/60);
+    }
     if (pano->steady_delay_avg > 500){
         display.setTextCursor(6, 16);
         display.printf("%2ds ", (pano->steady_delay_avg+500)/1000);
         display.printf((pano->steady_delay_avg < 8000) ? "\x12" : "!");
     }
-    display.setTextCursor(7, 0);
-    for (int i=(pano->position+1) * DISPLAY_COLS / photos; i > 0; i--){
-        display.print('\xda');
+    if (state.running){
+        display.setTextCursor(7, 0);
+        for (int i=(pano->position+1) * DISPLAY_COLS / photos; i > 0; i--){
+            display.print('\xdb');
+        }
     }
-    display.println();
 }
 /*
  * Display panorama information
@@ -134,7 +186,7 @@ void displayPanoInfo(void){
  * Display the panorama grid size
  */
 void displayPanoSize(){
-    display.printf("Grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
+    display.printf("grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
 }
 
 /*
@@ -153,11 +205,18 @@ void displayArrows(){
  * @param msg:   title string
  * @param horiz: pointer to store horizontal movement
  * @param vert:  pointer to store vertical movement
+ *               if both horiz and vert are NULL then the head moves freely around
  */
 bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
-    int pos_x, pos_y;
-    int horiz_rpm, vert_rpm;
-    float horiz_offset = 0, vert_offset = 0;
+    struct {
+        settings_t horiz_rpm, vert_rpm, horiz_move, vert_move;
+        float horiz_offset = 0, vert_offset = 0;
+    } move;
+    int step = min(camera->getHorizFOV() / 10, 1);
+
+    if (horiz || vert){
+        radio.write_type_data('R');  // Set home to current head position
+    }
 
     display.clearDisplay();
     display.setTextCursor(0,0);
@@ -168,47 +227,38 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
         hid->read();
         if (hid->isLastEventOk() || hid->isLastEventCancel()) break;
 
-        pos_x = joystick->getPositionX();
-        horiz_rpm = DYNAMIC_HORIZ_RPM(camera->getHorizFOV());
-        if (pos_x == 0){
-            if (hid->isLastEventRight()) pos_x = 1;
-            if (hid->isLastEventLeft()) pos_x = -1;
-            horiz_rpm /= 3;
-        } else {
-            // proportional speed control
-            horiz_rpm = horiz_rpm * abs(pos_x) / joystick->range;
-            pos_x = pos_x / abs(pos_x);
+        move.horiz_rpm = DYNAMIC_HORIZ_RPM(camera->getHorizFOV());
+        move.horiz_move = joystick->getPositionX() * step;
+        if (move.horiz_move == 0){
+            if (hid->isLastEventRight()) move.horiz_move = step;
+            if (hid->isLastEventLeft()) move.horiz_move = -step;
         }
-        if (pos_x && horiz){
-            if (pos_x < -horiz_offset){
-                pos_x = -horiz_offset;
-            } else if (abs(pos_x + horiz_offset) + camera->getHorizFOV() > 360){
-                pos_x = 360 - camera->getHorizFOV() - horiz_offset;
+        if (move.horiz_move && horiz){
+            if (move.horiz_move < -move.horiz_offset){
+                move.horiz_move = -move.horiz_offset;
+            } else if (abs(move.horiz_move + move.horiz_offset) + camera->getHorizFOV() > 360){
+                move.horiz_move = 360 - camera->getHorizFOV() - move.horiz_offset;
             }
         }
 
-        pos_y = joystick->getPositionY();
-        vert_rpm = DYNAMIC_VERT_RPM(camera->getVertFOV());
-        if (pos_y == 0){
-            if (hid->isLastEventUp()) pos_y = 1;
-            if (hid->isLastEventDown()) pos_y = -1;
-            vert_rpm /= 3;
-        } else {
-            // proportional speed control
-            vert_rpm = vert_rpm * abs(pos_y) / joystick->range;
-            pos_y = pos_y / abs(pos_y);
+        move.vert_rpm = DYNAMIC_VERT_RPM(camera->getVertFOV());
+        move.vert_move = joystick->getPositionY() * step;
+        if (move.vert_move == 0){
+            if (hid->isLastEventUp()) move.vert_move = step;
+            if (hid->isLastEventDown()) move.vert_move = -step;
+            move.vert_rpm /= 3;
         }
-        if (pos_y && vert){
-            if (pos_y > -vert_offset){
-                pos_y = -vert_offset;
-            } else if (-(pos_y + vert_offset) + camera->getVertFOV() > 180){
-                pos_y = -(180 - camera->getVertFOV() + vert_offset);
+        if (move.vert_move && vert){
+            if (move.vert_move > -move.vert_offset){
+                move.vert_move = -move.vert_offset;
+            } else if (-(move.vert_move + move.vert_offset) + camera->getVertFOV() > 180){
+                move.vert_move = -(180 - camera->getVertFOV() + move.vert_offset);
             }
         }
 
-        if (vert && !pos_x && !pos_y){
-            pano->setFOV((horiz) ? abs(horiz_offset) + camera->getHorizFOV() : 360,
-                        abs(vert_offset) + camera->getVertFOV());
+        if (vert){
+            pano->setFOV((horiz) ? abs(move.horiz_offset) + camera->getHorizFOV() : 360,
+                        abs(move.vert_offset) + camera->getVertFOV());
             pano->computeGrid();
             display.setTextCursor(6, 0);
             display.print("          ");
@@ -219,70 +269,64 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             display.display();
         }
 
-        if (pos_x || pos_y){
-            horiz_offset += pos_x;
-            vert_offset += pos_y;
+        readState(radio, state);
+        if (move.horiz_move || move.vert_move){
+            radio.write_type_data('M', &move, sizeof(move));
+            move.horiz_offset = move.horiz_offset + move.horiz_move;
+            move.vert_offset = move.vert_offset + move.vert_move;
         }
     }
 
     if (horiz || vert){
         if (horiz){
-            *horiz = abs(horiz_offset) + camera->getHorizFOV();
+            *horiz = abs(move.horiz_offset) + camera->getHorizFOV();
         }
         if (vert){
-            *vert = abs(vert_offset) + camera->getVertFOV();
+            *vert = abs(move.vert_offset) + camera->getVertFOV();
         }
+
+        radio.write_type_data('B');  // Move head back to home position
     }
+
     return (hid->isLastEventOk());
 }
 
 /*
- * Execute panorama from start to finish.
+ * Follow panorama execution from start to finish.
  * Button click interrupts.
  */
-void executePano(void){
+void followPano(void){
+    bool manualMode = (settings.shutter == 0);
 
-    hid->clear(4000);
-    //pano->start();
-
-    /*
-    while (settings.running){
+    while (state.running){
         displayPanoStatus();
-        if (!pano->position){
-            delay(2000);
-        }
-        if (settings.shutter > 0){
-            //pano->shutter();
+
+        if (manualMode){
+            displayArrows();
         }
 
-        if (settings.shutter == 0 || hid->read()){
-            hid->clear(1000);
-            // button was clicked mid-pano or we are in manual shutter mode
-            displayPanoStatus();
-            displayArrows();
-            while (settings.running){
-                if (!hid->read()) continue;
-                else if (hid->isLastEventLeft()) pano->prev();
-                else if (hid->isLastEventRight()) pano->next();
-                else if (hid->isLastEventUp()) pano->moveTo(pano->getCurRow() - 1, pano->getCurCol());
-                else if (hid->isLastEventDown()) pano->moveTo(pano->getCurRow() + 1, pano->getCurCol());
-                else if (hid->isLastEventOk()) break;
-                else if (hid->isLastEventCancel()){
-                    settings.running = false;
-                    break;
-                }
-                displayPanoStatus();
-                displayArrows();
-            }
+        readState(radio, state);
+
+        if (!hid->read()){
+            continue;
         }
-        settings.running = settings.running && pano->next();
+
+        // button was clicked mid-pano
+        if (!manualMode){
+            radio.write_type_data('O');
+            manualMode = true;
+            hid->clear(1000);
+            continue;
+        }
+
+        if (hid->isLastEventOk())          radio.write_type_data('S');
+        else if (hid->isLastEventCancel()) radio.write_type_data('X');
+        else if (hid->isLastEventLeft())   radio.write_type_data('I', "<");
+        else if (hid->isLastEventRight())  radio.write_type_data('I', ">");
+        else if (hid->isLastEventUp())     radio.write_type_data('I', "^");
+        else if (hid->isLastEventDown())   radio.write_type_data('I', "v");
     };
 
-    settings.running = false;
-    displayPanoStatus();
-
-    pano->end();
-    */
     hid->waitAnyKey();
 }
 
@@ -290,33 +334,15 @@ void executePano(void){
  * Update common camera and pano settings from external vars
  */
 void setPanoParams(void){
-    menu->cancel();
+    sendSettings(radio, settings);
     camera->setAspect(settings.aspect);
     camera->setFocalLength(settings.focal);
     pano->setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
     pano->setShots(settings.shots);
-}
-
-/*
- * Menu callback invoked by selecting "Start"
- */
-int onStart(int __){
-    setPanoParams();
-
-    // set panorama FOV
-    if (!positionCamera("Set Top Left", NULL, NULL) ||
-        !positionCamera("Set Bottom Right", &settings.horiz, &settings.vert)){
-        return false;
-    }
-
     pano->setFOV(settings.horiz, settings.vert);
-    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
-        return false;
-    }
-    settings.running = true;
-    menu->sync();
-    executePano();
-    return __;
+    pano->computeGrid();
+    pano->position = state.position;
+    pano->steady_delay_avg = state.steady_delay_avg;
 }
 
 /*
@@ -324,47 +350,60 @@ int onStart(int __){
  */
 int onRepeat(int __){
     setPanoParams();
-
-    pano->setFOV(settings.horiz, settings.vert);
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
-    settings.running = true;
     menu->sync();
-    executePano();
+
+    hid->clear(4000);
+
+    radio.write_type_data('P');    // start Pano
     return __;
 }
 
 /*
- * Menu callback invoked by selecting "Repeat"
+ * Menu callback invoked by selecting "Start"
  */
-int on360(int __){
-    setPanoParams();
+int onStart(int __){
+    settings_t horiz, vert;
 
     // set panorama FOV
-    settings.horiz = 360;
-    if (!positionCamera("Set Top", NULL, NULL) ||
-        !positionCamera("Set Bottom", NULL, &settings.vert)){
+    if (!positionCamera("Set Top Left", NULL, NULL) ||
+        !positionCamera("Set Bottom Right", &horiz, &vert)){
         return false;
     }
 
-    pano->setFOV(settings.horiz, settings.vert);
-    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
+    settings.horiz = horiz;
+    settings.vert = vert;
+    pano->setFOV(horiz, vert);
+
+    return onRepeat(__);
+}
+
+/*
+ * Menu callback invoked by selecting "360 Pano"
+ */
+int on360(int __){
+    settings_t horiz, vert;
+    // set panorama FOV
+    horiz = 360;
+
+    if (!positionCamera("Set Top", NULL, NULL) ||
+        !positionCamera("Set Bottom", NULL, &vert)){
         return false;
     }
-    settings.running = true;
-    menu->sync();
-    executePano();
-    return __;
+
+    settings.horiz = horiz;
+    settings.vert = vert;
+    pano->setFOV(horiz, vert);
+
+    return onRepeat(__);
 }
 
 /*
  * Menu callback for displaying last pano info
  */
 int onPanoInfo(int __){
-    setPanoParams();
-    pano->setFOV(settings.horiz, settings.vert);
-    pano->computeGrid();
     displayPanoInfo();
     hid->waitAnyKey();
     return __;
@@ -374,8 +413,7 @@ int onPanoInfo(int __){
  * Menu callback for testing camera shutter
  */
 int onTestShutter(int __){
-    setPanoParams();
-    //pano->shutter();
+    radio.write_type_data('S');
     return __;
 }
 
@@ -399,7 +437,19 @@ void onMenuLoop(void){
 }
 
 void loop() {
+    bool stateChanged;
+
+    sendSettings(radio, settings);
+    stateChanged = readState(radio, state);
+    /*
+     * Render menu or state
+     */
+    if (state.running){
+        followPano();
+    } else if (stateChanged){
+        setPanoParams();
+    }
     displayMenu(*menu, display, DISPLAY_ROWS, *hid, onMenuLoop);
-    delay(10);
-    radio.write_type_data('S', &settings, sizeof(settings));
+
+    yield();
 }

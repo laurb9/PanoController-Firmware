@@ -25,6 +25,10 @@
 // these variables are modified by the menu
 PanoSettings settings;
 
+// This is the panorama engine state
+// should technically be in the Pano object
+PanoState state;
+
 static Display display(OLED_RESET);
 Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 
@@ -89,8 +93,9 @@ void setup() {
     menu = getMainMenu(settings);
 }
 
-int readBattery(void){
-    return map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE);
+
+void readBattery(void){
+    state.battery = map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE);
 }
 
 /*
@@ -99,13 +104,12 @@ int readBattery(void){
 void displayStatusOverlay(void){
 
     // Print battery voltage at cursor, format is #.#V (4 chars)
-    int battmV = readBattery();
     display.setTextCursor(0, 16);
     // poor attempt at blinking
-    if (battmV < LOW_BATTERY && millis() & 1024){
+    if (state.battery < LOW_BATTERY && millis() & 1024){
         display.setTextColor(BLACK, WHITE);
     }
-    display.printf("%2d.%dV", battmV/1000, (battmV % 1000)/100);
+    display.printf("%2d.%dV", state.battery/1000, (state.battery % 1000)/100);
     display.setTextColor(WHITE, BLACK);
 
     // show a character indicating bluetooth is connected
@@ -119,6 +123,7 @@ void displayStatusOverlay(void){
  * Display current panorama status (photo index, etc)
  */
 void displayPanoStatus(void){
+    readBattery();
     display.clearDisplay();
     display.setTextCursor(0,0);
 
@@ -153,6 +158,7 @@ void displayProgress(void){
 void displayPanoInfo(void){
     float horiz_fov = camera->getHorizFOV();
     float vert_fov = camera->getVertFOV();
+    readBattery();
     display.clearDisplay();
     display.setTextCursor(0,0);
     display.printf("Lens: %dmm\n", settings.focal);
@@ -256,6 +262,7 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             display.setTextCursor(6, 0);
             displayPanoSize();
             display.printf("FOV %d x %d ", pano->horiz_fov, pano->vert_fov);
+            readBattery();
             displayStatusOverlay();
             display.display();
         }

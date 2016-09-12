@@ -9,7 +9,7 @@
 #ifndef PANO_SETTINGS_H_
 #define PANO_SETTINGS_H_
 
-typedef volatile uint16_t settings_t;
+typedef volatile int16_t settings_t;
 
 typedef struct {
     settings_t
@@ -23,8 +23,19 @@ typedef struct {
     motors_enable = 0,
     display_invert = 0,
     horiz = 360,
-    vert = 160,
-    running = 0;
+    vert = 160;
 } PanoSettings;
+
+typedef struct {
+    settings_t
+    battery = 0,
+    motors_enable = 0,
+    display_invert = 0,
+    running = 0,
+    position = 0,
+    steady_delay_avg = 0;
+    float horiz_offset = 0;
+    float vert_offset = 0;
+} PanoState;
 
 #endif /* PANO_SETTINGS_H_ */
