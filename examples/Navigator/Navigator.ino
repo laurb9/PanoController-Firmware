@@ -126,67 +126,52 @@ void displayStatusOverlay(void){
 /*
  * Display current panorama status (photo index, etc)
  */
-void displayPanoStatus(void){
+void displayPanoStatus(bool complete){
     display.clearDisplay();
     display.setTextCursor(0,0);
+    int photos = pano->getHorizShots() * pano->getVertShots();
 
     if (state.running){
-        display.printf("# %d of %d\n", pano->position+1, pano->getHorizShots()*pano->getVertShots());
+        display.printf("# %d of %d\n", pano->position+1, photos);
         display.printf("at %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
     } else {
-        display.printf("%d photos\n\n", pano->getHorizShots()*pano->getVertShots());
+        display.printf("%d photos\n\n", photos);
     }
-    displayPanoSize();
+    display.printf("grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
+
+    float horiz_fov = camera->getHorizFOV();
+    float vert_fov = camera->getVertFOV();
+    display.setTextCursor(3,0);
+    display.printf("Lens: %dmm\n", settings.focal);
+    display.printf("      %d.%d x %d.%d\n",
+                   int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
+                   int(vert_fov), round(10*(vert_fov-int(vert_fov))));
+    display.printf("Pano %d x %d deg\n", pano->horiz_fov, pano->vert_fov);
+
     displayStatusOverlay();
-    displayProgress();
-    display.display();
-}
-/*
- * Display progress information (minutes / progress bar)
- */
-void displayProgress(void){
-    int photos = pano->getHorizShots() * pano->getVertShots();
+
     display.setTextCursor(6, 0);
     if (state.position + 1 < photos){
         display.printf("%d minutes ", pano->getTimeLeft()/60);
     }
+
+    // steady delay / shake indicator
     if (pano->steady_delay_avg > 500){
         display.setTextCursor(6, 16);
         display.printf("%2ds ", (pano->steady_delay_avg+500)/1000);
         display.printf((pano->steady_delay_avg < 8000) ? "\x12" : "!");
     }
+
+    // progress bar
     if (state.running){
         display.setTextCursor(7, 0);
         for (int i=(pano->position+1) * DISPLAY_COLS / photos; i > 0; i--){
             display.print('\xdb');
         }
     }
-}
-/*
- * Display panorama information
- */
-void displayPanoInfo(void){
-    float horiz_fov = camera->getHorizFOV();
-    float vert_fov = camera->getVertFOV();
-    display.clearDisplay();
-    display.setTextCursor(0,0);
-    display.printf("Lens: %dmm\n", settings.focal);
-    display.printf("      %d.%d x %d.%d\n",
-                   int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
-                   int(vert_fov), round(10*(vert_fov-int(vert_fov))));
-    display.printf("Pano FOV %d x %d \n", pano->horiz_fov, pano->vert_fov);
-    displayPanoSize();
-    display.printf("%d photos\n", pano->getHorizShots()*pano->getVertShots());
-    displayProgress();
-    displayStatusOverlay();
-    display.display();
-}
-
-/*
- * Display the panorama grid size
- */
-void displayPanoSize(){
-    display.printf("grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
+    if (complete){
+        display.display();
+    }
 }
 
 /*
@@ -260,13 +245,7 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             pano->setFOV((horiz) ? abs(move.horiz_offset) + camera->getHorizFOV() : 360,
                         abs(move.vert_offset) + camera->getVertFOV());
             pano->computeGrid();
-            display.setTextCursor(6, 0);
-            display.print("          ");
-            display.setTextCursor(6, 0);
-            displayPanoSize();
-            display.printf("FOV %d x %d ", pano->horiz_fov, pano->vert_fov);
-            displayStatusOverlay();
-            display.display();
+            displayPanoStatus(true);
         }
 
         readState(radio, state);
@@ -299,10 +278,12 @@ void followPano(void){
     bool manualMode = (settings.shutter == 0);
 
     while (state.running){
-        displayPanoStatus();
+        displayPanoStatus(false);
 
         if (manualMode){
             displayArrows();
+        } else {
+            display.display();
         }
 
         readState(radio, state);
@@ -404,7 +385,7 @@ int on360(int __){
  * Menu callback for displaying last pano info
  */
 int onPanoInfo(int __){
-    displayPanoInfo();
+    displayPanoStatus(true);
     hid->waitAnyKey();
     return __;
 }

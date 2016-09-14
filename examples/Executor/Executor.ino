@@ -87,15 +87,16 @@ void readBattery(void){
 /*
  * Display current panorama status (photo index, etc)
  */
-void displayPanoStatus(void){
+void displayPanoStatus(bool complete){
     display.clearDisplay();
     display.setTextCursor(0,0);
+    int photos = pano->getHorizShots() * pano->getVertShots();
 
     if (state.running){
-        display.printf("# %d of %d\n", pano->position+1, pano->getHorizShots()*pano->getVertShots());
+        display.printf("# %d of %d\n", pano->position+1, photos);
         display.printf("at %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
     } else {
-        display.printf("%d photos\n\n", pano->getHorizShots()*pano->getVertShots());
+        display.printf("%d photos\n\n", photos);
     }
     display.printf("grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
 
@@ -131,7 +132,6 @@ void displayPanoStatus(void){
         display.print("X");
     }
 
-    int photos = pano->getHorizShots() * pano->getVertShots();
     display.setTextCursor(6, 0);
     if (state.position + 1 < photos){
         display.printf("%d minutes ", pano->getTimeLeft()/60);
@@ -149,7 +149,9 @@ void displayPanoStatus(void){
             display.print('\xdb');
         };
     };
-    display.display();
+    if (complete){
+        display.display();
+    }
 }
 
 /*
@@ -269,12 +271,14 @@ void loop() {
      * Render state.
      * TODO: We should do this only if anything has changed though.
      */
-    //displayPanoStatus();
+    //displayPanoStatus(true);
     /*
      * Execute pano
      */
+    if (!settings.motors_enable || state.running){
+        displayPanoStatus(true);
+    }
     if (state.running){
-        displayPanoStatus();
         if (settings.shutter > 0){
             pano->shutter();
             state.running = pano->next();
