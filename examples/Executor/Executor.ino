@@ -20,6 +20,7 @@
 #include "display.h"
 #include "mpu.h"
 #include "radio.h"
+#include "protocol.h"
 
 // these variables are modified by the menu
 PanoSettings settings;
@@ -30,6 +31,7 @@ PanoState state;
 
 static Display display(OLED_RESET);
 static Radio radio(NRF24_CE, NRF24_CSN);
+static Exec comm(radio);
 
 static Camera* camera;
 static Joystick* joystick;
@@ -167,96 +169,83 @@ void setPanoParams(void){
     // pano->position = state.position;
 }
 
+/*
+ * Callbacks for commands received from remote Navigator
+ */
+void doConfig(void){
+    setPanoParams();
+    display.invertDisplay(settings.display_invert);
+};
+void doStart(void){
+    Serial.println("Start pano");
+    pano->start();
+    state.running = true;
+};
+void doCancel(void){
+    Serial.println("Cancel pano");
+    pano->end();
+    state.running = false;
+};
+void doPause(void){
+    Serial.println("Pause pano");
+    settings.shutter = 0;
+};
+void doShutter(void){
+    Serial.println("Shutter");
+    pano->shutter();
+    if (state.running){ // manual shutter mode, advance to next
+        state.running = pano->next();
+        if (!state.running){
+            pano->end();
+        }
+    }
+};
+void doSetHome(void){
+    Serial.println("Set home");
+    pano->setMotorsHomePosition();
+};
+void doGoHome(void){
+    Serial.println("Go home");
+    pano->moveMotorsHome();
+};
+void doFreeMove(move_t& move){
+    horiz_motor->setRPM(move.horiz_rpm);
+    vert_motor->setRPM(move.vert_rpm);
+    pano->motorsEnable(true);
+    pano->moveMotors(move.horiz_move, move.vert_move);
+};
+void doGridMove(const char direction){
+    Serial.println("Inc move");
+    switch (direction){
+    case '<': pano->prev(); break;
+    case '>': pano->next(); break;
+    case '^': pano->moveTo(pano->getCurRow() - 1, pano->getCurCol()); break;
+    case 'v': pano->moveTo(pano->getCurRow() + 1, pano->getCurCol()); break;
+    }
+};
+// unused
+void doGridMoveTo(settings_t row, settings_t col){
+    Serial.println("Head move");
+    pano->moveTo(row, col);
+}
+
+const comm_callbacks callbacks = {
+    doConfig,
+    doStart,
+    doCancel,
+    doPause,
+    doShutter,
+    doSetHome,
+    doGoHome,
+    doFreeMove,
+    doGridMove
+};
+
 void loop() {
     /*
      * Read state from menu navigator
      */
-    if (radio.available()){
-        uint8_t type = 0;
-        uint8_t len = 0;
-        void *buffer;
-        len = radio.read_type_data(type, buffer);
-        if (type != int('C')){
-            Serial.print("msg "); Serial.print((char)type); Serial.print(" len "); Serial.println(len);
-        }
-        switch(type){
-
-        case 'C':   // Configuration settings
-            memcpy(&settings, buffer, sizeof(settings));
-            setPanoParams();
-            display.invertDisplay(settings.display_invert);
-            break;
-
-        case 'P':   // Execute pano
-            Serial.println("Start pano");
-            pano->start();
-            state.running = true;
-            break;
-
-        case 'X':   // Cancel pano
-            Serial.println("Cancel pano");
-            pano->end();
-            state.running = false;
-            break;
-
-        case 'O':   // Pause pano
-            Serial.println("Pause pano");
-            settings.shutter = 0;
-            break;
-
-        case 'S':   // Shutter
-            Serial.println("Shutter");
-            pano->shutter();
-            if (state.running){ // manual shutter mode, advance to next
-                state.running = pano->next();
-                if (!state.running){
-                    pano->end();
-                }
-            }
-            break;
-
-        case 'R':   // Set home to current head position
-            Serial.println("Set home");
-            pano->setMotorsHomePosition();
-            break;
-
-        case 'B':   // Move head to home position
-            Serial.println("Go home");
-            pano->moveMotorsHome();
-            break;
-
-        case 'M':   // Move motors
-            Serial.println("Motor move");
-            struct {
-                settings_t horiz_rpm, vert_rpm, horiz_move, vert_move;
-            } motor_move;
-            memcpy(&motor_move, buffer, sizeof(motor_move));
-            horiz_motor->setRPM(motor_move.horiz_rpm);
-            vert_motor->setRPM(motor_move.vert_rpm);
-            pano->motorsEnable(true);
-            pano->moveMotors(motor_move.horiz_move, motor_move.vert_move);
-            break;
-
-        case 'H':   // Move head to requested row/col
-            Serial.println("Head move");
-            struct {
-                settings_t row, col;
-            } head_move;
-            memcpy(&head_move, buffer, sizeof(head_move));
-            pano->moveTo(head_move.row, head_move.col);
-            break;
-
-        case 'I':   // Incrementally move head
-            Serial.println("Inc move");
-            switch (*(char*)buffer){
-            case '<': pano->prev(); break;
-            case '>': pano->next(); break;
-            case '^': pano->moveTo(pano->getCurRow() - 1, pano->getCurCol()); break;
-            case 'v': pano->moveTo(pano->getCurRow() + 1, pano->getCurCol()); break;
-                break;
-            }
-        }
-    }
+    comm.getCmd(settings, callbacks);
     /*
      * Collect and send state to menu navigator
      */
@@ -266,7 +255,7 @@ void loop() {
     state.horiz_offset = pano->horiz_home_offset;
     state.vert_offset = pano->vert_home_offset;
     state.motors_enable = settings.motors_enable;
-    radio.write_type_data('T', &state, sizeof(state));
+    comm.sendState(state);
     /*
      * Render state.
      * TODO: We should do this only if anything has changed though.

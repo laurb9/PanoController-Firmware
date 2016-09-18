@@ -18,6 +18,7 @@
 #include "menu.h"
 #include "display.h"
 #include "radio.h"
+#include "protocol.h"
 
 // these variables are modified by the menu
 PanoSettings settings;
@@ -28,6 +29,7 @@ PanoState state;
 
 static Display display(OLED_RESET);
 static Radio radio(NRF24_CE, NRF24_CSN);
+static Command comm(radio);
 
 static Camera* camera;
 static Joystick* joystick;
@@ -59,33 +61,6 @@ void setup() {
     pano = new PanoSetup(*camera);
 
     menu = getMainMenu(settings);
-}
-
-/*
- * Send settings to remote execution unit
- */
-static void sendSettings(Radio& radio, PanoSettings& settings){
-    radio.write_type_data('C', &settings, sizeof(settings));
-}
-/*
- * Read state from remote execution unit
- */
-static bool readState(Radio& radio, PanoState& state){
-    uint8_t type = 0;
-    uint8_t len = 0;
-    if (radio.available()){
-        void *buffer;
-        len = radio.read_type_data(type, buffer);
-        if (len){
-            switch(type){
-
-            case 'T': // State information
-                memcpy(&state, buffer, sizeof(state));
-                setPanoParams();
-            }
-        }
-    }
-    return (type != 0);
 }
 
 /*
@@ -193,14 +168,11 @@ void displayArrows(){
  *               if both horiz and vert are NULL then the head moves freely around
  */
 bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
-    struct {
-        settings_t horiz_rpm, vert_rpm, horiz_move, vert_move;
-        float horiz_offset = 0, vert_offset = 0;
-    } move;
+    move_t move;
     int step = min(camera->getHorizFOV() / 10, 1);
 
     if (horiz || vert){
-        radio.write_type_data('R');  // Set home to current head position
+        comm.setHome();
     }
 
     display.clearDisplay();
@@ -248,9 +220,9 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             displayPanoStatus(true);
         }
 
-        readState(radio, state);
+        comm.getState(state, setPanoParams);
         if (move.horiz_move || move.vert_move){
-            radio.write_type_data('M', &move, sizeof(move));
+            comm.freeMove(move);
             move.horiz_offset = move.horiz_offset + move.horiz_move;
             move.vert_offset = move.vert_offset + move.vert_move;
         }
@@ -264,7 +236,7 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             *vert = abs(move.vert_offset) + camera->getVertFOV();
         }
 
-        radio.write_type_data('B');  // Move head back to home position
+        comm.goHome();
     }
 
     return (hid->isLastEventOk());
@@ -286,7 +258,7 @@ void followPano(void){
             display.display();
         }
 
-        readState(radio, state);
+        comm.getState(state, setPanoParams);
 
         if (!hid->read()){
             continue;
@@ -294,18 +266,18 @@ void followPano(void){
 
         // button was clicked mid-pano
         if (!manualMode){
-            radio.write_type_data('O');
+            comm.pausePano(state);
             manualMode = true;
             hid->clear(1000);
             continue;
         }
 
-        if (hid->isLastEventOk())          radio.write_type_data('S');
-        else if (hid->isLastEventCancel()) radio.write_type_data('X');
-        else if (hid->isLastEventLeft())   radio.write_type_data('I', "<");
-        else if (hid->isLastEventRight())  radio.write_type_data('I', ">");
-        else if (hid->isLastEventUp())     radio.write_type_data('I', "^");
-        else if (hid->isLastEventDown())   radio.write_type_data('I', "v");
+        if (hid->isLastEventOk())          comm.shutter(state);
+        else if (hid->isLastEventCancel()) comm.cancelPano(state);
+        else if (hid->isLastEventLeft())   comm.gridMoveLeft(state);
+        else if (hid->isLastEventRight())  comm.gridMoveRight(state);
+        else if (hid->isLastEventUp())     comm.gridMoveUp(state);
+        else if (hid->isLastEventDown())   comm.gridMoveDown(state);
     };
 
     hid->waitAnyKey();
@@ -315,7 +287,7 @@ void followPano(void){
  * Update common camera and pano settings from external vars
  */
 void setPanoParams(void){
-    sendSettings(radio, settings);
+    comm.sendConfig(settings);
     camera->setAspect(settings.aspect);
     camera->setFocalLength(settings.focal);
     pano->setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
@@ -338,7 +310,7 @@ int onRepeat(int __){
 
     hid->clear(4000);
 
-    radio.write_type_data('P');    // start Pano
+    comm.startPano(state);
     return __;
 }
 
@@ -394,7 +366,7 @@ int onPanoInfo(int __){
  * Menu callback for testing camera shutter
  */
 int onTestShutter(int __){
-    radio.write_type_data('S');
+    comm.shutter(state);
     return __;
 }
 
@@ -420,8 +392,9 @@ void onMenuLoop(void){
 void loop() {
     bool stateChanged;
 
-    sendSettings(radio, settings);
-    stateChanged = readState(radio, state);
+    comm.sendConfig(settings);
+    stateChanged = comm.getState(state, setPanoParams);
+
     /*
      * Render menu or state
      */
