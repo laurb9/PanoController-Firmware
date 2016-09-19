@@ -379,7 +379,7 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
  * This must be called in a loop.
  */
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
-                 AllHID& hid, void(*onMenuLoop)(void)){
+                 AllHID& hid, void(*onMenuLoop)(bool)){
     static int last_event_timestamp = 0;
 
     if (!hid.read() && last_event_timestamp){
@@ -387,7 +387,7 @@ void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
             display.clearDisplay();
             display.display();
         } else {
-            if (onMenuLoop) onMenuLoop();
+            if (onMenuLoop) onMenuLoop(false);
             display.display();
         }
         return;
@@ -403,7 +403,7 @@ void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
     display.clearDisplay();
     display.setTextCursor(0,0);
     menu.render(display, rows);
-    if (onMenuLoop) onMenuLoop();
+    if (onMenuLoop) onMenuLoop(true);
     display.display();
     delay(100);
 }

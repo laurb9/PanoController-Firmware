@@ -32,6 +32,7 @@ typedef struct {
     motors_enable = 0,
     display_invert = 0,
     running = 0,
+    paused = 0,
     position = 0,
     steady_delay_avg = 0;
     float horiz_offset = 0;

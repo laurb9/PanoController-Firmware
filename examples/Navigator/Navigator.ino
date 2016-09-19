@@ -247,7 +247,7 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
  * Button click interrupts.
  */
 void followPano(void){
-    bool manualMode = (settings.shutter == 0);
+    bool manualMode = (state.paused);
 
     while (state.running){
         displayPanoStatus(false);
@@ -384,7 +384,12 @@ int onAboutPanoController(int __){
     return __;
 }
 
-void onMenuLoop(void){
+void onMenuLoop(bool updated){
+    static unsigned next_update_time = 0;
+    if (updated || millis() >= next_update_time){
+        comm.sendConfig(settings);
+        next_update_time = millis() + 5000;
+    }
     displayStatusOverlay();
     display.invertDisplay(settings.display_invert);
 }
@@ -392,7 +397,6 @@ void onMenuLoop(void){
 void loop() {
     bool stateChanged;
 
-    comm.sendConfig(settings);
     stateChanged = comm.getState(state, setPanoParams);
 
     /*

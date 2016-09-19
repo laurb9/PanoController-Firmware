@@ -146,6 +146,6 @@ public:
 Menu* getMainMenu(PanoSettings& settings);
 
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
-                 AllHID& hid, void(*onMenuLoop)(void)=NULL);
+                 AllHID& hid, void(*onMenuLoop)(bool)=NULL);
 
 #endif /* MENU_H_ */

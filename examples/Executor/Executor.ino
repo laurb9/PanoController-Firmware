@@ -80,7 +80,7 @@ void setup() {
 }
 
 void readBattery(void){
-    state.battery = map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE);
+    state.battery = map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE/100) * 100;
     if (state.battery < LOW_BATTERY){
         state.battery = -state.battery;
     }
@@ -180,15 +180,19 @@ void doStart(void){
     Serial.println("Start pano");
     pano->start();
     state.running = true;
+    state.paused = (settings.shutter == 0);
 };
 void doCancel(void){
     Serial.println("Cancel pano");
     pano->end();
     state.running = false;
+    state.paused = false;
 };
 void doPause(void){
     Serial.println("Pause pano");
-    settings.shutter = 0;
+    if (state.running){
+        state.paused = true;
+    }
 };
 void doShutter(void){
     Serial.println("Shutter");
@@ -206,6 +210,7 @@ void doSetHome(void){
 };
 void doGoHome(void){
     Serial.println("Go home");
+    pano->motorsEnable(true);
     pano->moveMotorsHome();
 };
 void doFreeMove(move_t& move){
@@ -255,7 +260,6 @@ void loop() {
     state.horiz_offset = pano->horiz_home_offset;
     state.vert_offset = pano->vert_home_offset;
     state.motors_enable = settings.motors_enable;
-    comm.sendState(state);
     /*
      * Render state.
      * TODO: We should do this only if anything has changed though.
@@ -265,16 +269,17 @@ void loop() {
      * Execute pano
      */
     if (!settings.motors_enable || state.running){
+        comm.sendState(state);
         displayPanoStatus(true);
     }
     if (state.running){
-        if (settings.shutter > 0){
+        if (!state.paused){
             pano->shutter();
             state.running = pano->next();
+            if (!state.running){
+                pano->end();
+            };
         };
-        if (!state.running){
-            pano->end();
-        }
     } else {
         pano->motorsEnable(settings.motors_enable);
     };

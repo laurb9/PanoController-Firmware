@@ -41,7 +41,7 @@ void Exec::getCmd(PanoSettings& settings, const comm_callbacks& callbacks){
     if (radio.available()){
         len = radio.read_type_data(type, buffer);
         Serial.print("msg "); Serial.print((char)type); Serial.print(" len "); Serial.println(len);
-        switch(type){
+        switch((char)type){
 
         case CMD_CONFIG:   // Configuration settings
             memcpy(&settings, buffer, sizeof(PanoSettings));
