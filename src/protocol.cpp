@@ -38,7 +38,7 @@ void Exec::getCmd(PanoSettings& settings, const comm_callbacks& callbacks){
     uint8_t len = 0;
     void *buffer;
     move_t move;
-    if (radio.available()){
+    while (radio.available()){
         len = radio.read_type_data(type, buffer);
         Serial.print("msg "); Serial.print((char)type); Serial.print(" len "); Serial.println(len);
         switch((char)type){
@@ -93,7 +93,7 @@ bool Command::getState(PanoState& state, void(*callback)(void)){
     uint8_t type = 0;
     uint8_t len = 0;
     void *buffer;
-    if (radio.available()){
+    while (radio.available()){
         len = radio.read_type_data(type, buffer);
         if (type == CMD_STATE && len == sizeof(state)){
             if (memcmp(&state, buffer, sizeof(state)) == 0){
