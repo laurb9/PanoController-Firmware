@@ -32,15 +32,16 @@ void Exec::sendState(PanoState& state){
 
 /*
  * Receive and execute a command
+ * Returns true if a command was received / executed,
+ *         false otherwise
  */
-void Exec::getCmd(PanoSettings& settings, const comm_callbacks& callbacks){
+bool Exec::getCmd(PanoSettings& settings, const comm_callbacks& callbacks){
     uint8_t type = 0;
     uint8_t len = 0;
-    void *buffer;
+    void *buffer = NULL;
     move_t move;
     while (radio.available()){
         len = radio.read_type_data(type, buffer);
-        Serial.print("msg "); Serial.print((char)type); Serial.print(" len "); Serial.println(len);
         switch((char)type){
 
         case CMD_CONFIG:   // Configuration settings
@@ -82,6 +83,7 @@ void Exec::getCmd(PanoSettings& settings, const comm_callbacks& callbacks){
             break;
         }
     }
+    return (buffer != NULL);
 }
 
 /*

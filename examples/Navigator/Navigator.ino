@@ -169,6 +169,7 @@ void displayArrows(){
  */
 bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
     move_t move;
+    bool has_updated;
     int step = min(camera->getHorizFOV() / 10, 1);
 
     if (horiz || vert){
@@ -181,6 +182,10 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
     displayArrows();
 
     while (true){
+        comm.getState(state, setPanoParams);
+        move.horiz_offset = state.horiz_offset;
+        move.vert_offset = state.vert_offset;
+
         hid->read();
         if (hid->isLastEventOk() || hid->isLastEventCancel()) break;
 
@@ -220,7 +225,6 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             displayPanoStatus(true);
         }
 
-        comm.getState(state, setPanoParams);
         if (move.horiz_move || move.vert_move){
             comm.freeMove(move);
             move.horiz_offset = move.horiz_offset + move.horiz_move;
@@ -280,7 +284,7 @@ void followPano(void){
         else if (hid->isLastEventDown())   comm.gridMoveDown(state);
     };
 
-    hid->waitAnyKey();
+    displayPanoStatus(true);
 }
 
 /*
