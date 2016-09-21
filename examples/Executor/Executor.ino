@@ -77,6 +77,11 @@ void setup() {
     analogReadRes(10);
     analogReadAveraging(32);
 #endif
+
+    display.printf("Waiting to connect...");
+    display.display();
+
+    while (!comm.getConfig(settings)) delay(100);
 }
 
 void readBattery(void){

@@ -29,7 +29,22 @@ static const char CMD_CONFIG    = 'C',
 void Exec::sendState(PanoState& state){
     radio.write_type_data(CMD_STATE, &state, sizeof(state));
 }
-
+/*
+ * Wait for a config command, returns false if none received
+ */
+bool Exec::getConfig(PanoSettings& settings){
+    uint8_t type = 0;
+    void *buffer = NULL;
+    bool config_received = false;
+    while (radio.available()){
+        radio.read_type_data(type, buffer);
+        if (type == CMD_CONFIG){
+            memcpy(&settings, buffer, sizeof(PanoSettings));
+            config_received = true;
+        }
+    }
+    return config_received;
+}
 /*
  * Receive and execute a command
  * Returns true if a command was received / executed,

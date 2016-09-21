@@ -70,7 +70,9 @@ uint8_t Radio::read(void){
 void Radio::write(const void *data, uint8_t len){
     debug("Radio Send ", data, len);
     radio->stopListening();
-    radio->write(data, len);
+    if (!radio->write(data, len)){
+        connected = false;
+    }
     radio->startListening();
 }
 

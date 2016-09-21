@@ -68,6 +68,7 @@ protected:
 public:
     Exec(Radio& radio):radio(radio){};
     void sendState(PanoState& state);
+    bool getConfig(PanoSettings& settings);
     bool getCmd(PanoSettings& settings, const comm_callbacks& callbacks);
 };
 
