@@ -264,7 +264,7 @@ void loop() {
     state.position = pano->position;
     state.horiz_offset = pano->horiz_home_offset;
     state.vert_offset = pano->vert_home_offset;
-    state.motors_enable = settings.motors_enable;
+    state.motors_on = settings.motors_on;
     /*
      * Render state.
      * TODO: We should do this only if anything has changed though.
@@ -286,7 +286,7 @@ void loop() {
             };
         };
     } else {
-        pano->motorsEnable(settings.motors_enable);
+        pano->motorsEnable(state.motors_on);
     };
 
     yield();

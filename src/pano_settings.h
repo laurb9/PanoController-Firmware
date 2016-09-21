@@ -21,6 +21,7 @@ typedef struct {
     aspect = 1,
     shots = 1,
     motors_enable = 0,
+    motors_on = 0,
     display_invert = 0,
     horiz = 360,
     vert = 160;
@@ -29,7 +30,7 @@ typedef struct {
 typedef struct {
     settings_t
     battery = 0,
-    motors_enable = 0,
+    motors_on = 0,
     display_invert = 0,
     running = 0,
     paused = 0,

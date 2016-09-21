@@ -69,7 +69,7 @@ void setup() {
 void displayStatusOverlay(void){
 
     // motors active
-    if (state.running){
+    if (state.motors_on || state.running){
         display.setTextCursor(0,14);
         display.print("*");
     }
@@ -169,8 +169,7 @@ void displayArrows(){
  */
 bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
     move_t move;
-    bool has_updated;
-    int step = min(camera->getHorizFOV() / 10, 1);
+    int step = 1;
 
     if (horiz || vert){
         comm.setHome();
@@ -306,6 +305,7 @@ void setPanoParams(void){
  * Menu callback invoked by selecting "Repeat"
  */
 int onRepeat(int __){
+    settings.motors_on = true;
     setPanoParams();
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
@@ -323,6 +323,7 @@ int onRepeat(int __){
  */
 int onStart(int __){
     settings_t horiz, vert;
+    settings.motors_on = true;
 
     // set panorama FOV
     if (!positionCamera("Set Top Left", NULL, NULL) ||
@@ -341,9 +342,8 @@ int onStart(int __){
  * Menu callback invoked by selecting "360 Pano"
  */
 int on360(int __){
-    settings_t horiz, vert;
-    // set panorama FOV
-    horiz = 360;
+    settings_t horiz = 360, vert;
+    settings.motors_on = true;
 
     if (!positionCamera("Set Top", NULL, NULL) ||
         !positionCamera("Set Bottom", NULL, &vert)){
@@ -391,6 +391,7 @@ int onAboutPanoController(int __){
 void onMenuLoop(bool updated){
     static unsigned next_update_time = 0;
     if (updated || millis() >= next_update_time){
+        settings.motors_on = settings.motors_enable;
         comm.sendConfig(settings);
         next_update_time = millis() + 5000;
     }
