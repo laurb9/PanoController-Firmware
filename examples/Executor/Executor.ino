@@ -14,9 +14,6 @@
 #include "config.h"
 #include "pano.h"
 #include "camera.h"
-#include "hid.h"
-#include "joystick.h"
-#include "remote.h"
 #include "display.h"
 #include "mpu.h"
 #include "radio.h"
@@ -34,10 +31,6 @@ static Radio radio(NRF24_CE, NRF24_CSN);
 static Exec comm(radio);
 
 static Camera* camera;
-static Joystick* joystick;
-static Remote* remote;
-// HID (Human Interface Device) Combined joystick+remote
-static AllHID* hid;
 static MPU* mpu;
 static DRV8834* horiz_motor;
 static DRV8834* vert_motor;
@@ -57,10 +50,6 @@ void setup() {
     radio.begin();
 
     camera = new Camera(CAMERA_FOCUS, CAMERA_SHUTTER);
-    joystick = new Joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
-    remote = new Remote(REMOTE_IN);
-    // HID (Human Interface Device) Combined joystick+remote
-    hid = new AllHID(2, new HID* const[2] {joystick, remote});
 
     mpu = new MPU(MPU_I2C_ADDRESS, MPU_INT);
     mpu->init();
@@ -78,10 +67,12 @@ void setup() {
     analogReadAveraging(32);
 #endif
 
+    Serial.println("Waiting to connect...");
     display.printf("Waiting to connect...");
     display.display();
 
     while (!comm.getConfig(settings)) delay(100);
+    Serial.println("Received settings");
 }
 
 void readBattery(void){
