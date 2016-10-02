@@ -19,20 +19,18 @@ Camera::Camera(int focus_pin, int shutter_pin)
 :focus_pin(focus_pin),
  shutter_pin(shutter_pin)
 {
-    pinMode(focus_pin, OUTPUT);
-    pinMode(shutter_pin, OUTPUT);
-    digitalWrite(focus_pin, HIGH);
-    digitalWrite(shutter_pin, HIGH);
     setFocalLength(24);
 }
 
 void Camera::shutter(int delay_ms, bool long_pulse){
     int shutter_pulse = (long_pulse) ? delay_ms : SHUTTER_PULSE;
+    pinMode(focus_pin, OUTPUT);
+    pinMode(shutter_pin, OUTPUT);
     digitalWrite(focus_pin, LOW);
     digitalWrite(shutter_pin, LOW);
     delay(min(shutter_pulse, delay_ms));
-    digitalWrite(focus_pin, HIGH);
-    digitalWrite(shutter_pin, HIGH);
+    pinMode(focus_pin, INPUT);
+    pinMode(shutter_pin, INPUT);
     if (delay_ms > shutter_pulse){
         delay(delay_ms - shutter_pulse);
     }

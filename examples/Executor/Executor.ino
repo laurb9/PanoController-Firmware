@@ -49,6 +49,13 @@ void setup() {
 
     radio.begin();
 
+    Serial.println("Checking Camera Shutter Connection");
+    pinMode(CAMERA_FOCUS, INPUT_PULLDOWN);
+    pinMode(CAMERA_SHUTTER, INPUT_PULLDOWN);
+    Serial.print("  Focus: ");
+    Serial.println((digitalRead(CAMERA_FOCUS) ? "OK" : "N/C"));
+    Serial.print("  Shutter: ");
+    Serial.println((digitalRead(CAMERA_SHUTTER) ? "OK" : "N/C"));
     camera = new Camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 
     mpu = new MPU(MPU_I2C_ADDRESS, MPU_INT);
