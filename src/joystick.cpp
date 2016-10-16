@@ -13,29 +13,38 @@
 /*
  * Interrupt handler triggered by joystick button click
  */
-volatile static int button_clicked = false;
+volatile static uint8_t button_clicked = false;
 void button_click(){
     button_clicked = true;
 }
+volatile static uint8_t cancel_clicked = false;
+void cancel_click(){
+    cancel_clicked = true;
+}
 
-Joystick::Joystick(int sw_pin, int x_pin, int y_pin)
-:sw_pin(sw_pin),
- x_pin(x_pin),
- y_pin(y_pin)
+Joystick::Joystick(int x_pin, int y_pin, int sw_pin, int cancel_pin)
+:x_pin(x_pin),
+ y_pin(y_pin),
+ sw_pin(sw_pin),
+ cancel_pin(cancel_pin)
 {
-    pinMode(sw_pin, INPUT_PULLUP);
     pinMode(x_pin, INPUT);
     pinMode(y_pin, INPUT);
+    pinMode(sw_pin, INPUT_PULLUP);
+    pinMode(cancel_pin, INPUT_PULLUP);
     sw_state = HIGH;
+    cancel_state = HIGH;
     x_state = 0;
     y_state = 0;
     read();
     attachInterrupt(digitalPinToInterrupt(sw_pin), button_click, FALLING);
+    attachInterrupt(digitalPinToInterrupt(cancel_pin), cancel_click, FALLING);
 }
 
 Joystick::~Joystick(void){
     // clean up
     detachInterrupt(digitalPinToInterrupt(sw_pin));
+    detachInterrupt(digitalPinToInterrupt(cancel_pin));
 }
 
 bool Joystick::isConnected(void){
@@ -47,6 +56,26 @@ bool Joystick::isConnected(void){
         }
     }
     return connected;
+}
+
+/*
+ *
+ */
+static bool read_button_state(int& state, volatile uint8_t& clicked, int pin){
+    int current_state;
+    bool active = false;
+    current_state = (clicked) ? LOW : digitalRead(pin);
+    if (current_state != state){
+        state = current_state;
+        if (state == LOW){
+            active = true;
+            for (int i=50; i && digitalRead(pin) == LOW; i--){
+                delay(10);
+            }
+        }
+        clicked = false;
+    }
+    return active;
 }
 
 unsigned Joystick::read(void){
@@ -61,17 +90,12 @@ unsigned Joystick::read(void){
         return event;
     }
 
-    // read click switch
-    current_state = (button_clicked) ? LOW : digitalRead(sw_pin);
-    if (current_state != sw_state){
-        sw_state = current_state;
-        if (sw_state == LOW){
-            event |= EVENT_OK;
-            for (int i=50; i && digitalRead(sw_pin) == LOW; i--){
-                delay(10);
-            };
-        }
-        button_clicked = false;
+    // read click switches
+    if (read_button_state(sw_state, button_clicked, sw_pin)){
+        event |= EVENT_OK;
+    }
+    if (read_button_state(cancel_state, cancel_clicked, cancel_pin)){
+        event |= EVENT_CANCEL;
     }
 
     // read X position

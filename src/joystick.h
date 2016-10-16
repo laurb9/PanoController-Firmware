@@ -15,8 +15,8 @@ class Joystick : public HID {
 private:
     static const int sensitivity = 7; // lower is higher :)
 protected:
-    int sw_pin, x_pin, y_pin;
-    int sw_state = 0, x_state = 0, y_state = 0;
+    int x_pin, y_pin, sw_pin, cancel_pin;
+    int x_state = 0, y_state = 0, sw_state = 0, cancel_state = 0;
     int last_read;
     bool connected = false;
 public:
@@ -24,7 +24,7 @@ public:
     int autorepeat_delay;
     int autorepeat_repeat;
     unsigned read(void) override;
-    Joystick(int sw_pin, int x_pin, int y_pin);
+    Joystick(int x_pin, int y_pin, int sw_pin, int cancel_pin);
     ~Joystick(void);
     int getPositionX(bool if_connected=true);
     int getPositionY(bool if_connected=true);

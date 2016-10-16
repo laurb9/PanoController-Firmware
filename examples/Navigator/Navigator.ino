@@ -53,7 +53,7 @@ void setup() {
     radio.begin();
 
     camera = new Camera(PIN_UNCONNECTED, PIN_UNCONNECTED);
-    joystick = new Joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
+    joystick = new Joystick(JOYSTICK_X, JOYSTICK_Y, JOYSTICK_SW, CANCEL_PIN);
     remote = new Remote(REMOTE_IN);
     // HID (Human Interface Device) Combined joystick+remote
     hid = new AllHID(2, new HID* const[2] {joystick, remote});
