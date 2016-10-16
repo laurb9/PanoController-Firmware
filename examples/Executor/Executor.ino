@@ -41,7 +41,7 @@ void setup() {
     delay(1000); // wait for serial
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
-    //display.setRotation(2);
+    display.setRotation(2);
     display.clearDisplay();
     display.setTextCursor(0,0);
     display.setTextColor(WHITE);
