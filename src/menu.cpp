@@ -132,6 +132,10 @@ RangeSelector::RangeSelector(const char *description, settings_t *value, int def
  min_val(min_val), max_val(max_val), step(step)
 {
     pointer = this->default_val;
+    if (step > 1){
+        // pointer should be an integer number of steps from min_val
+        pointer = pointer - (pointer - min_val) % step;
+    }
     pos = pointer;
 };
 
@@ -151,7 +155,8 @@ void RangeSelector::select(void){
     cancel();
 }
 void RangeSelector::sync(void){
-    pointer = *value % step;
+    // pointer should be an integer number of steps from min_val
+    pointer = *value - (*value - min_val) % step;
     if (pointer > max_val) pointer = max_val;
     if (pointer < min_val) pointer = min_val;
     pos = pointer;
