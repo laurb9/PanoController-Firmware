@@ -8,9 +8,9 @@ See the <a href="https://www.facebook.com/panocontroller">Official Facebook page
 
 Current state: fully functional prototype board, field-tested, frequently upgraded.
 
-<img src="extras/images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
-<img src="extras/images/pano-info.jpg" width="200" alt="Pano Controller Pano Information Screen">
-<img src="extras/images/navigator.jpg" width="400" alt="Pano Controller Remote Navigator Unit">
+<img src="images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
+<img src="images/pano-info.jpg" width="200" alt="Pano Controller Pano Information Screen">
+<img src="images/navigator.jpg" width="400" alt="Pano Controller Remote Navigator Unit">
 
 
 ## Features:
@@ -201,7 +201,7 @@ Status: untested (NRF24 library not working with Feather yet).
   - if we ever want to use ESP-12, need to reduce pins. ESP-12 only has 11: 
     (0,2,4,5,12,13,14,15,16,RXD,TXD,ADC)
 
-<img src="extras/images/breadboard.jpg" width="500" alt="Breadboard setup with Teensy LC">
+<img src="images/breadboard.jpg" width="500" alt="Breadboard playing with Feather M0">
 
 ## Setting stepper motor current limit for DRV8834
 
