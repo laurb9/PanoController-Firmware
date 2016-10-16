@@ -361,6 +361,7 @@ int on360(int __){
  * Menu callback for displaying last pano info
  */
 int onPanoInfo(int __){
+    setPanoParams();
     displayPanoStatus(true);
     hid->waitAnyKey();
     return __;
