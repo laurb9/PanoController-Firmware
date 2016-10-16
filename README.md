@@ -8,9 +8,9 @@ See the <a href="https://www.facebook.com/panocontroller">Official Facebook page
 
 Current state: fully functional prototype board, field-tested, frequently upgraded.
 
-<img src="images/prototype.jpg" width="400" alt="Pano Controller Prototype Board installed in Gigapan EPIC 100">
-<img src="images/pano-info.jpg" width="200" alt="Pano Controller Pano Information Screen">
+<img src="images/prototype.jpg" width="400" alt="Pano Controller Executor Boards installed in Gigapan EPIC 100">
 <img src="images/navigator.jpg" width="400" alt="Pano Controller Remote Navigator Unit">
+<img src="images/pano-info.jpg" width="200" alt="Pano Controller Pano Information Screen">
 
 
 ## Features:
