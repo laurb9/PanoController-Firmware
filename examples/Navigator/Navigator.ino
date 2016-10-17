@@ -394,7 +394,7 @@ void onMenuLoop(bool updated){
     if (updated || millis() >= next_update_time){
         settings.motors_on = settings.motors_enable;
         comm.sendConfig(settings);
-        next_update_time = millis() + 5000;
+        next_update_time = millis() + 4000;
     }
     displayStatusOverlay();
     display.invertDisplay(settings.display_invert);
