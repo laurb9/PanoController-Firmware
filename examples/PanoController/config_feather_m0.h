@@ -21,6 +21,7 @@
 #define JOYSTICK_X A3
 #define JOYSTICK_Y A2
 #define JOYSTICK_SW A1
+#define CANCEL_PIN A0
 
 // IR remote is not supported on Feather M0
 // https://github.com/z3t0/Arduino-IRremote/issues/274

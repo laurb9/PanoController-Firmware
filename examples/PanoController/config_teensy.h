@@ -26,6 +26,7 @@
 #define JOYSTICK_X A3
 #define JOYSTICK_Y A2
 #define JOYSTICK_SW A1
+#define CANCEL_PIN A8
 
 // IR remote
 #define REMOTE_IN 3

@@ -66,7 +66,7 @@ void setup() {
     display.setTextSize(TEXT_SIZE);
 
     camera = new Camera(CAMERA_FOCUS, CAMERA_SHUTTER);
-    joystick = new Joystick(JOYSTICK_SW, JOYSTICK_X, JOYSTICK_Y);
+    joystick = new Joystick(JOYSTICK_X, JOYSTICK_Y, JOYSTICK_SW, CANCEL_PIN);
     remote = new Remote(REMOTE_IN);
     ble_remote = new BLERemote(ble);
     // HID (Human Interface Device) Combined joystick+remote
@@ -295,7 +295,7 @@ void executePano(void){
     hid->clear(4000);
     pano->start();
 
-    while (settings.running){
+    while (state.running){
         displayPanoStatus();
         if (!pano->position){
             delay(2000);
@@ -309,7 +309,7 @@ void executePano(void){
             // button was clicked mid-pano or we are in manual shutter mode
             displayPanoStatus();
             displayArrows();
-            while (settings.running){
+            while (state.running){
                 if (!hid->read()) continue;
                 else if (hid->isLastEventLeft()) pano->prev();
                 else if (hid->isLastEventRight()) pano->next();
@@ -317,17 +317,17 @@ void executePano(void){
                 else if (hid->isLastEventDown()) pano->moveTo(pano->getCurRow() + 1, pano->getCurCol());
                 else if (hid->isLastEventOk()) break;
                 else if (hid->isLastEventCancel()){
-                    settings.running = false;
+                    state.running = false;
                     break;
                 }
                 displayPanoStatus();
                 displayArrows();
             }
         }
-        settings.running = settings.running && pano->next();
+        state.running = state.running && pano->next();
     };
 
-    settings.running = false;
+    state.running = false;
     displayPanoStatus();
 
     pano->end();
@@ -362,7 +362,7 @@ int onStart(int __){
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
-    settings.running = true;
+    state.running = true;
     menu->sync();
     executePano();
     return __;
@@ -378,7 +378,7 @@ int onRepeat(int __){
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
-    settings.running = true;
+    state.running = true;
     menu->sync();
     executePano();
     return __;
@@ -401,7 +401,7 @@ int on360(int __){
     if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
         return false;
     }
-    settings.running = true;
+    state.running = true;
     menu->sync();
     executePano();
     return __;
@@ -442,7 +442,7 @@ int onAboutPanoController(int __){
     return __;
 }
 
-void onMenuLoop(void){
+void onMenuLoop(bool updated){
     displayStatusOverlay();
     display.invertDisplay(settings.display_invert);
     pano->motorsEnable(settings.motors_enable);
