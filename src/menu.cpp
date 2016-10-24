@@ -59,7 +59,7 @@ ActionItem::ActionItem(const char *description, int(*onselect)(int))
 /*
  * MultiSelect: share functionality among the other menu classes
  */
-MultiSelect::MultiSelect(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int))
+MultiSelect::MultiSelect(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int))
 :BaseMenu(description, onselect),
  value(value),
  default_val(default_val),
@@ -126,12 +126,16 @@ int MultiSelect::render(DISPLAY_DEVICE display, int rows){
 /*
  * RangeSelector: a number with up/down controls
  */
-RangeSelector::RangeSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+RangeSelector::RangeSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                              int min_val, int max_val, int step)
 :MultiSelect(description, value, default_val, eeprom, onselect),
  min_val(min_val), max_val(max_val), step(step)
 {
     pointer = this->default_val;
+    if (step > 1){
+        // pointer should be an integer number of steps from min_val
+        pointer = pointer - (pointer - min_val) % step;
+    }
     pos = pointer;
 };
 
@@ -151,7 +155,8 @@ void RangeSelector::select(void){
     cancel();
 }
 void RangeSelector::sync(void){
-    pointer = *value % step;
+    // pointer should be an integer number of steps from min_val
+    pointer = *value - (*value - min_val) % step;
     if (pointer > max_val) pointer = max_val;
     if (pointer < min_val) pointer = min_val;
     pos = pointer;
@@ -180,7 +185,7 @@ int RangeSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * ListSelector: list of numeric options
  */
-ListSelector::ListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+ListSelector::ListSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                            int count, const int values[])
 :MultiSelect(description, value, default_val, eeprom, onselect),
  values(values)
@@ -237,7 +242,7 @@ int ListSelector::render(DISPLAY_DEVICE display, int rows){
 /*
  * NamedListSelector: list of named numeric options
  */
-NamedListSelector::NamedListSelector(const char *description, volatile int *value, int default_val, int eeprom, int(*onselect)(int),
+NamedListSelector::NamedListSelector(const char *description, settings_t *value, int default_val, int eeprom, int(*onselect)(int),
                                      int count, const char * const names[], const int values[])
 :ListSelector(description, value, default_val, eeprom, onselect, count, values),
  names(names)
@@ -379,7 +384,7 @@ int Menu::render(DISPLAY_DEVICE display, int rows){
  * This must be called in a loop.
  */
 void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
-                 AllHID& hid, void(*onMenuLoop)(void)){
+                 AllHID& hid, void(*onMenuLoop)(bool)){
     static int last_event_timestamp = 0;
 
     if (!hid.read() && last_event_timestamp){
@@ -387,7 +392,7 @@ void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
             display.clearDisplay();
             display.display();
         } else {
-            if (onMenuLoop) onMenuLoop();
+            if (onMenuLoop) onMenuLoop(false);
             display.display();
         }
         return;
@@ -403,7 +408,7 @@ void displayMenu(Menu& menu, DISPLAY_DEVICE display, const int rows,
     display.clearDisplay();
     display.setTextCursor(0,0);
     menu.render(display, rows);
-    if (onMenuLoop) onMenuLoop();
+    if (onMenuLoop) onMenuLoop(true);
     display.display();
     delay(100);
 }

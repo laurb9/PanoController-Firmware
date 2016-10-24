@@ -9,61 +9,65 @@
 
 #include "pano.h"
 
-Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu)
-:horiz_motor(horiz_motor),
- vert_motor(vert_motor),
- camera(camera),
- mpu(mpu)
+PanoSetup::PanoSetup(Camera& camera)
+:camera(camera)
 {
-    motorsEnable(false);
-
-    setFOV(360,180);
 }
-void Pano::setFOV(int horiz_angle, int vert_angle){
+
+void PanoSetup::setFOV(int horiz_angle, int vert_angle){
     if (horiz_angle && vert_angle && horiz_angle <= 360 && vert_angle <= 180){
         horiz_fov = horiz_angle;
         vert_fov = vert_angle;
     }
 }
-void Pano::setShutter(unsigned speed, unsigned pre_delay, unsigned post_wait, bool long_pulse){
+
+void PanoSetup::setShutter(unsigned speed, unsigned pre_delay, unsigned post_wait, bool long_pulse){
     shutter_delay = speed;
     pre_shutter_delay = pre_delay;
     post_shutter_delay = post_wait;
     shutter_long_pulse = long_pulse;
 }
-void Pano::setShots(unsigned shots){
+
+void PanoSetup::setShots(unsigned shots){
     shots_per_position = shots;
 }
-void Pano::setMode(unsigned mode){
+
+void PanoSetup::setMode(unsigned mode){
 
 }
-unsigned Pano::getHorizShots(void){
+
+unsigned PanoSetup::getHorizShots(void){
     return horiz_count;
 }
-unsigned Pano::getVertShots(void){
+
+unsigned PanoSetup::getVertShots(void){
     return vert_count;
 }
-int Pano::getCurRow(void){
+
+int PanoSetup::getCurRow(void){
     return position / horiz_count;
 }
-int Pano::getCurCol(void){
+
+int PanoSetup::getCurCol(void){
     return position % horiz_count;
 }
+
 /*
  * Calculate time left to complete pano.
  */
-unsigned Pano::getTimeLeft(void){
+unsigned PanoSetup::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
     int seconds = photos * shots_per_position * (pre_shutter_delay + steady_delay_avg + shots_per_position * (shutter_delay + post_shutter_delay)) / 1000 +
         // time needed to move the platform
         // each photo requires a horizontal move (except last one in each row)
-        (photos - photos/horiz_count) * camera.getHorizFOV() * horiz_gear_ratio * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
+        (photos - photos/horiz_count) * camera.getHorizFOV() * HORIZ_GEAR_RATIO * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
         // row-to-row movement
-        photos / horiz_count * camera.getVertFOV() * vert_gear_ratio * 60 / DYNAMIC_RPM(VERT_MOTOR_RPM, camera.getVertFOV()) / 360 +
+        photos / horiz_count * camera.getVertFOV() * VERT_GEAR_RATIO * 60 / DYNAMIC_RPM(VERT_MOTOR_RPM, camera.getVertFOV()) / 360 +
         // row return horizontal movement
         photos / horiz_count * horiz_fov * 60 / HORIZ_MOTOR_RPM / 360;
     return seconds;
 }
+
 /*
  * Helper to calculate grid fit with overlap
  * @param total_size: entire grid size (1-360 degrees)
@@ -71,7 +75,7 @@ unsigned Pano::getTimeLeft(void){
  * @param block_size: ref to initial (max) block size (will be updated)
  * @param count: ref to image count (will be updated)
  */
-void Pano::gridFit(int total_size, int overlap, float& block_size, int& count){
+void PanoSetup::gridFit(int total_size, int overlap, float& block_size, int& count){
     if (block_size <= total_size){
         /*
          * For 360 pano, we need to cover entire circle plus overlap.
@@ -87,17 +91,33 @@ void Pano::gridFit(int total_size, int overlap, float& block_size, int& count){
         count = 1;
     }
 }
+
 /*
  * Calculate shot-to-shot horizontal/vertical head movement,
  * taking overlap into account
  * Must be called every time focal distance or panorama dimensions change.
  */
-void Pano::computeGrid(void){
+void PanoSetup::computeGrid(void){
     horiz_move = camera.getHorizFOV();
     gridFit(horiz_fov, MIN_OVERLAP, horiz_move, horiz_count);
     vert_move = camera.getVertFOV();
     gridFit(vert_fov, MIN_OVERLAP, vert_move, vert_count);
 }
+
+/*
+ * Actual platform driver part
+ */
+Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu)
+:PanoSetup(camera),
+ horiz_motor(horiz_motor),
+ vert_motor(vert_motor),
+ mpu(mpu)
+{
+    motorsEnable(false);
+
+    setFOV(360,180);
+}
+
 void Pano::start(void){
     computeGrid();
     motorsEnable(true);
@@ -213,11 +233,11 @@ void Pano::moveMotorsAdaptive(float h, float v){
  */
 void Pano::moveMotors(float h, float v){
     if (h){
-        horiz_motor.rotate(h * horiz_gear_ratio);
+        horiz_motor.rotate(h * HORIZ_GEAR_RATIO);
         horiz_home_offset += h;
     }
     if (v){
-        vert_motor.rotate(v * vert_gear_ratio);
+        vert_motor.rotate(v * VERT_GEAR_RATIO);
         vert_home_offset += v;
     }
 }
