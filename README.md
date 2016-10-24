@@ -6,7 +6,8 @@ flexible and support home-brew panoramic platforms.
 
 See the <a href="https://www.facebook.com/panocontroller">Official Facebook page</a> for demo videos and more progress photos.
 
-Current state: fully functional prototype board, field-tested, frequently upgraded.
+Current state: fully functional two-module prototype boards, field-tested, frequently upgraded. One module (Executor) is installed on the Gigapan platform. The other module
+is the radio controller with OLED display (Navigator).
 
 <img src="images/prototype.jpg" width="400" alt="Pano Controller Executor Boards installed in Gigapan EPIC 100">
 <img src="images/navigator.jpg" width="400" alt="Pano Controller Remote Navigator Unit">
