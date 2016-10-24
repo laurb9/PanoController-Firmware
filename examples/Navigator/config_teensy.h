@@ -1,5 +1,5 @@
 /*
- * Pano Controller Configuration File for Teensy boards from PJRC
+ * Pano Controller Navigator Configuration File for Teensy boards from PJRC
  * Supported:
  * - Teensy LC
  * - Teensy 3.1
@@ -15,31 +15,15 @@
 #define SPI_MISO           12
 #define SPI_SCK            13
 
-// Camera shutter controls
-#define CAMERA_FOCUS 0
-#define CAMERA_SHUTTER 1
-
-// Battery measurement pin R1/R2
-#define BATTERY A0
-
 // Joystick inputs
 #define JOYSTICK_X A3
 #define JOYSTICK_Y A2
 #define JOYSTICK_SW A1
+#define CANCEL_PIN A8
 
 // IR remote
 #define REMOTE_IN 3
 
-// MPU (accel/gyro)
-#define MPU_INT 2
-
-// Future devices
-//#define COMPASS_DRDY 4
-
-// Stepper drivers control
-#define DIR 5
-#define VERT_STEP 6
-#define HORIZ_STEP 9
-
-// this should be hooked up to nENABLE on both drivers
-#define nENABLE 10
+// NRF24 radio
+#define NRF24_CE A6
+#define NRF24_CSN A7

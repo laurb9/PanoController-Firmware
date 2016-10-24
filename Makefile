@@ -2,33 +2,52 @@
 #
 #
 
-ARDUINO := arduino --verbose --preserve-temp-files
+ARDUINO := arduino --preserve-temp-files
+
+ifndef board
+$(error Usage: make <executor|navigator|panocontroller> board=<teensy31|teensyLC|feather>)
+endif
+
+ifeq ($(board),teensy31)
+	# Teensy 3.1/3.2 target
+	# Teensy options hardware/teensy/avr/boards.txt
+	BOARD = teensy:avr:teensy31:usb=serial,keys=en-us,speed=72
+	PORT = /dev/ttyACM0
+endif 
+ifeq ($(board),teensyLC) 
+	# Teensy LC target
+	# Teensy options hardware/teensy/avr/boards.txt
+	BOARD = teensy:avr:teensyLC:usb=serial,keys=en-us,speed=48
+	PORT = /dev/ttyACM0
+endif
+ifeq ($(board),feather)
+    # Adafruit Feather M0
+    # must be installed with arduino --install-boards "adafruit:samd"
+    # ~/.arduino15/packages/adafruit/hardware/samd/1.0.13/boards.txt
+    BOARD = adafruit:samd:adafruit_feather_m0
+    PORT = /dev/ttyACM0
+endif
+ifeq ($(board),uno)
+	# Arduino UNO target
+	# arduino options hardware/arduino/avr/boards.txt
+	BOARD = arduino:avr:uno
+	PORT = /dev/ttyUSB0
+endif
+
 # Mac
 #ARDUINO := Arduino.app/Contents/MacOS/Arduino --verbose --preserve-temp-files
 TMPDIR := /tmp/pano-controller-build
 
-SOURCES := pano-controller.ino *.cpp *.h
+LIB_SOURCES =  src/*.cpp src/*.h
 
-#
-# Specify which of the below targets to build (default teensyLC)
-#
-all: teensyLC
+panocontroller: examples/PanoController/PanoController.ino $(LIB_SOURCES) $(TMPDIR)
+	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
 
-# Arduino UNO target
-# arduino options hardware/arduino/avr/boards.txt
-uno: BOARD = arduino:avr:uno
+navigator: examples/Navigator/Navigator.ino $(LIB_SOURCES) $(TMPDIR)
+	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
 
-# Teensy LC target
-# Teensy options hardware/teensy/avr/boards.txt
-teensyLC: BOARD = teensy:avr:teensyLC
-
-# 
-# Common rule for building and uploading the project
-#
-# See https://github.com/arduino/Arduino/blob/ide-1.5.x/build/shared/manpage.adoc
-uno teensyLC: $(SOURCES) $(TMPDIR)
-	$(ARDUINO) --upload $< --board $(BOARD) --pref build.path=$(TMPDIR)
-
+executor: examples/Executor/Executor.ino $(LIB_SOURCES) $(TMPDIR)
+	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
 	
 $(TMPDIR):
 	mkdir -p $(TMPDIR)
