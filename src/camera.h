@@ -31,9 +31,9 @@ public:
     Camera(int focus_pin, int shutter_pin);
     void shutter(int delay_ms, bool long_pulse);
     unsigned setFocalLength(unsigned focal_length);
-    unsigned getFocalLength(void);
-    float getHorizFOV(void);
-    float getVertFOV(void);
+    unsigned getFocalLength(void){ return focal_length; };
+    float getHorizFOV(void){ return horiz_fov; };
+    float getVertFOV(void){ return vert_fov; };
     void setAspect(int aspect);
 };
 

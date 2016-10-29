@@ -45,10 +45,6 @@ unsigned Camera::setFocalLength(unsigned focal_length){
     return focal_length;
 }
 
-unsigned Camera::getFocalLength(void){
-    return focal_length;
-}
-
 /*
  * Set image aspect ratio
  *
@@ -58,14 +54,6 @@ unsigned Camera::getFocalLength(void){
 void Camera::setAspect(int aspect){
     this->aspect = aspect;
     calcAllFOV();
-}
-
-float Camera::getHorizFOV(void){
-    return horiz_fov;
-}
-
-float Camera::getVertFOV(void){
-    return vert_fov;
 }
 
 void Camera::calcAllFOV(void){
