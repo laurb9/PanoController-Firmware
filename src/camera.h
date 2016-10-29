@@ -11,28 +11,30 @@
 
 #include <math.h>
 
-// shutter pulse, in ms - 100 = 0.1s
-#define SHUTTER_PULSE 100
+// (min) shutter pulse, in ms - 10 = 0.01s
+// should give camera enough time to recognize the pulse
+#define MIN_SHUTTER_PULSE 10
 
 class Camera {
 protected:
     int focus_pin;
     int shutter_pin;
-    unsigned lens_idx;
+    unsigned focal_length;
+    float horiz_fov, vert_fov;
+    float calcFOV(float d){
+        // https://en.wikipedia.org/wiki/Angle_of_view
+        return 360*atan(d/2/focal_length)/M_PI;
+    }
+    void calcAllFOV(void);
 public:
     int aspect = 23;
-    static const unsigned focal_lengths[];
     Camera(int focus_pin, int shutter_pin);
     void shutter(int delay_ms, bool long_pulse);
     unsigned setFocalLength(unsigned focal_length);
-    unsigned getFocalLength(void);
-    float getHorizFOV(void);
-    float getVertFOV(void);
+    unsigned getFocalLength(void){ return focal_length; };
+    float getHorizFOV(void){ return horiz_fov; };
+    float getVertFOV(void){ return vert_fov; };
     void setAspect(int aspect);
-    float calcFOV(float d){
-        // https://en.wikipedia.org/wiki/Angle_of_view
-        return 360*atan(d/2/focal_lengths[lens_idx])/M_PI;
-    }
 };
 
 #endif /* CAMERA_H_ */

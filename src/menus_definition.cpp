@@ -46,9 +46,9 @@ Menu* getMainMenu(PanoSettings& settings){
        new Menu("Camera", 8, new BaseMenu* const[8] {
             new ListSelector("Focal Len", &settings.focal, 35, USE_EEPROM, NULL, 16,
                 (const int[]){12, 14, 16, 20, 24, 28, 35, 50, 75, 105, 200, 300, 400, 450, 500, 600}),
-            new NamedListSelector("Shutter", &settings.shutter, 10, USE_EEPROM, NULL, 11,
-                (const char * const[]){"1/100", "1/50", "1/25", "1/10", "1/4", "0.5s", "1s", "2s", "4s", "8s", "MANUAL"},
-                (const int[]){10, 20, 40, 100, 250, 500, 1000, 2000, 4000, 8000, 0}),
+            new NamedListSelector("Shutter", &settings.shutter, 10, USE_EEPROM, NULL, 14,
+                (const char * const[]){"1/1000", "1/500", "1/250", "1/100", "1/50", "1/25", "1/10", "1/4", "0.5s", "1s", "2s", "4s", "8s", "MANUAL"},
+                (const int[]){1, 2, 4, 10, 20, 40, 100, 250, 500, 1000, 2000, 4000, 8000, 0}),
             new NamedListSelector("Delay", &settings.pre_shutter, 100, USE_EEPROM, NULL, 6,
                 (const char * const[]){"0.1s", "0.5s", "1s", "2s", "4s", "8s"},
                 (const int[]){100, 500, 1000, 2000, 4000, 8000}),
