@@ -23,14 +23,22 @@ Camera::Camera(int focus_pin, int shutter_pin)
 }
 
 void Camera::shutter(int delay_ms, bool long_pulse){
-    int shutter_pulse = (long_pulse) ? delay_ms : SHUTTER_PULSE;
+    int shutter_pulse;
+    if (long_pulse){
+        // don't allow a delay shorter than MIN_SHUTTER_PULSE
+        shutter_pulse = max(delay_ms, MIN_SHUTTER_PULSE);
+    } else {
+        shutter_pulse = MIN_SHUTTER_PULSE;
+    }
     pinMode(focus_pin, OUTPUT);
     pinMode(shutter_pin, OUTPUT);
     digitalWrite(focus_pin, LOW);
     digitalWrite(shutter_pin, LOW);
-    delay(min(shutter_pulse, delay_ms));
+    /* keep line active LOW for <shutter_pulse> ms */
+    delay(shutter_pulse);
     pinMode(focus_pin, INPUT);
     pinMode(shutter_pin, INPUT);
+    /* wait to complete the shutter action */
     if (delay_ms > shutter_pulse){
         delay(delay_ms - shutter_pulse);
     }

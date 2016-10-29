@@ -11,8 +11,9 @@
 
 #include <math.h>
 
-// shutter pulse, in ms - 100 = 0.1s
-#define SHUTTER_PULSE 100
+// (min) shutter pulse, in ms - 10 = 0.01s
+// should give camera enough time to recognize the pulse
+#define MIN_SHUTTER_PULSE 10
 
 class Camera {
 protected:
