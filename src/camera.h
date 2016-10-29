@@ -19,10 +19,15 @@ class Camera {
 protected:
     int focus_pin;
     int shutter_pin;
-    unsigned lens_idx;
+    unsigned focal_length;
+    float horiz_fov, vert_fov;
+    float calcFOV(float d){
+        // https://en.wikipedia.org/wiki/Angle_of_view
+        return 360*atan(d/2/focal_length)/M_PI;
+    }
+    void calcAllFOV(void);
 public:
     int aspect = 23;
-    static const unsigned focal_lengths[];
     Camera(int focus_pin, int shutter_pin);
     void shutter(int delay_ms, bool long_pulse);
     unsigned setFocalLength(unsigned focal_length);
@@ -30,10 +35,6 @@ public:
     float getHorizFOV(void);
     float getVertFOV(void);
     void setAspect(int aspect);
-    float calcFOV(float d){
-        // https://en.wikipedia.org/wiki/Angle_of_view
-        return 360*atan(d/2/focal_lengths[lens_idx])/M_PI;
-    }
 };
 
 #endif /* CAMERA_H_ */
