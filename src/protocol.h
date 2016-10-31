@@ -16,8 +16,7 @@
 #include "pano_settings.h"
 
 typedef struct {
-        settings_t horiz_rpm, vert_rpm;
-        settings_t horiz_move, vert_move;
+        float horiz_move, vert_move;
         float horiz_offset = 0, vert_offset = 0;
 } move_t;
 

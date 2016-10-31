@@ -17,7 +17,8 @@ private:
 protected:
     int x_pin, y_pin, sw_pin, cancel_pin;
     int x_state = 0, y_state = 0, sw_state = 0, cancel_state = 0;
-    int last_read;
+    unsigned last_read;
+    unsigned next_repeat_time;
     bool connected = false;
 public:
     static const int range = (1024/2) >> sensitivity;

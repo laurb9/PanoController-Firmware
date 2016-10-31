@@ -169,7 +169,7 @@ void displayArrows(){
  */
 bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
     move_t move;
-    int step = 1;
+    float step = min(5, min(camera->getHorizFOV(), camera->getVertFOV())/5);
 
     if (horiz || vert){
         comm.setHome();
@@ -188,12 +188,9 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
         hid->read();
         if (hid->isLastEventOk() || hid->isLastEventCancel()) break;
 
-        move.horiz_rpm = DYNAMIC_HORIZ_RPM(camera->getHorizFOV());
-        move.horiz_move = joystick->getPositionX() * step;
-        if (move.horiz_move == 0){
-            if (hid->isLastEventRight()) move.horiz_move = step;
-            if (hid->isLastEventLeft()) move.horiz_move = -step;
-        }
+        move.horiz_move = 0;
+        if (hid->isLastEventRight() || joystick->getPositionX() > 0) move.horiz_move = step;
+        if (hid->isLastEventLeft() || joystick->getPositionX() < 0) move.horiz_move = -step;
         if (move.horiz_move && horiz){
             if (move.horiz_move < -move.horiz_offset){
                 move.horiz_move = -move.horiz_offset;
@@ -202,13 +199,9 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             }
         }
 
-        move.vert_rpm = DYNAMIC_VERT_RPM(camera->getVertFOV());
-        move.vert_move = joystick->getPositionY() * step;
-        if (move.vert_move == 0){
-            if (hid->isLastEventUp()) move.vert_move = step;
-            if (hid->isLastEventDown()) move.vert_move = -step;
-            move.vert_rpm /= 3;
-        }
+        move.vert_move = 0;
+        if (hid->isLastEventUp() || joystick->getPositionY() > 0) move.vert_move = step;
+        if (hid->isLastEventDown() || joystick->getPositionY() < 0) move.vert_move = -step;
         if (move.vert_move && vert){
             if (move.vert_move > -move.vert_offset){
                 move.vert_move = -move.vert_offset;

@@ -217,10 +217,8 @@ void doGoHome(void){
     pano->moveMotorsHome();
 };
 void doFreeMove(move_t& move){
-    horiz_motor->setRPM(move.horiz_rpm);
-    vert_motor->setRPM(move.vert_rpm);
     pano->motorsEnable(true);
-    pano->moveMotors(move.horiz_move, move.vert_move);
+    pano->moveMotorsAdaptive(move.horiz_move, move.vert_move);
 };
 void doGridMove(const char direction){
     Serial.println("Inc move");
