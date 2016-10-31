@@ -220,13 +220,23 @@ void Pano::setMotorsHomePosition(void){
  * Move head requested number of degrees at an adaptive speed
  */
 void Pano::moveMotorsAdaptive(float h, float v){
+    static unsigned last_call = 0;
+    static float last_move_h, last_move_v;
+    if (millis() < last_call + 10){
+        last_move_h *= 1.5;
+        last_move_v *= 1.5;
+    } else {
+        last_move_h = h;
+        last_move_v = v;
+    }
     if (h){
-        horiz_motor.setRPM(DYNAMIC_HORIZ_RPM(h));
+        horiz_motor.setRPM(DYNAMIC_HORIZ_RPM(last_move_h));
     }
     if (v){
-        vert_motor.setRPM(DYNAMIC_VERT_RPM(v));
+        vert_motor.setRPM(DYNAMIC_VERT_RPM(last_move_v));
     }
     moveMotors(h, v);
+    last_call = millis();
 }
 /*
  * Move head requested number of degrees, fixed predefined speed
