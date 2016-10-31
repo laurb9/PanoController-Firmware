@@ -216,8 +216,8 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
         if (hid->isLastEventOk() || hid->isLastEventCancel()) break;
 
         pos_x = 0;
-        if (hid->isLastEventRight()) pos_x = step;
-        if (hid->isLastEventLeft()) pos_x = -step;
+        if (hid->isLastEventRight() || joystick->getPositionX() > 0) pos_x = step;
+        if (hid->isLastEventLeft() || joystick->getPositionX() < 0) pos_x = -step;
         if (pos_x && horiz){
             if (pos_x < -pano->horiz_home_offset){
                 pos_x = -pano->horiz_home_offset;
@@ -227,8 +227,8 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
         }
 
         pos_y = 0;
-        if (hid->isLastEventUp()) pos_y = step;
-        if (hid->isLastEventDown()) pos_y= -step;
+        if (hid->isLastEventUp() || joystick->getPositionY() > 0) pos_y = step;
+        if (hid->isLastEventDown() || joystick->getPositionY() < 0) pos_y= -step;
         if (pos_y && vert){
             if (pos_y > -pano->vert_home_offset){
                 pos_y = -pano->vert_home_offset;
