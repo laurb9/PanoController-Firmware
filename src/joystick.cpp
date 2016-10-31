@@ -100,22 +100,27 @@ unsigned Joystick::read(void){
 
     // read X position
     current_state = getPositionX();
-    if (current_state > x_state && current_state > 0){
-        event |= EVENT_RIGHT;
-    } else if (current_state < x_state && current_state < 0){
-        event |= EVENT_LEFT;
+    if (!x_state || millis() > next_repeat_time){
+        if (current_state > 0){
+            event |= EVENT_RIGHT;
+        } else if (current_state < 0){
+            event |= EVENT_LEFT;
+        }
+        x_state = current_state;
+        next_repeat_time = millis() + (x_state) ? REPEAT_INTERVAL : REPEAT_DELAY;
     }
-    x_state = current_state;
 
     // read Y position
     current_state = getPositionY();
-    if (current_state > y_state && current_state > 0){
-        event |= EVENT_UP;
-    } else if (current_state < y_state && current_state < 0){
-        event |= EVENT_DOWN;
+    if (!y_state || millis() > next_repeat_time){
+        if (current_state > 0){
+            event |= EVENT_UP;
+        } else if (current_state < 0){
+            event |= EVENT_DOWN;
+        }
+        y_state = current_state;
+        next_repeat_time = millis() + (y_state) ? REPEAT_INTERVAL : REPEAT_DELAY;
     }
-    y_state = current_state;
-
     last_read = millis();
     return event;
 }
