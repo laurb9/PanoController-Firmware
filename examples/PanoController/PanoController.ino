@@ -198,8 +198,8 @@ void displayArrows(){
  * @param vert:  pointer to store vertical movement
  */
 bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
-    int pos_x, pos_y;
-    int horiz_rpm, vert_rpm;
+    float pos_x, pos_y;
+    float step = min(camera->getHorizFOV(), camera->getVertFOV())/5;
 
     display.clearDisplay();
     display.setTextCursor(0,0);
@@ -215,17 +215,9 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
         hid->read();
         if (hid->isLastEventOk() || hid->isLastEventCancel()) break;
 
-        pos_x = joystick->getPositionX();
-        horiz_rpm = DYNAMIC_HORIZ_RPM(camera->getHorizFOV());
-        if (pos_x == 0){
-            if (hid->isLastEventRight()) pos_x = 1;
-            if (hid->isLastEventLeft()) pos_x = -1;
-            horiz_rpm /= 3;
-        } else {
-            // proportional speed control
-            horiz_rpm = horiz_rpm * abs(pos_x) / joystick->range;
-            pos_x = pos_x / abs(pos_x);
-        }
+        pos_x = 0;
+        if (hid->isLastEventRight()) pos_x = step;
+        if (hid->isLastEventLeft()) pos_x = -step;
         if (pos_x && horiz){
             if (pos_x < -pano->horiz_home_offset){
                 pos_x = -pano->horiz_home_offset;
@@ -234,17 +226,9 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
             }
         }
 
-        pos_y = joystick->getPositionY();
-        vert_rpm = DYNAMIC_VERT_RPM(camera->getVertFOV());
-        if (pos_y == 0){
-            if (hid->isLastEventUp()) pos_y = 1;
-            if (hid->isLastEventDown()) pos_y = -1;
-            vert_rpm /= 3;
-        } else {
-            // proportional speed control
-            vert_rpm = vert_rpm * abs(pos_y) / joystick->range;
-            pos_y = pos_y / abs(pos_y);
-        }
+        pos_y = 0;
+        if (hid->isLastEventUp()) pos_y = step;
+        if (hid->isLastEventDown()) pos_y= -step;
         if (pos_y && vert){
             if (pos_y > -pano->vert_home_offset){
                 pos_y = -pano->vert_home_offset;
@@ -268,8 +252,6 @@ bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
         }
 
         if (pos_x || pos_y){
-            horiz_motor->setRPM(horiz_rpm);
-            vert_motor->setRPM(vert_rpm);
             pano->moveMotors(pos_x, pos_y);
         }
     }
