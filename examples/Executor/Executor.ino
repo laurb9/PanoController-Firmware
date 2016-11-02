@@ -269,9 +269,14 @@ void loop() {
     /*
      * Execute pano
      */
-    if (!settings.motors_enable || state.running){
-        comm.sendState(state);
-        displayPanoStatus(true);
+    if (radio.connected || state.running){
+        if (!settings.motors_enable || state.running){
+            comm.sendState(state);
+            displayPanoStatus(true);
+        }
+    } else {
+        display.clearDisplay();
+        display.display();
     }
     if (state.running){
         if (!state.paused){
