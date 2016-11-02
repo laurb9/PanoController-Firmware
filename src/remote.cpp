@@ -13,6 +13,9 @@
 Remote::Remote(int pin)
 :pin(pin)
 {
+}
+
+void Remote::begin(void){
     remote = new IRrecv(pin);
     remote->blink13(false);
     remote->enableIRIn();

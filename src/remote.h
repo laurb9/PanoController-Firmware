@@ -25,6 +25,7 @@ private:
     decode_results remote_buffer;
 public:
     Remote(int pin);
+    void begin(void);
     unsigned read(void) override;
     int clear(int timeout);
 };

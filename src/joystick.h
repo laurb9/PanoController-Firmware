@@ -27,6 +27,7 @@ public:
     unsigned read(void) override;
     Joystick(int x_pin, int y_pin, int sw_pin, int cancel_pin);
     ~Joystick(void);
+    void begin(void);
     int getPositionX(bool if_connected=true);
     int getPositionY(bool if_connected=true);
     bool getButtonState(void);

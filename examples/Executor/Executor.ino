@@ -30,8 +30,8 @@ static Display display(OLED_RESET);
 static Radio radio(NRF24_CE, NRF24_CSN);
 static Exec comm(radio);
 
-static Camera* camera;
-static MPU* mpu;
+static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
+static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
 static DRV8834* horiz_motor;
 static DRV8834* vert_motor;
 static Pano* pano;
@@ -56,17 +56,15 @@ void setup() {
     Serial.println((digitalRead(CAMERA_FOCUS) ? "OK" : "N/C"));
     Serial.print("  Shutter: ");
     Serial.println((digitalRead(CAMERA_SHUTTER) ? "OK" : "N/C"));
-    camera = new Camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 
-    mpu = new MPU(MPU_I2C_ADDRESS, MPU_INT);
-    mpu->init();
+    mpu.begin();
 
     horiz_motor = new DRV8834(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
     vert_motor = new DRV8834(MOTOR_STEPS, DIR, VERT_STEP);
     horiz_motor->setMicrostep(32);
     vert_motor->setMicrostep(32);
 
-    pano = new Pano(*horiz_motor, *vert_motor, *camera, *mpu);
+    pano = new Pano(*horiz_motor, *vert_motor, camera, mpu);
 
     pinMode(BATTERY, INPUT);
 #if defined(__MK20DX256__) || defined(__MKL26Z64__)
@@ -105,8 +103,8 @@ void displayPanoStatus(bool complete){
     }
     display.printf("grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
 
-    float horiz_fov = camera->getHorizFOV();
-    float vert_fov = camera->getVertFOV();
+    float horiz_fov = camera.getHorizFOV();
+    float vert_fov = camera.getVertFOV();
     display.setTextCursor(3,0);
     display.printf("Lens: %dmm\n", settings.focal);
     display.printf("      %d.%d x %d.%d\n",
@@ -163,8 +161,8 @@ void displayPanoStatus(bool complete){
  * Update camera and pano settings received from navigator
  */
 void setPanoParams(void){
-    camera->setAspect(settings.aspect);
-    camera->setFocalLength(settings.focal);
+    camera.setAspect(settings.aspect);
+    camera.setFocalLength(settings.focal);
     pano->setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
     pano->setShots(settings.shots);
     pano->setFOV(settings.horiz, settings.vert);
