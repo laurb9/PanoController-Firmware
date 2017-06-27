@@ -1,7 +1,7 @@
 /*
  * Pano Controller for Arduino project
  *
- * Copyright (C)2015,2016 Laurentiu Badea
+ * Copyright (C)2015-2017 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
@@ -39,8 +39,8 @@ static BLERemote ble_remote(ble);
 // HID (Human Interface Device) Combined joystick+remote
 static AllHID hid(3, new HID* const[3] {&joystick, &remote, &ble_remote});
 static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
-static DRV8834* horiz_motor;
-static DRV8834* vert_motor;
+static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
+static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
 static Pano* pano;
 static Menu* menu;
 
@@ -70,12 +70,12 @@ void setup() {
 
     mpu.begin();
 
-    horiz_motor = new DRV8834(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
-    vert_motor = new DRV8834(MOTOR_STEPS, DIR, VERT_STEP);
-    horiz_motor->setMicrostep(32);
-    vert_motor->setMicrostep(32);
+    horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
+    horiz_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+    vert_motor.begin(MOTOR_RPM, MICROSTEPS);
+    vert_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
 
-    pano = new Pano(*horiz_motor, *vert_motor, camera, mpu);
+    pano = new Pano(horiz_motor, vert_motor, camera, mpu);
 
     //pinMode(COMPASS_DRDY, INPUT_PULLUP);
 

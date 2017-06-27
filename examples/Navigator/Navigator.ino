@@ -8,6 +8,7 @@
  */
 #include <Arduino.h>
 #include <SPI.h>
+#include <EEPROM.h>
 #include <BasicStepperDriver.h>
 #include "config.h"
 #include "pano.h"

@@ -1,7 +1,7 @@
 /*
  * Pano engine
  *
- * Copyright (C)2016 Laurentiu Badea
+ * Copyright (C)2016,2017 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
@@ -55,16 +55,16 @@ int PanoSetup::getCurCol(void){
 /*
  * Calculate time left to complete pano.
  */
-unsigned PanoSetup::getTimeLeft(void){
+unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
     int seconds = photos * shots_per_position * (pre_shutter_delay + steady_delay_avg + shots_per_position * (shutter_delay + post_shutter_delay)) / 1000 +
         // time needed to move the platform
         // each photo requires a horizontal move (except last one in each row)
-        (photos - photos/horiz_count) * camera.getHorizFOV() * HORIZ_GEAR_RATIO * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
+        (photos - photos/horiz_count) * camera.getHorizFOV() * HORIZ_GEAR_RATIO * 60 / horiz_motor.getRPM() / 360 +
         // row-to-row movement
-        photos / horiz_count * camera.getVertFOV() * VERT_GEAR_RATIO * 60 / DYNAMIC_RPM(VERT_MOTOR_RPM, camera.getVertFOV()) / 360 +
+        photos / horiz_count * camera.getVertFOV() * VERT_GEAR_RATIO * 60 / vert_motor.getRPM() / 360 +
         // row return horizontal movement
-        photos / horiz_count * horiz_fov * 60 / HORIZ_MOTOR_RPM / 360;
+        photos / horiz_count * horiz_fov * 60 / horiz_motor.getRPM() / 360;
     return seconds;
 }
 
@@ -121,8 +121,6 @@ Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu)
 void Pano::start(void){
     computeGrid();
     motorsEnable(true);
-    horiz_motor.setRPM(HORIZ_MOTOR_RPM);
-    vert_motor.setRPM(VERT_MOTOR_RPM);
     // set start position
     setMotorsHomePosition();
     position = 0;
@@ -176,11 +174,11 @@ bool Pano::moveTo(int new_row, int new_col){
                 move = move - 360;
             }
         }
-        moveMotorsAdaptive(move, 0);
+        moveMotors(move, 0);
     }
     if (cur_row != new_row){
         // vertical adjustment needed
-        moveMotorsAdaptive(0, -(new_row-cur_row)*vert_move);
+        moveMotors(0, -(new_row-cur_row)*vert_move);
     }
 
     position = new_row * horiz_count + new_col;
@@ -217,29 +215,7 @@ void Pano::setMotorsHomePosition(void){
 }
 
 /*
- * Move head requested number of degrees at an adaptive speed
- */
-void Pano::moveMotorsAdaptive(float h, float v){
-    static unsigned last_call = 0;
-    static float last_move_h, last_move_v;
-    if (millis() < last_call + 10){
-        last_move_h *= 1.5;
-        last_move_v *= 1.5;
-    } else {
-        last_move_h = h;
-        last_move_v = v;
-    }
-    if (h){
-        horiz_motor.setRPM(DYNAMIC_HORIZ_RPM(last_move_h));
-    }
-    if (v){
-        vert_motor.setRPM(DYNAMIC_VERT_RPM(last_move_v));
-    }
-    moveMotors(h, v);
-    last_call = millis();
-}
-/*
- * Move head requested number of degrees, fixed predefined speed
+ * Move head requested number of degrees
  */
 void Pano::moveMotors(float h, float v){
     if (h){
@@ -256,7 +232,7 @@ void Pano::moveMotors(float h, float v){
  * Move head back to home position
  */
 void Pano::moveMotorsHome(void){
-    moveMotorsAdaptive(-horiz_home_offset, -vert_home_offset);
+    moveMotors(-horiz_home_offset, -vert_home_offset);
 }
 
 void Pano::motorsEnable(bool on){

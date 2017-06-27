@@ -32,8 +32,8 @@ static Exec comm(radio);
 
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
-static DRV8834* horiz_motor;
-static DRV8834* vert_motor;
+static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
+static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
 static Pano* pano;
 
 void setup() {
@@ -59,12 +59,12 @@ void setup() {
 
     mpu.begin();
 
-    horiz_motor = new DRV8834(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
-    vert_motor = new DRV8834(MOTOR_STEPS, DIR, VERT_STEP);
-    horiz_motor->setMicrostep(32);
-    vert_motor->setMicrostep(32);
+    horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
+    horiz_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+    vert_motor.begin(MOTOR_RPM, MICROSTEPS);
+    vert_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
 
-    pano = new Pano(*horiz_motor, *vert_motor, camera, mpu);
+    pano = new Pano(horiz_motor, vert_motor, camera, mpu);
 
     pinMode(BATTERY, INPUT);
 #if defined(__MK20DX256__) || defined(__MKL26Z64__)
@@ -216,7 +216,7 @@ void doGoHome(void){
 };
 void doFreeMove(move_t& move){
     pano->motorsEnable(true);
-    pano->moveMotorsAdaptive(move.horiz_move, move.vert_move);
+    pano->moveMotors(move.horiz_move, move.vert_move);
 };
 void doGridMove(const char direction){
     Serial.println("Inc move");
