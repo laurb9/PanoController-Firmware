@@ -28,6 +28,9 @@ Joystick::Joystick(int x_pin, int y_pin, int sw_pin, int cancel_pin)
  sw_pin(sw_pin),
  cancel_pin(cancel_pin)
 {
+}
+
+void Joystick::begin(void){
     pinMode(x_pin, INPUT);
     pinMode(y_pin, INPUT);
     pinMode(sw_pin, INPUT_PULLUP);

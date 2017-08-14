@@ -1,7 +1,7 @@
 /*
  * Pano engine
  *
- * Copyright (C)2016 Laurentiu Badea
+ * Copyright (C)2016,2017 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
@@ -18,11 +18,6 @@
 // Calculate maximum allowed movement at given focal length and shutter
 // =angular velocity that would cause a pixel to overlap next one within shot time
 #define STEADY_TARGET(fov, shutter, resolution) (100*1000/shutter*fov/resolution)
-
-// formula used to lower speed for short movements, to reduce shake
-#define DYNAMIC_RPM(rpm, angle) ((abs(angle)>10) ? rpm : rpm/4)
-#define DYNAMIC_HORIZ_RPM(angle) DYNAMIC_RPM(HORIZ_MOTOR_RPM, angle)
-#define DYNAMIC_VERT_RPM(angle) DYNAMIC_RPM(VERT_MOTOR_RPM, angle)
 
 class PanoSetup {
 protected:
@@ -45,10 +40,8 @@ public:
     const unsigned CAMERA_RESOLUTION = 4000;
 
     /*
-     * Platform and motor physical parameters
+     * Platform physical parameters
      */
-    const unsigned short HORIZ_MOTOR_RPM = 20; // max 60 @ 0.8A, 20 @ 0.3A & 1:16
-    const unsigned short VERT_MOTOR_RPM = 60;  // max 180 @ 0.8A. 60 @ 0.3A & 1:16
     const unsigned short HORIZ_GEAR_RATIO = 5; // 1:5
     const unsigned short VERT_GEAR_RATIO = 15; // 1:15
 
@@ -78,7 +71,6 @@ public:
     // pano info
     int getCurRow(void);
     int getCurCol(void);
-    unsigned getTimeLeft(void);
 };
 
 class Pano : public PanoSetup {
@@ -95,6 +87,9 @@ public:
     unsigned steady_delay_avg = 100;
 
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu);
+
+    // pano info
+    unsigned getTimeLeft(void);
 
     // pano execution
     void start(void);
@@ -114,7 +109,6 @@ public:
     void setZeroElevation(void);
     void moveMotorsHome(void);
     void moveMotors(float h, float v);
-    void moveMotorsAdaptive(float h, float v);
 };
 
 #endif /* PANO_H_ */

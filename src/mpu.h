@@ -11,6 +11,7 @@
 #define MPU_H_
 #include <Arduino.h>
 #include <Wire.h>
+//#include <MahonyAHRS.h>
 
 // for gyro_scale=25000 (in 1/100deg) 15 = 0.15
 #define GYRO_NOISE 10
@@ -62,7 +63,7 @@ public:
     int gyro_offset_y =  43;
     int gyro_offset_z =  24;
     MPU(const int address, const int int_pin);
-    void init(void);
+    void begin(void);
     void read(void);
     bool zeroMotionWait(int target, const int timeout);
 };

@@ -22,8 +22,17 @@
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
 
-// Stepper motors steps per revolution
+// Stepper motors and drivers configuration
+// steps per revolution
 #define MOTOR_STEPS 200
+// microsteps
+#define MICROSTEPS 32
+// max RPM 
+#define MOTOR_RPM 500
+// do these belong in platform settings ?
+// acceleration/deceleration in steps/sec^2
+#define MOTOR_ACCEL 300
+#define MOTOR_DECEL 100
 
 // board-specific pin settings
 #if defined(ARDUINO_ARCH_SAMD) && defined(ARDUINO_SAMD_FEATHER_M0)
