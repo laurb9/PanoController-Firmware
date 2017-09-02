@@ -87,6 +87,7 @@ public:
     unsigned steady_delay_avg = 100;
 
     Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu);
+    void begin(void);
 
     // pano info
     unsigned getTimeLeft(void);

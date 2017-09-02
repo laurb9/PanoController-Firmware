@@ -16,10 +16,9 @@
 #include "camera.h"
 #include "display.h"
 #include "mpu.h"
-#include "protocol.h"
-#include "ble_profile.h"
+#include "app_interface.h"
 
-// these variables are modified by the menu
+// these variables are updated via Bluetooth
 PanoSettings settings;
 
 // This is the panorama engine state
@@ -29,18 +28,19 @@ PanoState state;
 static Display display(OLED_RESET);
 
 static Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
-static BLEProfile ble_profile(ble);
-static Exec comm(ble_profile);
+AppInterface app(ble, settings, state);
 
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
 static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
 static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
-static Pano* pano;
+static Pano pano(horiz_motor, vert_motor, camera, mpu);
 
 void setup() {
     Serial.begin(38400);
     delay(1000); // wait for serial
+    Serial.println("PanoController built " __DATE__ " " __TIME__);
+    Serial.println("setup()");
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
     display.setRotation(0);
@@ -57,53 +57,57 @@ void setup() {
     Serial.print("  Shutter: ");
     Serial.println((digitalRead(CAMERA_SHUTTER) ? "OK" : "N/C"));
 
+    Serial.println("Configuring MPU");
     mpu.begin();
 
-
+    Serial.println("Configuring stepper drivers");
     horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
     horiz_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
     vert_motor.begin(MOTOR_RPM, MICROSTEPS);
     vert_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
 
-    pano = new Pano(horiz_motor, vert_motor, camera, mpu);
+    Serial.println("Configuring Bluefruit LE");
+    ble.begin(true);
+    ble.echo(false);     // disable command echo
+    ble.factoryReset();
+    ble.info();
+    ble.verbose(false);  // turn off debug info
 
+    Serial.println("Initializing BLE App Communication");
+    app.begin();
+
+    ble.sendCommandCheckOK("AT+BLEBATTEN=1"); // enable battery service
+    // ble.sendCommandCheckOK("AT+BLEPOWERLEVEL=0"); // can be used to change transmit power
+
+    Serial.print("Checking battery voltage... ");
+    // Configure input pin and ADC for reading battery voltage
     pinMode(BATTERY, INPUT);
 #if defined(__MK20DX256__) || defined(__MKL26Z64__)
     analogReadRes(10);
     analogReadAveraging(32);
 #endif
     readBattery();
+    Serial.print(abs(state.battery)); Serial.println("mV");
 
-    ble.begin(true);
-    //ble.echo(false);     // disable command echo
-    ble.factoryReset();
-    ble.info();
-    //ble.verbose(false);  // turn off debug info
-
-    // just testing out commands
-    ble.sendCommandCheckOK("AT+BLEPOWERLEVEL");
-    ble.sendCommandCheckOK("AT+BLEBATTEN=1");
-    
-    ble_profile.init();
-    comm.sendState(state);
-    
     Serial.println("Waiting to connect...");
     display.printf("Waiting to connect...");
     display.display();
 
-    while (!comm.getConfig(settings)) delay(20);
-    Serial.println("Received settings");
+    while (!app.isConnected()) app.poll(100);
+
+    Serial.println("Connected, waiting for config data");
+
+    pano.begin();
 }
 
 void readBattery(void){
+    // mV
     state.battery = map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE/100) * 100;
-    Serial.print("BATTERY ");
-    Serial.println(state.battery);
     if (state.battery < LOW_BATTERY){
         state.battery = -state.battery;
-        ble.sendCommandCheckOK("AT+BLEBATTVAL=10");
+        ble.sendCommandCheckOK("AT+BLEBATTVAL=10");  // battery at 10% 
     } else {
-        ble.sendCommandCheckOK("AT+BLEBATTVAL=90");
+        ble.sendCommandCheckOK("AT+BLEBATTVAL=100"); // battery full
     }
 }
 
@@ -113,15 +117,15 @@ void readBattery(void){
 void displayPanoStatus(bool complete){
     display.clearDisplay();
     display.setTextCursor(0,0);
-    int photos = pano->getHorizShots() * pano->getVertShots();
+    int photos = pano.getHorizShots() * pano.getVertShots();
 
     if (state.running){
-        display.printf("# %d of %d\n", pano->position+1, photos);
-        display.printf("at %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
+        display.printf("# %d of %d\n", pano.position+1, photos);
+        display.printf("at %d x %d\n", 1+pano.getCurRow(), 1+pano.getCurCol());
     } else {
         display.printf("%d photos\n\n", photos);
     }
-    display.printf("grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
+    display.printf("grid %d x %d \n", pano.getVertShots(), pano.getHorizShots());
 
     float horiz_fov = camera.getHorizFOV();
     float vert_fov = camera.getVertFOV();
@@ -130,7 +134,7 @@ void displayPanoStatus(bool complete){
     display.printf("      %d.%d x %d.%d\n",
                    int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
                    int(vert_fov), round(10*(vert_fov-int(vert_fov))));
-    display.printf("Pano %d x %d deg\n", pano->horiz_fov, pano->vert_fov);
+    display.printf("Pano %d x %d deg\n", pano.horiz_fov, pano.vert_fov);
 
     // Print battery voltage at cursor, format is #.#V (4 chars)
     display.setTextCursor(0, 16);
@@ -157,18 +161,18 @@ void displayPanoStatus(bool complete){
 
     display.setTextCursor(6, 0);
     if (state.position + 1 < photos){
-        display.printf("%d minutes ", pano->getTimeLeft()/60);
+        display.printf("%d minutes ", pano.getTimeLeft()/60);
     }
-    if (pano->steady_delay_avg > 500){
+    if (pano.steady_delay_avg > 500){
         display.setTextCursor(6, 16);
-        display.printf("%2ds ", (pano->steady_delay_avg+500)/1000);
-        display.printf((pano->steady_delay_avg < 8000) ? "\x12" : "!");
+        display.printf("%2ds ", (pano.steady_delay_avg+500)/1000);
+        display.printf((pano.steady_delay_avg < 8000) ? "\x12" : "!");
     }
 
     // show progress bar
     if (state.running){
         display.setTextCursor(7, 0);
-        for (int i=(pano->position+1) * DISPLAY_COLS / photos; i > 0; i--){
+        for (int i=(pano.position+1) * DISPLAY_COLS / photos; i > 0; i--){
             display.print('\xdb');
         };
     };
@@ -178,20 +182,20 @@ void displayPanoStatus(bool complete){
 }
 
 /*
- * Update camera and pano settings received from navigator
+ * Update camera and pano settings
  */
 void setPanoParams(void){
     camera.setAspect(settings.aspect);
     camera.setFocalLength(settings.focal);
-    pano->setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
-    pano->setShots(settings.shots);
-    pano->setFOV(settings.horiz, settings.vert);
-    pano->computeGrid();
-    // pano->position = state.position;
+    pano.setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
+    pano.setShots(settings.shots);
+    pano.setFOV(settings.horiz, settings.vert);
+    pano.computeGrid();
+    // pano.position = state.position;
 }
 
 /*
- * Callbacks for commands received from remote Navigator
+ * Callbacks for commands received from app
  */
 void doConfig(void){
     setPanoParams();
@@ -199,13 +203,13 @@ void doConfig(void){
 };
 void doStart(void){
     Serial.println("Start pano");
-    pano->start();
+    pano.start();
     state.running = true;
     state.paused = (settings.shutter == 0);
 };
 void doCancel(void){
     Serial.println("Cancel pano");
-    pano->end();
+    pano.end();
     state.running = false;
     state.paused = false;
 };
@@ -217,43 +221,43 @@ void doPause(void){
 };
 void doShutter(void){
     Serial.println("Shutter");
-    pano->shutter();
+    pano.shutter();
     if (state.running){ // manual shutter mode, advance to next
-        state.running = pano->next();
+        state.running = pano.next();
         if (!state.running){
-            pano->end();
+            pano.end();
         }
     }
 };
 void doSetHome(void){
     Serial.println("Set home");
-    pano->setMotorsHomePosition();
+    pano.setMotorsHomePosition();
 };
 void doGoHome(void){
     Serial.println("Go home");
-    pano->motorsEnable(true);
-    pano->moveMotorsHome();
+    pano.motorsEnable(true);
+    pano.moveMotorsHome();
 };
 void doFreeMove(move_t& move){
-    pano->motorsEnable(true);
-    pano->moveMotors(move.horiz_move, move.vert_move);
+    pano.motorsEnable(true);
+    pano.moveMotors(move.horiz_move, move.vert_move);
 };
 void doGridMove(const char direction){
     Serial.println("Inc move");
     switch (direction){
-    case '<': pano->prev(); break;
-    case '>': pano->next(); break;
-    case '^': pano->moveTo(pano->getCurRow() - 1, pano->getCurCol()); break;
-    case 'v': pano->moveTo(pano->getCurRow() + 1, pano->getCurCol()); break;
+    case '<': pano.prev(); break;
+    case '>': pano.next(); break;
+    case '^': pano.moveTo(pano.getCurRow() - 1, pano.getCurCol()); break;
+    case 'v': pano.moveTo(pano.getCurRow() + 1, pano.getCurCol()); break;
     }
 };
 // unused
 void doGridMoveTo(int16_t row, int16_t col){
     Serial.println("Head move");
-    pano->moveTo(row, col);
+    pano.moveTo(row, col);
 }
 
-const comm_callbacks callbacks = {
+const app_callbacks callbacks = {
     doConfig,
     doStart,
     doCancel,
@@ -267,17 +271,17 @@ const comm_callbacks callbacks = {
 
 void loop() {
     /*
-     * Read state from menu navigator
+     * Check if anything was sent to us
      */
-    comm.getCmd(settings, callbacks);
+    app.poll(20);
     /*
      * Collect and send state to menu navigator
      */
     readBattery();
-    state.steady_delay_avg = pano->steady_delay_avg;
-    state.position = pano->position;
-    state.horiz_offset = pano->horiz_home_offset;
-    state.vert_offset = pano->vert_home_offset;
+    state.steady_delay_avg = pano.steady_delay_avg;
+    state.position = pano.position;
+    state.horiz_offset = pano.horiz_home_offset;
+    state.vert_offset = pano.vert_home_offset;
     state.motors_on = settings.motors_on;
     /*
      * Render state.
@@ -289,7 +293,7 @@ void loop() {
      */
     if (ble.isConnected() || state.running){
         if (!settings.motors_enable || state.running){
-            comm.sendState(state);
+            app.sendStatus();
             displayPanoStatus(true);
         }
     } else {
@@ -298,14 +302,14 @@ void loop() {
     }
     if (state.running){
         if (!state.paused){
-            pano->shutter();
-            state.running = pano->next();
+            pano.shutter();
+            state.running = pano.next();
             if (!state.running){
-                pano->end();
+                pano.end();
             };
         };
     } else {
-        pano->motorsEnable(state.motors_on);
+        pano.motorsEnable(state.motors_on);
     };
 
     yield();

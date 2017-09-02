@@ -113,9 +113,12 @@ Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu)
  vert_motor(vert_motor),
  mpu(mpu)
 {
-    motorsEnable(false);
-
     setFOV(360,180);
+}
+
+// begin() follows Arduino convention for setup code
+void Pano::begin(void){
+    motorsEnable(false);
 }
 
 void Pano::start(void){
