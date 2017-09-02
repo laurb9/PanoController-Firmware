@@ -1,9 +1,9 @@
 /*
- * Headless Pano Controller
+ * Bluetooth 4.0 Pano Controller
  *
- * A basic panorama controller without menus and advanced HID devices.
+ * Pano Controller configured via phone (iOS)
  *
- * Copyright (C)2015,2016 Laurentiu Badea
+ * Copyright (C)2015-2017 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
@@ -16,8 +16,8 @@
 #include "camera.h"
 #include "display.h"
 #include "mpu.h"
-#include "radio.h"
 #include "protocol.h"
+#include "ble_profile.h"
 
 // these variables are modified by the menu
 PanoSettings settings;
@@ -27,8 +27,10 @@ PanoSettings settings;
 PanoState state;
 
 static Display display(OLED_RESET);
-static Radio radio(NRF24_CE, NRF24_CSN);
-static Exec comm(radio);
+
+static Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
+static BLEProfile ble_profile(ble);
+static Exec comm(ble_profile);
 
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
@@ -41,13 +43,11 @@ void setup() {
     delay(1000); // wait for serial
 
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
-    display.setRotation(2);
+    display.setRotation(0);
     display.clearDisplay();
     display.setTextCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
-
-    radio.begin();
 
     Serial.println("Checking Camera Shutter Connection");
     pinMode(CAMERA_FOCUS, INPUT_PULLDOWN);
@@ -58,6 +58,7 @@ void setup() {
     Serial.println((digitalRead(CAMERA_SHUTTER) ? "OK" : "N/C"));
 
     mpu.begin();
+
 
     horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
     horiz_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
@@ -71,19 +72,38 @@ void setup() {
     analogReadRes(10);
     analogReadAveraging(32);
 #endif
+    readBattery();
 
+    ble.begin(true);
+    //ble.echo(false);     // disable command echo
+    ble.factoryReset();
+    ble.info();
+    //ble.verbose(false);  // turn off debug info
+
+    // just testing out commands
+    ble.sendCommandCheckOK("AT+BLEPOWERLEVEL");
+    ble.sendCommandCheckOK("AT+BLEBATTEN=1");
+    
+    ble_profile.init();
+    comm.sendState(state);
+    
     Serial.println("Waiting to connect...");
     display.printf("Waiting to connect...");
     display.display();
 
-    while (!comm.getConfig(settings)) delay(100);
+    while (!comm.getConfig(settings)) delay(20);
     Serial.println("Received settings");
 }
 
 void readBattery(void){
     state.battery = map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE/100) * 100;
+    Serial.print("BATTERY ");
+    Serial.println(state.battery);
     if (state.battery < LOW_BATTERY){
         state.battery = -state.battery;
+        ble.sendCommandCheckOK("AT+BLEBATTVAL=10");
+    } else {
+        ble.sendCommandCheckOK("AT+BLEBATTVAL=90");
     }
 }
 
@@ -129,7 +149,7 @@ void displayPanoStatus(bool complete){
 
     // radio connection status
     display.setTextCursor(0,15);
-    if (radio.connected){
+    if (ble.isConnected()){
         display.print("^");
     } else {
         display.print("X");
@@ -228,7 +248,7 @@ void doGridMove(const char direction){
     }
 };
 // unused
-void doGridMoveTo(settings_t row, settings_t col){
+void doGridMoveTo(int16_t row, int16_t col){
     Serial.println("Head move");
     pano->moveTo(row, col);
 }
@@ -267,7 +287,7 @@ void loop() {
     /*
      * Execute pano
      */
-    if (radio.connected || state.running){
+    if (ble.isConnected() || state.running){
         if (!settings.motors_enable || state.running){
             comm.sendState(state);
             displayPanoStatus(true);
