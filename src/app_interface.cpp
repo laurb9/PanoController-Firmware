@@ -82,11 +82,14 @@ void AppInterface::gattRX(int32_t char_id, uint8_t* data, uint16_t len){
         uartRX(data, len);
     }
 }
-static bool read_config(settings_t& variable, uint8_t* &data, uint16_t& len){
-    if (len >= sizeof(variable)){
-        memcpy((void*)&variable, data, sizeof(variable));
-        data += sizeof(variable);
-        len -= sizeof(variable);
+static bool unpack(settings_t& variable, uint8_t* &data, uint16_t& len){
+    if (len >= 2*sizeof(variable)){
+        len -= 2*sizeof(variable);
+        variable = 0;
+        for (int i=2*sizeof(variable); i; i--){
+            variable <<= 4;
+            variable += (*data++ - 0x30);
+        }
         return true;
     }
     return false;
@@ -100,18 +103,18 @@ void AppInterface::uartRX(uint8_t* data, uint16_t len){
         switch (keyCode){
 
             // Configs
-            case 0x41: updateConfig |= read_config(settings.focal, data, len); break;
-            case 0x42: updateConfig |= read_config(settings.shutter, data, len); break;
-            case 0x43: updateConfig |= read_config(settings.pre_shutter, data, len); break;
-            case 0x44: updateConfig |= read_config(settings.post_wait, data, len); break;
-            case 0x45: updateConfig |= read_config(settings.long_pulse, data, len); break;
-            case 0x46: updateConfig |= read_config(settings.aspect, data, len); break;
-            case 0x47: updateConfig |= read_config(settings.shots, data, len); break;
-            case 0x48: updateConfig |= read_config(settings.motors_enable, data, len); break;
-            case 0x49: updateConfig |= read_config(settings.motors_on, data, len); break;
-            case 0x4A: updateConfig |= read_config(settings.display_invert, data, len); break;
-            case 0x4B: updateConfig |= read_config(settings.horiz, data, len); break;
-            case 0x4C: updateConfig |= read_config(settings.vert, data, len); break;
+            case 0x41: updateConfig |= unpack(settings.focal, data, len); break;
+            case 0x42: updateConfig |= unpack(settings.shutter, data, len); break;
+            case 0x43: updateConfig |= unpack(settings.pre_shutter, data, len); break;
+            case 0x44: updateConfig |= unpack(settings.post_wait, data, len); break;
+            case 0x45: updateConfig |= unpack(settings.long_pulse, data, len); break;
+            case 0x46: updateConfig |= unpack(settings.aspect, data, len); break;
+            case 0x47: updateConfig |= unpack(settings.shots, data, len); break;
+            case 0x48: updateConfig |= unpack(settings.motors_enable, data, len); break;
+            case 0x49: updateConfig |= unpack(settings.motors_on, data, len); break;
+            case 0x4A: updateConfig |= unpack(settings.display_invert, data, len); break;
+            case 0x4B: updateConfig |= unpack(settings.horiz, data, len); break;
+            case 0x4C: updateConfig |= unpack(settings.vert, data, len); break;
 
             // Commands
             case 0x61: callbacks.start(); break;
