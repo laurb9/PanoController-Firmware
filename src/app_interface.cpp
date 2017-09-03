@@ -56,11 +56,11 @@ void AppInterface::begin(){
     gatt = new Adafruit_BLEGatt(ble);
     service_id = gatt->addService(SERVICE_UUID);
     config_char_id = gatt->addCharacteristic(CONFIG_CHAR_UUID, GATT_CHARS_PROPERTIES_READ | GATT_CHARS_PROPERTIES_WRITE | GATT_CHARS_PROPERTIES_WRITE_WO_RESP,
-                                             3, 20, BLE_DATATYPE_BYTEARRAY, "Configuration");
+                                             5, 20, BLE_DATATYPE_BYTEARRAY, "Configuration");
     status_char_id = gatt->addCharacteristic(STATUS_CHAR_UUID, GATT_CHARS_PROPERTIES_READ | GATT_CHARS_PROPERTIES_NOTIFY,
                                              sizeof(PanoState), sizeof(PanoState), BLE_DATATYPE_BYTEARRAY, "Status");
     cmd_char_id = gatt->addCharacteristic(CMD_CHAR_UUID, GATT_CHARS_PROPERTIES_WRITE,
-                                          1, 5, BLE_DATATYPE_BYTEARRAY, "Command");
+                                          1, 20, BLE_DATATYPE_BYTEARRAY, "Command");
     ble.sendCommandCheckOK("AT+GAPSETADVDATA=07-02-17-20-0A-18-0F-18"); // 7=number of bytes following, 02-flag for 16-bit service uuids, 17-20 = 0x2017, 0x180A, 0x180F
     ble.sendCommandCheckOK("AT+GAPCONNECTABLE=1");
     ble.reset();
@@ -87,15 +87,13 @@ static bool unpack(settings_t& variable, uint8_t* &data, uint16_t& len){
         len -= 2*sizeof(variable);
         variable = 0;
         for (int i=2*sizeof(variable); i; i--){
-            variable <<= 4;
-            variable += (*data++ - 0x30);
+            variable = (variable <<= 4) + (*data++ - 0x30);
         }
         return true;
     }
     return false;
 }
 void AppInterface::uartRX(uint8_t* data, uint16_t len){
-    move_t move;
     static uint8_t keyCode;
     bool updateConfig = false;
     while (len-- >= 1){
@@ -125,13 +123,21 @@ void AppInterface::uartRX(uint8_t* data, uint16_t len){
             case 0x66: callbacks.goHome(); break;
             case 0x67: sendStatus(); break;
             case 0x68: // free move
-                // TODO: check that len=5
-                memcpy(&move, data, sizeof(move));
-                callbacks.freeMove(move);
+                Serial.println(2 * 2 * sizeof(settings_t));
+                if (len >= 2 * 2 * sizeof(settings_t)){
+                    settings_t horiz_move, vert_move;
+                    unpack(horiz_move, data, len);
+                    unpack(vert_move, data, len);
+                    callbacks.freeMove(horiz_move/100, vert_move/100);
+                }
                 break;
             case 0x69: // incremental move (forward or backward)
                 // TODO: check that len=2
-                callbacks.gridMove((char)data[1]);
+                if (len >= 2){
+                    callbacks.gridMove((char)data[0]);
+                    len--;
+                    data++;
+                }
                 break;
             default:
                 Serial.print("Unknown code received: "); Serial.println(keyCode, HEX);

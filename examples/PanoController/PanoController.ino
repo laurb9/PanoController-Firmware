@@ -238,9 +238,9 @@ void doGoHome(void){
     pano.motorsEnable(true);
     pano.moveMotorsHome();
 };
-void doFreeMove(move_t& move){
+void doFreeMove(float horiz_move, float vert_move){
     pano.motorsEnable(true);
-    pano.moveMotors(move.horiz_move, move.vert_move);
+    pano.moveMotors(horiz_move, vert_move);
 };
 void doGridMove(const char direction){
     Serial.println("Inc move");

@@ -14,11 +14,6 @@
 #include "pano_settings.h"
 
 typedef struct {
-    float horiz_move, vert_move;
-    float horiz_offset = 0, vert_offset = 0;
-} move_t;
-
-typedef struct {
     void(*config)(void);
     void(*start)(void);
     void(*cancel)(void);
@@ -26,7 +21,7 @@ typedef struct {
     void(*shutter)(void);
     void(*setHome)(void);
     void(*goHome)(void);
-    void(*freeMove)(move_t& move);
+    void(*freeMove)(float horiz, float vert);
     void(*gridMove)(char direction);
 } app_callbacks;
 
