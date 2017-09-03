@@ -50,7 +50,7 @@ void callbackDidDisconnect(void){
 void AppInterface::begin(){
     ble.sendCommandCheckOK("AT+BAUDRATE=921600");
     // LED Activity command is only supported from 0.6.6
-    ble.sendCommandCheckOK("AT+HWMODELED=SPI");
+    ble.sendCommandCheckOK("AT+HWMODELED=BLEUART");
     ble.sendCommandCheckOK("AT+GAPDEVNAME=Pano Controller");
     
     gatt = new Adafruit_BLEGatt(ble);
