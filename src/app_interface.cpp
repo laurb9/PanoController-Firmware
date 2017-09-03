@@ -30,6 +30,16 @@ void callbackGattRX(int32_t char_id, uint8_t* data, uint16_t len){
     //} debug
     app.gattRX(char_id, data, len);
 }
+void callbackUartRX(char data[], uint16_t len){
+    //{ debug
+        Serial.print("BLE UART RX len=");
+        Serial.print(len);
+        Serial.print(" data=");
+        for (int i = 0; i < len; i++) { Serial.print(data[i], HEX); Serial.print("-"); };
+        Serial.println("");
+        //} debug
+        app.uartRX((uint8_t *)data, len);
+}
 void callbackDidConnect(void){
     app.didConnect();
 }
@@ -46,7 +56,7 @@ void AppInterface::begin(){
     gatt = new Adafruit_BLEGatt(ble);
     service_id = gatt->addService(SERVICE_UUID);
     config_char_id = gatt->addCharacteristic(CONFIG_CHAR_UUID, GATT_CHARS_PROPERTIES_READ | GATT_CHARS_PROPERTIES_WRITE | GATT_CHARS_PROPERTIES_WRITE_WO_RESP,
-                                             3, sizeof(PanoSettings), BLE_DATATYPE_BYTEARRAY, "Configuration");
+                                             3, 20, BLE_DATATYPE_BYTEARRAY, "Configuration");
     status_char_id = gatt->addCharacteristic(STATUS_CHAR_UUID, GATT_CHARS_PROPERTIES_READ | GATT_CHARS_PROPERTIES_NOTIFY,
                                              sizeof(PanoState), sizeof(PanoState), BLE_DATATYPE_BYTEARRAY, "Status");
     cmd_char_id = gatt->addCharacteristic(CMD_CHAR_UUID, GATT_CHARS_PROPERTIES_WRITE,
@@ -59,6 +69,7 @@ void AppInterface::begin(){
     ble.setDisconnectCallback(callbackDidDisconnect);
     ble.setBleGattRxCallback(config_char_id, callbackGattRX);
     ble.setBleGattRxCallback(cmd_char_id, callbackGattRX);
+    ble.setBleUartRxCallback(callbackUartRX);
 }
     
 void AppInterface::sendStatus(){
@@ -67,33 +78,42 @@ void AppInterface::sendStatus(){
 }
 
 void AppInterface::gattRX(int32_t char_id, uint8_t* data, uint16_t len){
-    if (char_id = config_char_id){  // Configuration setting(s) received
-        while (len >= 3){
-            len -= 3;
-            uint8_t keyCode = data[0];
-            settings_t value = data[1] + 256*data[2];
-            switch (keyCode){
-                case 0x41: settings.focal = value; break;
-                case 0x42: settings.shutter = value; break;
-                case 0x43: settings.pre_shutter = value; break;
-                case 0x44: settings.post_wait = value; break;
-                case 0x45: settings.long_pulse = value; break;
-                case 0x46: settings.aspect = value; break;
-                case 0x47: settings.shots = value; break;
-                case 0x48: settings.motors_enable = value; break;
-                case 0x49: settings.motors_on = value; break;
-                case 0x50: settings.display_invert = value; break;
-                case 0x51: settings.horiz = value; break;
-                case 0x52: settings.vert = value; break;
-                default:
-                    Serial.print("Unknown config code "); Serial.println(keyCode, HEX);
-            }
-            callbacks.config();
-        }
-    } else if (char_id == cmd_char_id){ // Command received
-        uint8_t keyCode = data[0];
-        move_t move;
+    if (char_id == config_char_id || char_id == cmd_char_id){
+        uartRX(data, len);
+    }
+}
+static bool read_config(settings_t& variable, uint8_t* &data, uint16_t& len){
+    if (len >= sizeof(variable)){
+        memcpy((void*)&variable, data, sizeof(variable));
+        data += sizeof(variable);
+        len -= sizeof(variable);
+        return true;
+    }
+    return false;
+}
+void AppInterface::uartRX(uint8_t* data, uint16_t len){
+    move_t move;
+    static uint8_t keyCode;
+    bool updateConfig = false;
+    while (len-- >= 1){
+        keyCode = *data++;
         switch (keyCode){
+
+            // Configs
+            case 0x41: updateConfig |= read_config(settings.focal, data, len); break;
+            case 0x42: updateConfig |= read_config(settings.shutter, data, len); break;
+            case 0x43: updateConfig |= read_config(settings.pre_shutter, data, len); break;
+            case 0x44: updateConfig |= read_config(settings.post_wait, data, len); break;
+            case 0x45: updateConfig |= read_config(settings.long_pulse, data, len); break;
+            case 0x46: updateConfig |= read_config(settings.aspect, data, len); break;
+            case 0x47: updateConfig |= read_config(settings.shots, data, len); break;
+            case 0x48: updateConfig |= read_config(settings.motors_enable, data, len); break;
+            case 0x49: updateConfig |= read_config(settings.motors_on, data, len); break;
+            case 0x4A: updateConfig |= read_config(settings.display_invert, data, len); break;
+            case 0x4B: updateConfig |= read_config(settings.horiz, data, len); break;
+            case 0x4C: updateConfig |= read_config(settings.vert, data, len); break;
+
+            // Commands
             case 0x61: callbacks.start(); break;
             case 0x62: callbacks.cancel(); break;
             case 0x63: callbacks.pause(); break;
@@ -111,8 +131,11 @@ void AppInterface::gattRX(int32_t char_id, uint8_t* data, uint16_t len){
                 callbacks.gridMove((char)data[1]);
                 break;
             default:
-                Serial.print("Unknown command code "); Serial.println(keyCode, HEX);
+                Serial.print("Unknown code received: "); Serial.println(keyCode, HEX);
         }
+    }
+    if (updateConfig){
+        callbacks.config();
     }
 }
 
