@@ -1,12 +1,17 @@
 # Pano Controller
 
-Open Arduino-based Platform for high-resolution panoramic photography controlled via Bluetooth.
+Open Arduino-based Platform for high-resolution panoramic photography controlled via Bluetooth App.
 Started as a board replacement/upgrade for the Gigapan EPIC 100, but designed to be 
 flexible and support home-brew panoramic platforms.
 
+The design goals for the new version 2.1 are as follows:
+  1. (iOS) App is required to configure the device and start panorama (the platform cannot set up a pano without it)
+  2. (Arduino) Platform can complete a full pano once started, even if App disconnects
+  3. (iOS) App may enhance operation during pano execution (by reading status and influencing parameters)
+
 See the <a href="https://www.facebook.com/panocontroller">Official Facebook page</a> for demo videos and more progress photos.
 
-Current state: two previous stable versions but being currently redesigned to pair with an iOS app.
+Current state: two previous stable versions but being currently redesigned for 2.1 to pair with an iOS app. Past functional versions:
 - Version 1.4 is a standalone controller with joystick, IR remote and bluetooth directional pad.
 - Version 2.0 uses a separate 2.4GHz radio device for configuration and control
 - Version 2.1 (in progress) all management is done via iOS App and Bluetooth 4.0. 
@@ -159,7 +164,7 @@ lower current even, if we reduce the speed.
   - PJRC <a href="http://www.pjrc.com/store/teensylc.html">Teensy LC</a> 
   - PJRC <a href="http://www.pjrc.com/store/teensy32.html">Teensy 3.1+</a>
 - 2 x <a href="https://www.pololu.com/product/2134">DRV8834 Low-Voltage Stepper Motor Driver</a> from Pololu
-- <a href="http://www.amazon.com/Yellow-Serial-128X64-Display-Arduino/dp/B00O2LLT30">128x64 OLED display, SSD1306 I2C</a> from anywhere
+- (Optional) <a href="http://www.amazon.com/Yellow-Serial-128X64-Display-Arduino/dp/B00O2LLT30">128x64 OLED display, SSD1306 I2C</a> from anywhere
 - (for Teensy) Adafruit <a href="https://learn.adafruit.com/introducing-the-adafruit-bluefruit-spi-breakout">Bluefruit SPI Breakout</a>
 - GY-521 board with MPU-6050 6-axis accel/gyro (3.3V version)
 - Step-Down 3.3V converter (<a href="https://www.pololu.com/product/2842">Pololu D24V5F3</a>)
