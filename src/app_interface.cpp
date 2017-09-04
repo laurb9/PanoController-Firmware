@@ -131,8 +131,7 @@ void AppInterface::uartRX(uint8_t* data, uint16_t len){
                 }
                 break;
             case 0x69: // incremental move (forward or backward)
-                // TODO: check that len=2
-                if (len >= 2){
+                if (len >= 1){
                     callbacks.gridMove((char)data[0]);
                     len--;
                     data++;
