@@ -203,9 +203,14 @@ void doConfig(void){
 };
 void doStart(void){
     Serial.println("Start pano");
-    pano.start();
-    state.running = true;
-    state.paused = (settings.shutter == 0);
+    if (!state.running){
+        pano.start();
+        state.running = true;
+        state.paused = (settings.shutter == 0);
+    } else if (state.running && state.paused && settings.shutter > 0){
+        // resume a previously stopped session
+        state.paused = false;
+    }
 };
 void doCancel(void){
     Serial.println("Cancel pano");

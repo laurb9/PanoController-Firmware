@@ -123,7 +123,6 @@ void AppInterface::uartRX(uint8_t* data, uint16_t len){
             case 0x66: callbacks.goHome(); break;
             case 0x67: sendStatus(); break;
             case 0x68: // free move
-                Serial.println(2 * 2 * sizeof(settings_t));
                 if (len >= 2 * 2 * sizeof(settings_t)){
                     settings_t horiz_move, vert_move;
                     unpack(horiz_move, data, len);

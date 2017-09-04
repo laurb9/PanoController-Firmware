@@ -28,14 +28,14 @@ typedef struct {
 } PanoSettings;
 
 typedef struct  __attribute__ ((packed)) {
-    volatile float horiz_offset = 1.234;
-    volatile float vert_offset = 56.78;
+    volatile float horiz_offset = 0;
+    volatile float vert_offset = 0;
     volatile int16_t battery = 0;
     volatile int16_t position = 0;
     volatile int16_t steady_delay_avg = 0;
     volatile int8_t motors_on = 0;
     volatile int8_t running = 0;
-    volatile int8_t paused = 7;
+    volatile int8_t paused = 0;
 } PanoState;
 
 #endif /* PANO_SETTINGS_H_ */
