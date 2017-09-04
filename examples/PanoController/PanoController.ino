@@ -38,7 +38,7 @@ static Pano pano(horiz_motor, vert_motor, camera, mpu);
 
 void setup() {
     Serial.begin(38400);
-    delay(1000); // wait for serial
+    delay(2000); // wait for serial
     Serial.println("PanoController built " __DATE__ " " __TIME__);
     Serial.println("setup()");
 
@@ -65,6 +65,7 @@ void setup() {
     horiz_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
     vert_motor.begin(MOTOR_RPM, MICROSTEPS);
     vert_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+    horiz_motor.disable(); // turn off motors at startup
 
     Serial.println("Configuring Bluefruit LE");
     ble.begin(true);
