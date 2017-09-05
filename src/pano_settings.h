@@ -27,15 +27,18 @@ typedef struct {
     display_invert = 0;
 } PanoSettings;
 
+// note: this needs to be <= 20 bytes to fit in a BLE GATT characteristic
 typedef struct  __attribute__ ((packed)) {
-    volatile float horiz_offset = 0;
-    volatile float vert_offset = 0;
-    volatile int16_t battery = 0;
-    volatile int16_t position = 0;
-    volatile int16_t steady_delay_avg = 0;
-    volatile int8_t motors_on = 0;
-    volatile int8_t running = 0;
-    volatile int8_t paused = 0;
+    int16_t horiz_offset = 0;
+    int16_t vert_offset = 0;
+    int16_t rows = 0;
+    int16_t cols = 0;
+    int16_t battery = 0;
+    int16_t position = 0;
+    int16_t steady_delay_avg = 0;
+    int8_t motors_on = 0;
+    int8_t running = 0;
+    int8_t paused = 0;
 } PanoState;
 
 #endif /* PANO_SETTINGS_H_ */

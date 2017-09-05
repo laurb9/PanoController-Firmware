@@ -286,8 +286,10 @@ void loop() {
     readBattery();
     state.steady_delay_avg = pano.steady_delay_avg;
     state.position = pano.position;
-    state.horiz_offset = pano.horiz_home_offset;
-    state.vert_offset = pano.vert_home_offset;
+    state.rows = pano.getVertShots();
+    state.cols = pano.getHorizShots();
+    state.horiz_offset = int(pano.horiz_home_offset);
+    state.vert_offset = int(pano.vert_home_offset);
     state.motors_on = settings.motors_on;
     /*
      * Render state.
