@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <DRV8834.h>
+#include <MultiDriver.h>
 #include "config.h"
 #include "pano.h"
 #include "camera.h"
@@ -32,9 +33,10 @@ AppInterface app(ble, settings, state);
 
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
-static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
-static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
-static Pano pano(horiz_motor, vert_motor, camera, mpu);
+DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
+DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
+static MultiDriver motors(horiz_motor, vert_motor);
+static Pano pano(motors, camera, mpu);
 
 void setup() {
     Serial.begin(38400);
@@ -62,10 +64,10 @@ void setup() {
 
     Serial.println("Configuring stepper drivers");
     horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
-    horiz_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
     vert_motor.begin(MOTOR_RPM, MICROSTEPS);
-    vert_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-    horiz_motor.disable(); // turn off motors at startup
+    motors.disable(); // turn off motors at startup
+    horiz_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+    vert_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
 
     Serial.println("Configuring Bluefruit LE");
     ble.begin(true);
@@ -276,10 +278,17 @@ const app_callbacks callbacks = {
 };
 
 void loop() {
+    static unsigned long next_event_time = 0;
     /*
-     * Check if anything was sent to us
+     * Run Pano async execution thread
      */
-    app.poll(20);
+    if (micros() >= next_event_time){
+        next_event_time = pano.pollEvent();
+    }
+    /*
+     * BLE App async receive & execute thread
+     */
+    app.poll(min(micros() - next_event_time, 20));
     /*
      * Collect and send state to menu navigator
      */
@@ -292,12 +301,7 @@ void loop() {
     state.vert_offset = int(pano.vert_home_offset);
     state.motors_on = settings.motors_on;
     /*
-     * Render state.
-     * TODO: We should do this only if anything has changed though.
-     */
-    //displayPanoStatus(true);
-    /*
-     * Execute pano
+     * Update status to BLE App and display
      */
     if (ble.isConnected() || state.running){
         if (!settings.motors_enable || state.running){
@@ -308,6 +312,10 @@ void loop() {
         display.clearDisplay();
         display.display();
     }
+    /*
+     * In-progress pano execution
+     * TODO: move to Pano async execution thread
+     */
     if (state.running){
         if (!state.paused){
             pano.shutter();
@@ -317,8 +325,11 @@ void loop() {
             };
         };
     } else {
+        // App can only control motors state when pano is not running
         pano.motorsEnable(state.motors_on);
     };
-
+    /*
+     * Yield to other processes (ESP8266 and others)
+     */
     yield();
 }
