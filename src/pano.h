@@ -108,7 +108,9 @@ public:
     void moveMotorsHome(void);
     void moveMotors(float h, float v);
 
-    // async operation
+    // async operation (WIP)
+    void startMove(float h, float v);
+    void endMove(void);
     unsigned long pollEvent(void);
 };
 

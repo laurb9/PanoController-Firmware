@@ -235,12 +235,38 @@ void Pano::moveMotors(float h, float v){
 /*
  * Prepare moving motors requested number of degrees
  */
-
+void Pano::startMove(float h, float v){
+    motors.startRotate(h * HORIZ_GEAR_RATIO, v * VERT_GEAR_RATIO);
+}
+/*
+ * End a previously start move.
+ */
+void Pano::endMove(void){
+    motors.startBrake();
+    // TODO: make this async too later ?
+    while (unsigned long next_event = motors.nextAction()){
+        microWaitUntil(micros() + next_event);
+    }
+}
 /*
  * Run async operations if needed
  */
 unsigned long Pano::pollEvent(void){
     static unsigned long next_event_time = micros();
+    if (micros() > next_event_time){
+        // for now the only async operation is the motor move
+        // Pointless at this time because BLE polling takes 4000us and we need 50us spacing.
+        while (motors.isRunning()){
+            next_event_time = motors.nextAction();
+            Serial.println(next_event_time);
+            if (next_event_time < 25){ // if main loop cannot complete this fast, just wait here
+                microWaitUntil(micros() + next_event_time);
+            } else {
+                next_event_time = micros() + next_event_time;
+                break;
+            }
+        }
+    }
     return next_event_time;
 }
 
