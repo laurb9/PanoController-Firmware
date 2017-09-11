@@ -22,15 +22,6 @@
 // Battery measurement pin R1/R2
 #define BATTERY A0
 
-// Joystick inputs
-#define JOYSTICK_X A3
-#define JOYSTICK_Y A2
-#define JOYSTICK_SW A1
-#define CANCEL_PIN A8
-
-// IR remote
-#define REMOTE_IN 3
-
 // MPU (accel/gyro)
 #define MPU_INT 2
 

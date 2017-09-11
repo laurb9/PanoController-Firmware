@@ -14,10 +14,10 @@ MPU::MPU(const int address, const int int_pin)
 :address(address),
  int_pin(int_pin)
 {
-    pinMode(int_pin, INPUT_PULLUP);
 }
 
-void MPU::init(void){
+void MPU::begin(void){
+    pinMode(int_pin, INPUT_PULLUP);
     Wire.begin();
     Wire.beginTransmission(address);
     Wire.write(MPU6050_RA_PWR_MGMT_1);

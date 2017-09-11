@@ -1,13 +1,19 @@
 /*
  * Pano engine
  *
- * Copyright (C)2016 Laurentiu Badea
+ * Copyright (C)2016,2017 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 
 #include "pano.h"
+
+//{ FIXME: temporary, make them static in .ino once resolved
+#include <BasicStepperDriver.h>
+extern BasicStepperDriver horiz_motor;
+extern BasicStepperDriver vert_motor;
+//}
 
 PanoSetup::PanoSetup(Camera& camera)
 :camera(camera)
@@ -55,16 +61,16 @@ int PanoSetup::getCurCol(void){
 /*
  * Calculate time left to complete pano.
  */
-unsigned PanoSetup::getTimeLeft(void){
+unsigned Pano::getTimeLeft(void){
     int photos = getHorizShots() * getVertShots() - position + 1;
     int seconds = photos * shots_per_position * (pre_shutter_delay + steady_delay_avg + shots_per_position * (shutter_delay + post_shutter_delay)) / 1000 +
         // time needed to move the platform
         // each photo requires a horizontal move (except last one in each row)
-        (photos - photos/horiz_count) * camera.getHorizFOV() * HORIZ_GEAR_RATIO * 60 / DYNAMIC_RPM(HORIZ_MOTOR_RPM, camera.getHorizFOV()) / 360 +
+        (photos - photos/horiz_count) * camera.getHorizFOV() * HORIZ_GEAR_RATIO * 60 / horiz_motor.getRPM() / 360 +
         // row-to-row movement
-        photos / horiz_count * camera.getVertFOV() * VERT_GEAR_RATIO * 60 / DYNAMIC_RPM(VERT_MOTOR_RPM, camera.getVertFOV()) / 360 +
+        photos / horiz_count * camera.getVertFOV() * VERT_GEAR_RATIO * 60 / vert_motor.getRPM() / 360 +
         // row return horizontal movement
-        photos / horiz_count * horiz_fov * 60 / HORIZ_MOTOR_RPM / 360;
+        photos / horiz_count * horiz_fov * 60 / horiz_motor.getRPM() / 360;
     return seconds;
 }
 
@@ -107,22 +113,22 @@ void PanoSetup::computeGrid(void){
 /*
  * Actual platform driver part
  */
-Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu)
+Pano::Pano(MultiDriver& motors, Camera& camera, MPU& mpu)
 :PanoSetup(camera),
- horiz_motor(horiz_motor),
- vert_motor(vert_motor),
+ motors(motors),
  mpu(mpu)
 {
-    motorsEnable(false);
-
     setFOV(360,180);
+}
+
+// begin() follows Arduino convention for setup code
+void Pano::begin(void){
+    motorsEnable(false);
 }
 
 void Pano::start(void){
     computeGrid();
     motorsEnable(true);
-    horiz_motor.setRPM(HORIZ_MOTOR_RPM);
-    vert_motor.setRPM(VERT_MOTOR_RPM);
     // set start position
     setMotorsHomePosition();
     position = 0;
@@ -154,6 +160,7 @@ bool Pano::moveTo(int new_position){
 bool Pano::moveTo(int new_row, int new_col){
     int cur_row = getCurRow();
     int cur_col = getCurCol();
+    float h_move = 0, v_move = 0;
 
     if (cur_row >= vert_count ||
         new_row >= vert_count ||
@@ -168,21 +175,21 @@ bool Pano::moveTo(int new_row, int new_col){
         // horizontal adjustment needed
         // figure out shortest path around the circle
         // good idea if on batteries, bad idea when power cable in use
-        float move = (new_col-cur_col) * horiz_move;
-        if (abs(move) > 180){
-            if (move < 0){
-                move = 360 + move;
+        h_move = (new_col-cur_col) * horiz_move;
+        if (abs(h_move) > 180){
+            if (h_move < 0){
+                h_move = 360 + h_move;
             } else {
-                move = move - 360;
+                h_move = h_move - 360;
             }
         }
-        moveMotorsAdaptive(move, 0);
     }
     if (cur_row != new_row){
         // vertical adjustment needed
-        moveMotorsAdaptive(0, -(new_row-cur_row)*vert_move);
+        v_move = -(new_row-cur_row)*vert_move;
     }
 
+    moveMotors(h_move, v_move);
     position = new_row * horiz_count + new_col;
     return true;
 }
@@ -217,39 +224,60 @@ void Pano::setMotorsHomePosition(void){
 }
 
 /*
- * Move head requested number of degrees at an adaptive speed
- */
-void Pano::moveMotorsAdaptive(float h, float v){
-    if (h){
-        horiz_motor.setRPM(DYNAMIC_HORIZ_RPM(h));
-    }
-    if (v){
-        vert_motor.setRPM(DYNAMIC_VERT_RPM(v));
-    }
-    moveMotors(h, v);
-}
-/*
- * Move head requested number of degrees, fixed predefined speed
+ * Move head requested number of degrees
  */
 void Pano::moveMotors(float h, float v){
-    if (h){
-        horiz_motor.rotate(h * HORIZ_GEAR_RATIO);
-        horiz_home_offset += h;
+    motors.rotate(h * HORIZ_GEAR_RATIO, v * VERT_GEAR_RATIO);
+    horiz_home_offset += h;
+    vert_home_offset += v;
+}
+
+/*
+ * Prepare moving motors requested number of degrees
+ */
+void Pano::startMove(float h, float v){
+    motors.startRotate(h * HORIZ_GEAR_RATIO, v * VERT_GEAR_RATIO);
+}
+/*
+ * End a previously start move.
+ */
+void Pano::endMove(void){
+    motors.startBrake();
+    // TODO: make this async too later ?
+    while (unsigned long next_event = motors.nextAction()){
+        microWaitUntil(micros() + next_event);
     }
-    if (v){
-        vert_motor.rotate(v * VERT_GEAR_RATIO);
-        vert_home_offset += v;
+}
+/*
+ * Run async operations if needed
+ */
+unsigned long Pano::pollEvent(void){
+    static unsigned long next_event_time = micros();
+    if (micros() > next_event_time){
+        // for now the only async operation is the motor move
+        // Pointless at this time because BLE polling takes 4000us and we need 50us spacing.
+        while (motors.isRunning()){
+            next_event_time = motors.nextAction();
+            Serial.println(next_event_time);
+            if (next_event_time < 25){ // if main loop cannot complete this fast, just wait here
+                microWaitUntil(micros() + next_event_time);
+            } else {
+                next_event_time = micros() + next_event_time;
+                break;
+            }
+        }
     }
+    return next_event_time;
 }
 
 /*
  * Move head back to home position
  */
 void Pano::moveMotorsHome(void){
-    moveMotorsAdaptive(-horiz_home_offset, -vert_home_offset);
+    moveMotors(-horiz_home_offset, -vert_home_offset);
 }
 
 void Pano::motorsEnable(bool on){
-    (on) ? horiz_motor.enable() : horiz_motor.disable();
+    (on) ? motors.enable() : motors.disable();
     delay(1);
 }

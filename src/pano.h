@@ -1,14 +1,14 @@
 /*
  * Pano engine
  *
- * Copyright (C)2016 Laurentiu Badea
+ * Copyright (C)2016,2017 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 #ifndef PANO_H_
 #define PANO_H_
-#include <BasicStepperDriver.h>
+#include <MultiDriver.h>
 #include "camera.h"
 #include "mpu.h"
 #include "pano_settings.h"
@@ -16,24 +16,6 @@
 // Calculate maximum allowed movement at given focal length and shutter
 // =angular velocity that would cause a pixel to overlap next one within shot time
 #define STEADY_TARGET(fov, shutter, resolution) (100*1000/shutter*fov/resolution)
-// how long to wait for steady camera before giving up (ms)
-#define STEADY_TIMEOUT 10000
-#define CAMERA_RESOLUTION 4000
-
-#define Motor BasicStepperDriver
-// can do 60 @ 0.8A, 20 @ 0.3A & 1:16
-#define HORIZ_MOTOR_RPM 20
-// can do 180 @ 0.8A. 60 @ 0.3A & 1:16
-#define VERT_MOTOR_RPM 60
-#define HORIZ_GEAR_RATIO 5 /* 1:5 */
-#define VERT_GEAR_RATIO 15 /* 1:15 */
-
-#define MIN_OVERLAP 20
-
-// formula used to lower speed for short movements, to reduce shake
-#define DYNAMIC_RPM(rpm, angle) ((abs(angle)>10) ? rpm : rpm/4)
-#define DYNAMIC_HORIZ_RPM(angle) DYNAMIC_RPM(HORIZ_MOTOR_RPM, angle)
-#define DYNAMIC_VERT_RPM(angle) DYNAMIC_RPM(VERT_MOTOR_RPM, angle)
 
 class PanoSetup {
 protected:
@@ -51,6 +33,19 @@ protected:
     // Number of vertical shots to cover vertical FOV
     int vert_count;
 public:
+    // how long to wait for steady camera before giving up (ms)
+    const unsigned STEADY_TIMEOUT = 10000;
+    const unsigned CAMERA_RESOLUTION = 4000;
+
+    /*
+     * Platform physical parameters
+     */
+    const unsigned short HORIZ_GEAR_RATIO = 5; // 1:5
+    const unsigned short VERT_GEAR_RATIO = 15; // 1:15
+
+    // position overlap, in percent
+    const unsigned short MIN_OVERLAP = 25;
+
     // Current photo position
     unsigned position = 0;
     // How many degrees to move horizontally to advance to next column
@@ -74,13 +69,11 @@ public:
     // pano info
     int getCurRow(void);
     int getCurCol(void);
-    unsigned getTimeLeft(void);
 };
 
 class Pano : public PanoSetup {
 protected:
-    Motor& horiz_motor;
-    Motor& vert_motor;
+    MultiDriver& motors;
     MPU& mpu;
     // state information
 public:
@@ -90,7 +83,11 @@ public:
 
     unsigned steady_delay_avg = 100;
 
-    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu);
+    Pano(MultiDriver& motors, Camera& camera, MPU& mpu);
+    void begin(void);
+
+    // pano info
+    unsigned getTimeLeft(void);
 
     // pano execution
     void start(void);
@@ -110,7 +107,11 @@ public:
     void setZeroElevation(void);
     void moveMotorsHome(void);
     void moveMotors(float h, float v);
-    void moveMotorsAdaptive(float h, float v);
+
+    // async operation (WIP)
+    void startMove(float h, float v);
+    void endMove(void);
+    unsigned long pollEvent(void);
 };
 
 #endif /* PANO_H_ */
