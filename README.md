@@ -11,14 +11,9 @@ The design goals for the new version 2.1 are as follows:
 
 See the <a href="https://www.facebook.com/panocontroller">Official Facebook page</a> for demo videos and more progress photos.
 
-Current state: two previous stable versions but being currently redesigned for 2.1 to pair with an iOS app. Past functional versions:
-- Version 1.4 is a standalone controller with joystick, IR remote and bluetooth directional pad.
-- Version 2.0 uses a separate 2.4GHz radio device for configuration and control
-- Version 2.1 (in progress) all management is done via iOS App and Bluetooth 4.0. 
 Will need the <a href="https://github.com/laurb9/PanoController">Pano Controller iOS App</a> (also in development).
 
 <img src="images/prototype.jpg" width="400" alt="Pano Controller 2.0 Executor Boards installed in Gigapan EPIC 100">
-<img src="images/navigator.jpg" width="400" alt="Pano Controller 2.0 Remote Navigator Unit">
 <img src="images/pano-info.jpg" width="200" alt="Pano Controller 2.0 Information Display">
 
 ## Features:
@@ -34,22 +29,16 @@ Will need the <a href="https://github.com/laurb9/PanoController">Pano Controller
   - Grid size and position
 - Precision movement control
 - Multiple delay options: pre-shutter and post-shutter, short or long shutter pulse (for bracketing).
-- Bluetooth joystick control via phone
-- Radio Remote Menu Navigation unit (2.0 only)
 
 ### Hardware
 - 32-bit ARM controllers (Gigapan had 8-bit AVR)
 - OLED 128x64 display
-- Radio-controlled joystick menu navigation
+- Bluetooth LE control via iOS App
 - Can operate with battery voltage from 10V down to 6V
 
 ## Wiring map
 
-Previous versions wiring and code:
-- https://github.com/laurb9/pano-controller/tree/v1.4
-- https://github.com/laurb9/pano-controller/tree/v2.0-beta
-
-Current wiring is a work in progress. A BLE device is now required for iOS connectivity.
+Wiring is still a work in progress. An Adafruit BLE device is now required for iOS connectivity.
 
 ### Controller
 
@@ -86,7 +75,6 @@ Bluefruit SPI Friend is required.
 #### Feather M0 / Bluefruit
 
 Status: in active development. Using onboard Feather/BLE. 
-
 - A0
 - A1
 - A2
@@ -197,3 +185,14 @@ The only thing required of the platform is the two horiz/vert stepper motors.
   - Notes: 
     - the DRV8834 current limit must be set according to motor spec
     - reduction gear settings are hardcoded in pano.h
+
+## Previous Versions
+
+Two previous stable versions:
+- Version 1.4 is a standalone controller with joystick, IR remote and bluetooth directional pad.
+  - https://github.com/laurb9/pano-controller/tree/v1.4
+- Version 2.0 uses a separate 2.4GHz radio device for configuration and control
+  - https://github.com/laurb9/pano-controller/tree/v2.0-beta
+
+<img src="images/navigator.jpg" width="400" alt="Pano Controller 2.0 Remote Navigator Unit">
+
