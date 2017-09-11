@@ -8,12 +8,10 @@
  */
 #ifndef PANO_H_
 #define PANO_H_
-#include <BasicStepperDriver.h>
+#include <MultiDriver.h>
 #include "camera.h"
 #include "mpu.h"
 #include "pano_settings.h"
-
-#define Motor BasicStepperDriver
 
 // Calculate maximum allowed movement at given focal length and shutter
 // =angular velocity that would cause a pixel to overlap next one within shot time
@@ -75,8 +73,7 @@ public:
 
 class Pano : public PanoSetup {
 protected:
-    Motor& horiz_motor;
-    Motor& vert_motor;
+    MultiDriver& motors;
     MPU& mpu;
     // state information
 public:
@@ -86,7 +83,8 @@ public:
 
     unsigned steady_delay_avg = 100;
 
-    Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu);
+    Pano(MultiDriver& motors, Camera& camera, MPU& mpu);
+    void begin(void);
 
     // pano info
     unsigned getTimeLeft(void);
@@ -109,6 +107,11 @@ public:
     void setZeroElevation(void);
     void moveMotorsHome(void);
     void moveMotors(float h, float v);
+
+    // async operation (WIP)
+    void startMove(float h, float v);
+    void endMove(void);
+    unsigned long pollEvent(void);
 };
 
 #endif /* PANO_H_ */

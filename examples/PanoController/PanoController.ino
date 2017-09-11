@@ -1,5 +1,7 @@
 /*
- * Pano Controller for Arduino project
+ * Bluetooth 4.0 Pano Controller
+ *
+ * Pano Controller configured via phone (iOS)
  *
  * Copyright (C)2015-2017 Laurentiu Badea
  *
@@ -9,20 +11,15 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <DRV8834.h>
-#include <Adafruit_BLE.h>
-#include <Adafruit_BluefruitLE_SPI.h>
+#include <MultiDriver.h>
 #include "config.h"
 #include "pano.h"
 #include "camera.h"
-#include "hid.h"
-#include "joystick.h"
-#include "remote.h"
-#include "ble_remote.h"
-#include "menu.h"
 #include "display.h"
 #include "mpu.h"
+#include "app_interface.h"
 
-// these variables are modified by the menu
+// these variables are updated via Bluetooth
 PanoSettings settings;
 
 // This is the panorama engine state
@@ -30,401 +27,309 @@ PanoSettings settings;
 PanoState state;
 
 static Display display(OLED_RESET);
-Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
+
+static Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
+AppInterface app(ble, settings, state);
 
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
-static Joystick joystick(JOYSTICK_X, JOYSTICK_Y, JOYSTICK_SW, CANCEL_PIN);
-static Remote remote(REMOTE_IN);
-static BLERemote ble_remote(ble);
-// HID (Human Interface Device) Combined joystick+remote
-static AllHID hid(3, new HID* const[3] {&joystick, &remote, &ble_remote});
 static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
-static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
-static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
-static Pano* pano;
-static Menu* menu;
+DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
+DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
+static MultiDriver motors(horiz_motor, vert_motor);
+static Pano pano(motors, camera, mpu);
 
 void setup() {
     Serial.begin(38400);
-    delay(1000); // wait for serial
+    delay(2000); // wait for serial
+    Serial.println("PanoController built " __DATE__ " " __TIME__);
+    Serial.println("setup()");
 
+    display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
+    display.setRotation(0);
+    display.clearDisplay();
+    display.setTextCursor(0,0);
+    display.setTextColor(WHITE);
+    display.setTextSize(TEXT_SIZE);
+
+    Serial.println("Checking Camera Shutter Connection");
+    pinMode(CAMERA_FOCUS, INPUT_PULLDOWN);
+    pinMode(CAMERA_SHUTTER, INPUT_PULLDOWN);
+    Serial.print("  Focus: ");
+    Serial.println((digitalRead(CAMERA_FOCUS) ? "OK" : "N/C"));
+    Serial.print("  Shutter: ");
+    Serial.println((digitalRead(CAMERA_SHUTTER) ? "OK" : "N/C"));
+
+    Serial.println("Configuring MPU");
+    mpu.begin();
+
+    Serial.println("Configuring stepper drivers");
+    horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
+    vert_motor.begin(MOTOR_RPM, MICROSTEPS);
+    motors.disable(); // turn off motors at startup
+    horiz_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+    vert_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+
+    Serial.println("Configuring Bluefruit LE");
     ble.begin(true);
     ble.echo(false);     // disable command echo
     ble.factoryReset();
     ble.info();
     ble.verbose(false);  // turn off debug info
 
-    // LED Activity command is only supported from 0.6.6
-    ble.sendCommandCheckOK("AT+HWModeLED=BLEUART");
-    ble.sendCommandCheckOK("AT+GAPDEVNAME=Pano Controller");
+    Serial.println("Initializing BLE App Communication");
+    app.begin();
 
-    display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
-    //display.setRotation(2);
-    display.clearDisplay();
-    display.setTextCursor(0,0);
-    display.setTextColor(WHITE);
-    display.setTextSize(TEXT_SIZE);
+    ble.sendCommandCheckOK("AT+BLEBATTEN=1"); // enable battery service
+    // ble.sendCommandCheckOK("AT+BLEPOWERLEVEL=0"); // can be used to change transmit power
 
-    joystick.begin();
-    remote.begin();
-
-    mpu.begin();
-
-    horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
-    horiz_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-    vert_motor.begin(MOTOR_RPM, MICROSTEPS);
-    vert_motor.setSpeedProfile(LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-
-    pano = new Pano(horiz_motor, vert_motor, camera, mpu);
-
-    //pinMode(COMPASS_DRDY, INPUT_PULLUP);
-
+    Serial.print("Checking battery voltage... ");
+    // Configure input pin and ADC for reading battery voltage
     pinMode(BATTERY, INPUT);
 #if defined(__MK20DX256__) || defined(__MKL26Z64__)
     analogReadRes(10);
     analogReadAveraging(32);
 #endif
+    readBattery();
+    Serial.print(abs(state.battery)); Serial.println("mV");
 
-    menu = getMainMenu(settings);
+    Serial.println("Waiting to connect...");
+    display.printf("Waiting to connect...");
+    display.display();
+
+    while (!app.isConnected()) app.poll(100);
+
+    Serial.println("Connected, waiting for config data");
+
+    pano.begin();
 }
-
 
 void readBattery(void){
-    state.battery = map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE);
-}
-
-/*
- * Add a status overlay (currently battery and bluetooth status)
- */
-void displayStatusOverlay(void){
-
-    // Print battery voltage at cursor, format is #.#V (4 chars)
-    display.setTextCursor(0, 16);
-    // poor attempt at blinking
-    if (state.battery < LOW_BATTERY && millis() & 1024){
-        display.setTextColor(BLACK, WHITE);
-    }
-    display.printf("%2d.%dV", state.battery/1000, (state.battery % 1000)/100);
-    display.setTextColor(WHITE, BLACK);
-
-    // show a character indicating bluetooth is connected
-    if (ble_remote.active){
-        display.setTextCursor(0,15);
-        display.print("\xe8");
+    // mV
+    state.battery = map(analogRead(BATTERY), 0, (1<<10)-1, 0, BATT_RANGE/100) * 100;
+    if (state.battery < LOW_BATTERY){
+        state.battery = -state.battery;
+        ble.sendCommandCheckOK("AT+BLEBATTVAL=10");  // battery at 10% 
+    } else {
+        ble.sendCommandCheckOK("AT+BLEBATTVAL=100"); // battery full
     }
 }
 
 /*
  * Display current panorama status (photo index, etc)
  */
-void displayPanoStatus(void){
-    readBattery();
+void displayPanoStatus(bool complete){
     display.clearDisplay();
     display.setTextCursor(0,0);
+    int photos = pano.getHorizShots() * pano.getVertShots();
 
-    display.printf("Photo %d of %d\n", pano->position+1, pano->getHorizShots()*pano->getVertShots());
-    display.printf("At %d x %d\n", 1+pano->getCurRow(), 1+pano->getCurCol());
-    displayPanoSize();
-    displayStatusOverlay();
-    displayProgress();
-    display.display();
-}
-/*
- * Display progress information (minutes / progress bar)
- */
-void displayProgress(void){
-    int photos = pano->getHorizShots() * pano->getVertShots();
-    display.setTextCursor(6, 0);
-    display.printf("%d minutes ", pano->getTimeLeft()/60);
-    if (pano->steady_delay_avg > 500){
-        display.setTextCursor(6, 16);
-        display.printf("%2ds ", (pano->steady_delay_avg+500)/1000);
-        display.printf((pano->steady_delay_avg < 8000) ? "\x12" : "!");
+    if (state.running){
+        display.printf("# %d of %d\n", pano.position+1, photos);
+        display.printf("at %d x %d\n", 1+pano.getCurRow(), 1+pano.getCurCol());
+    } else {
+        display.printf("%d photos\n\n", photos);
     }
-    display.setTextCursor(7, 0);
-    for (int i=(pano->position+1) * DISPLAY_COLS / photos; i > 0; i--){
-        display.print('\xda');
-    }
-    display.println();
-}
-/*
- * Display panorama information
- */
-void displayPanoInfo(void){
+    display.printf("grid %d x %d \n", pano.getVertShots(), pano.getHorizShots());
+
     float horiz_fov = camera.getHorizFOV();
     float vert_fov = camera.getVertFOV();
-    readBattery();
-    display.clearDisplay();
-    display.setTextCursor(0,0);
+    display.setTextCursor(3,0);
     display.printf("Lens: %dmm\n", settings.focal);
     display.printf("      %d.%d x %d.%d\n",
                    int(horiz_fov), round(10*(horiz_fov-int(horiz_fov))),
                    int(vert_fov), round(10*(vert_fov-int(vert_fov))));
-    display.printf("Pano FOV %d x %d \n", pano->horiz_fov, pano->vert_fov);
-    displayPanoSize();
-    display.printf("%d photos\n", pano->getHorizShots()*pano->getVertShots());
-    displayProgress();
-    displayStatusOverlay();
-    display.display();
-}
+    display.printf("Pano %d x %d deg\n", pano.horiz_fov, pano.vert_fov);
 
-/*
- * Display the panorama grid size
- */
-void displayPanoSize(){
-    display.printf("Grid %d x %d \n", pano->getVertShots(), pano->getHorizShots());
-}
+    // Print battery voltage at cursor, format is #.#V (4 chars)
+    display.setTextCursor(0, 16);
+    // poor attempt at blinking
+    if (state.battery < 0 && millis() & 1024){
+        display.setTextColor(BLACK, WHITE);
+    }
+    display.printf("%2d.%dV", abs(state.battery)/1000, (abs(state.battery) % 1000)/100);
+    display.setTextColor(WHITE, BLACK);
 
-/*
- * Display the four navigation arrows, cancel and OK buttons.
- */
-void displayArrows(){
-    display.setTextCursor(3, 0);
-    display.println("          \x1e         \n"
-                    " [X]     \x11+\x10    [OK]\n"
-                    "          \x1f         ");
-    display.display();
-}
-
-/*
- * Let user move the camera while optionally recording position
- * @param msg:   title string
- * @param horiz: pointer to store horizontal movement
- * @param vert:  pointer to store vertical movement
- */
-bool positionCamera(const char *msg, settings_t *horiz, settings_t *vert){
-    float pos_x, pos_y;
-    float step = min(camera.getHorizFOV(), camera.getVertFOV())/5;
-
-    display.clearDisplay();
-    display.setTextCursor(0,0);
-    display.println(msg);
-    displayArrows();
-    pano->motorsEnable(true);
-
-    if (horiz || vert){
-        pano->setMotorsHomePosition();
+    // motors active
+    if (state.running){
+        display.setTextCursor(0,14);
+        display.print("*");
     }
 
-    while (true){
-        hid.read();
-        if (hid.isLastEventOk() || hid.isLastEventCancel()) break;
-
-        pos_x = 0;
-        if (hid.isLastEventRight() || joystick.getPositionX() > 0) pos_x = step;
-        if (hid.isLastEventLeft() || joystick.getPositionX() < 0) pos_x = -step;
-        if (pos_x && horiz){
-            if (pos_x < -pano->horiz_home_offset){
-                pos_x = -pano->horiz_home_offset;
-            } else if (abs(pos_x + pano->horiz_home_offset) + camera.getHorizFOV() > 360){
-                pos_x = 360 - camera.getHorizFOV() - pano->horiz_home_offset;
-            }
-        }
-
-        pos_y = 0;
-        if (hid.isLastEventUp() || joystick.getPositionY() > 0) pos_y = step;
-        if (hid.isLastEventDown() || joystick.getPositionY() < 0) pos_y= -step;
-        if (pos_y && vert){
-            if (pos_y > -pano->vert_home_offset){
-                pos_y = -pano->vert_home_offset;
-            } else if (-(pos_y + pano->vert_home_offset) + camera.getVertFOV() > 180){
-                pos_y = -(180 - camera.getVertFOV() + pano->vert_home_offset);
-            }
-        }
-
-        if (vert && !pos_x && !pos_y){
-            pano->setFOV((horiz) ? abs(pano->horiz_home_offset) + camera.getHorizFOV() : 360,
-                        abs(pano->vert_home_offset) + camera.getVertFOV());
-            pano->computeGrid();
-            display.setTextCursor(6, 0);
-            display.print("          ");
-            display.setTextCursor(6, 0);
-            displayPanoSize();
-            display.printf("FOV %d x %d ", pano->horiz_fov, pano->vert_fov);
-            readBattery();
-            displayStatusOverlay();
-            display.display();
-        }
-
-        if (pos_x || pos_y){
-            pano->moveMotors(pos_x, pos_y);
-        }
+    // radio connection status
+    display.setTextCursor(0,15);
+    if (ble.isConnected()){
+        display.print("^");
+    } else {
+        display.print("X");
     }
 
-    if (horiz || vert){
-        if (horiz){
-            *horiz = abs(pano->horiz_home_offset) + camera.getHorizFOV();
-        }
-        if (vert){
-            *vert = abs(pano->vert_home_offset) + camera.getVertFOV();
-        }
-        pano->moveMotorsHome();
+    display.setTextCursor(6, 0);
+    if (state.position + 1 < photos){
+        display.printf("%d minutes ", pano.getTimeLeft()/60);
     }
-    return (hid.isLastEventOk());
-}
+    if (pano.steady_delay_avg > 500){
+        display.setTextCursor(6, 16);
+        display.printf("%2ds ", (pano.steady_delay_avg+500)/1000);
+        display.printf((pano.steady_delay_avg < 8000) ? "\x12" : "!");
+    }
 
-/*
- * Execute panorama from start to finish.
- * Button click interrupts.
- */
-void executePano(void){
-
-    hid.clear(4000);
-    pano->start();
-
-    while (state.running){
-        displayPanoStatus();
-        if (!pano->position){
-            delay(2000);
-        }
-        if (settings.shutter > 0){
-            pano->shutter();
-        }
-
-        if (settings.shutter == 0 || hid.read()){
-            hid.clear(1000);
-            // button was clicked mid-pano or we are in manual shutter mode
-            displayPanoStatus();
-            displayArrows();
-            while (state.running){
-                if (!hid.read()) continue;
-                else if (hid.isLastEventLeft()) pano->prev();
-                else if (hid.isLastEventRight()) pano->next();
-                else if (hid.isLastEventUp()) pano->moveTo(pano->getCurRow() - 1, pano->getCurCol());
-                else if (hid.isLastEventDown()) pano->moveTo(pano->getCurRow() + 1, pano->getCurCol());
-                else if (hid.isLastEventOk()) break;
-                else if (hid.isLastEventCancel()){
-                    state.running = false;
-                    break;
-                }
-                displayPanoStatus();
-                displayArrows();
-            }
-        }
-        state.running = state.running && pano->next();
+    // show progress bar
+    if (state.running){
+        display.setTextCursor(7, 0);
+        for (int i=(pano.position+1) * DISPLAY_COLS / photos; i > 0; i--){
+            display.print('\xdb');
+        };
     };
-
-    state.running = false;
-    displayPanoStatus();
-
-    pano->end();
-
-    hid.waitAnyKey();
+    if (complete){
+        display.display();
+    }
 }
 
 /*
- * Update common camera and pano settings from external vars
+ * Update camera and pano settings
  */
 void setPanoParams(void){
-    menu->cancel();
     camera.setAspect(settings.aspect);
     camera.setFocalLength(settings.focal);
-    pano->setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
-    pano->setShots(settings.shots);
+    pano.setShutter(settings.shutter, settings.pre_shutter, settings.post_wait, settings.long_pulse);
+    pano.setShots(settings.shots);
+    pano.setFOV(settings.horiz, settings.vert);
+    pano.computeGrid();
+    // pano.position = state.position;
 }
 
 /*
- * Menu callback invoked by selecting "Start"
+ * Callbacks for commands received from app
  */
-int onStart(int __){
+void doConfig(void){
     setPanoParams();
-
-    // set panorama FOV
-    if (!positionCamera("Set Top Left", NULL, NULL) ||
-        !positionCamera("Set Bottom Right", &settings.horiz, &settings.vert)){
-        return false;
-    }
-
-    pano->setFOV(settings.horiz, settings.vert);
-    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
-        return false;
-    }
-    state.running = true;
-    menu->sync();
-    executePano();
-    return __;
-}
-
-/*
- * Menu callback invoked by selecting "Repeat"
- */
-int onRepeat(int __){
-    setPanoParams();
-
-    pano->setFOV(settings.horiz, settings.vert);
-    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
-        return false;
-    }
-    state.running = true;
-    menu->sync();
-    executePano();
-    return __;
-}
-
-/*
- * Menu callback invoked by selecting "Repeat"
- */
-int on360(int __){
-    setPanoParams();
-
-    // set panorama FOV
-    settings.horiz = 360;
-    if (!positionCamera("Set Top", NULL, NULL) ||
-        !positionCamera("Set Bottom", NULL, &settings.vert)){
-        return false;
-    }
-
-    pano->setFOV(settings.horiz, settings.vert);
-    if (!positionCamera("Adjust start pos\nSet exposure & focus", NULL, NULL)){
-        return false;
-    }
-    state.running = true;
-    menu->sync();
-    executePano();
-    return __;
-}
-
-/*
- * Menu callback for displaying last pano info
- */
-int onPanoInfo(int __){
-    setPanoParams();
-    pano->setFOV(settings.horiz, settings.vert);
-    pano->computeGrid();
-    displayPanoInfo();
-    hid.waitAnyKey();
-    return __;
-}
-
-/*
- * Menu callback for testing camera shutter
- */
-int onTestShutter(int __){
-    setPanoParams();
-    pano->shutter();
-    return __;
-}
-
-/*
- * Menu callback for displaying About... info
- */
-int onAboutPanoController(int __){
-    display.clearDisplay();
-    display.setTextCursor(2, 0);
-    display.print("Pano Controller\n\n"
-                  "Built " __DATE__ "\n"
-                  __TIME__ "\n");
-    display.display();
-    hid.waitAnyKey();
-    return __;
-}
-
-void onMenuLoop(bool updated){
-    displayStatusOverlay();
     display.invertDisplay(settings.display_invert);
-    pano->motorsEnable(settings.motors_enable);
+};
+void doStart(void){
+    Serial.println("Start pano");
+    if (!state.running){
+        pano.start();
+        state.running = true;
+        state.paused = (settings.shutter == 0);
+    } else if (state.running && state.paused && settings.shutter > 0){
+        // resume a previously stopped session
+        state.paused = false;
+    }
+};
+void doCancel(void){
+    Serial.println("Cancel pano");
+    pano.end();
+    state.running = false;
+    state.paused = false;
+};
+void doPause(void){
+    Serial.println("Pause pano");
+    if (state.running){
+        state.paused = true;
+    }
+};
+void doShutter(void){
+    Serial.println("Shutter");
+    pano.shutter();
+    if (state.running){ // manual shutter mode, advance to next
+        state.running = pano.next();
+        if (!state.running){
+            pano.end();
+        }
+    }
+};
+void doSetHome(void){
+    Serial.println("Set home");
+    pano.setMotorsHomePosition();
+};
+void doGoHome(void){
+    Serial.println("Go home");
+    pano.motorsEnable(true);
+    pano.moveMotorsHome();
+};
+void doFreeMove(float horiz_move, float vert_move){
+    pano.motorsEnable(true);
+    pano.moveMotors(horiz_move, vert_move);
+};
+void doGridMove(const char direction){
+    Serial.println("Inc move");
+    switch (direction){
+    case '<': pano.prev(); break;
+    case '>': pano.next(); break;
+    case '^': pano.moveTo(pano.getCurRow() - 1, pano.getCurCol()); break;
+    case 'v': pano.moveTo(pano.getCurRow() + 1, pano.getCurCol()); break;
+    }
+};
+// unused
+void doGridMoveTo(int16_t row, int16_t col){
+    Serial.println("Head move");
+    pano.moveTo(row, col);
 }
+
+const app_callbacks callbacks = {
+    doConfig,
+    doStart,
+    doCancel,
+    doPause,
+    doShutter,
+    doSetHome,
+    doGoHome,
+    doFreeMove,
+    doGridMove
+};
 
 void loop() {
-    displayMenu(*menu, display, DISPLAY_ROWS, hid, onMenuLoop);
+    static unsigned long next_event_time = 0;
+    /*
+     * Run Pano async execution thread
+     */
+    if (micros() >= next_event_time){
+        next_event_time = pano.pollEvent();
+    }
+    /*
+     * BLE App async receive & execute thread
+     */
+    app.poll(min(micros() - next_event_time, 20));
+    /*
+     * Collect and send state to menu navigator
+     */
+    readBattery();
+    state.steady_delay_avg = pano.steady_delay_avg;
+    state.position = pano.position;
+    state.rows = pano.getVertShots();
+    state.cols = pano.getHorizShots();
+    state.horiz_offset = int(pano.horiz_home_offset);
+    state.vert_offset = int(pano.vert_home_offset);
+    state.motors_on = settings.motors_on;
+    /*
+     * Update status to BLE App and display
+     */
+    if (ble.isConnected() || state.running){
+        if (!settings.motors_enable || state.running){
+            app.sendStatus();
+            displayPanoStatus(true);
+        }
+    } else {
+        display.clearDisplay();
+        display.display();
+    }
+    /*
+     * In-progress pano execution
+     * TODO: move to Pano async execution thread
+     */
+    if (state.running){
+        if (!state.paused){
+            pano.shutter();
+            state.running = pano.next();
+            if (!state.running){
+                pano.end();
+            };
+        };
+    } else {
+        // App can only control motors state when pano is not running
+        pano.motorsEnable(state.motors_on);
+    };
+    /*
+     * Yield to other processes (ESP8266 and others)
+     */
+    yield();
 }

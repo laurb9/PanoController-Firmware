@@ -9,6 +9,12 @@
 
 #include "pano.h"
 
+//{ FIXME: temporary, make them static in .ino once resolved
+#include <BasicStepperDriver.h>
+extern BasicStepperDriver horiz_motor;
+extern BasicStepperDriver vert_motor;
+//}
+
 PanoSetup::PanoSetup(Camera& camera)
 :camera(camera)
 {
@@ -107,15 +113,17 @@ void PanoSetup::computeGrid(void){
 /*
  * Actual platform driver part
  */
-Pano::Pano(Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu)
+Pano::Pano(MultiDriver& motors, Camera& camera, MPU& mpu)
 :PanoSetup(camera),
- horiz_motor(horiz_motor),
- vert_motor(vert_motor),
+ motors(motors),
  mpu(mpu)
 {
-    motorsEnable(false);
-
     setFOV(360,180);
+}
+
+// begin() follows Arduino convention for setup code
+void Pano::begin(void){
+    motorsEnable(false);
 }
 
 void Pano::start(void){
@@ -152,6 +160,7 @@ bool Pano::moveTo(int new_position){
 bool Pano::moveTo(int new_row, int new_col){
     int cur_row = getCurRow();
     int cur_col = getCurCol();
+    float h_move = 0, v_move = 0;
 
     if (cur_row >= vert_count ||
         new_row >= vert_count ||
@@ -166,21 +175,21 @@ bool Pano::moveTo(int new_row, int new_col){
         // horizontal adjustment needed
         // figure out shortest path around the circle
         // good idea if on batteries, bad idea when power cable in use
-        float move = (new_col-cur_col) * horiz_move;
-        if (abs(move) > 180){
-            if (move < 0){
-                move = 360 + move;
+        h_move = (new_col-cur_col) * horiz_move;
+        if (abs(h_move) > 180){
+            if (h_move < 0){
+                h_move = 360 + h_move;
             } else {
-                move = move - 360;
+                h_move = h_move - 360;
             }
         }
-        moveMotors(move, 0);
     }
     if (cur_row != new_row){
         // vertical adjustment needed
-        moveMotors(0, -(new_row-cur_row)*vert_move);
+        v_move = -(new_row-cur_row)*vert_move;
     }
 
+    moveMotors(h_move, v_move);
     position = new_row * horiz_count + new_col;
     return true;
 }
@@ -218,14 +227,47 @@ void Pano::setMotorsHomePosition(void){
  * Move head requested number of degrees
  */
 void Pano::moveMotors(float h, float v){
-    if (h){
-        horiz_motor.rotate(h * HORIZ_GEAR_RATIO);
-        horiz_home_offset += h;
+    motors.rotate(h * HORIZ_GEAR_RATIO, v * VERT_GEAR_RATIO);
+    horiz_home_offset += h;
+    vert_home_offset += v;
+}
+
+/*
+ * Prepare moving motors requested number of degrees
+ */
+void Pano::startMove(float h, float v){
+    motors.startRotate(h * HORIZ_GEAR_RATIO, v * VERT_GEAR_RATIO);
+}
+/*
+ * End a previously start move.
+ */
+void Pano::endMove(void){
+    motors.startBrake();
+    // TODO: make this async too later ?
+    while (unsigned long next_event = motors.nextAction()){
+        microWaitUntil(micros() + next_event);
     }
-    if (v){
-        vert_motor.rotate(v * VERT_GEAR_RATIO);
-        vert_home_offset += v;
+}
+/*
+ * Run async operations if needed
+ */
+unsigned long Pano::pollEvent(void){
+    static unsigned long next_event_time = micros();
+    if (micros() > next_event_time){
+        // for now the only async operation is the motor move
+        // Pointless at this time because BLE polling takes 4000us and we need 50us spacing.
+        while (motors.isRunning()){
+            next_event_time = motors.nextAction();
+            Serial.println(next_event_time);
+            if (next_event_time < 25){ // if main loop cannot complete this fast, just wait here
+                microWaitUntil(micros() + next_event_time);
+            } else {
+                next_event_time = micros() + next_event_time;
+                break;
+            }
+        }
     }
+    return next_event_time;
 }
 
 /*
@@ -236,6 +278,6 @@ void Pano::moveMotorsHome(void){
 }
 
 void Pano::motorsEnable(bool on){
-    (on) ? horiz_motor.enable() : horiz_motor.disable();
+    (on) ? motors.enable() : motors.disable();
     delay(1);
 }
