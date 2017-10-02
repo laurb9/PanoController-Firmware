@@ -44,7 +44,7 @@ public:
     void begin(void);
     void sendStatus();
     bool isConnected();
-    void poll(uint32_t timeout);
+    void poll(uint32_t timeout = 0);
 
     void gattRX(int32_t char_id, uint8_t* data, uint16_t len);
     void uartRX(uint8_t* data, uint16_t len);

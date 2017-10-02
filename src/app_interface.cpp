@@ -9,6 +9,8 @@
 
 #include "app_interface.h"
 
+#define UART_BUFFER_SIZE BLE_BUFSIZE
+
 extern AppInterface app;
 
 AppInterface::AppInterface(Adafruit_BluefruitLE_SPI& ble, PanoSettings& settings, PanoState& state)
@@ -32,13 +34,13 @@ void callbackGattRX(int32_t char_id, uint8_t* data, uint16_t len){
 }
 void callbackUartRX(char data[], uint16_t len){
     //{ debug
-        Serial.print("BLE UART RX len=");
-        Serial.print(len);
-        Serial.print(" data=");
-        for (int i = 0; i < len; i++) { Serial.print(data[i], HEX); Serial.print("-"); };
-        Serial.println("");
-        //} debug
-        app.uartRX((uint8_t *)data, len);
+    Serial.print("BLE UART RX len=");
+    Serial.print(len);
+    Serial.print(" data=");
+    for (int i = 0; i < len; i++) { Serial.print(data[i], HEX); Serial.print("-"); };
+    Serial.println("");
+    //} debug
+    app.uartRX((uint8_t *)data, len);
 }
 void callbackDidConnect(void){
     app.didConnect();
@@ -49,14 +51,14 @@ void callbackDidDisconnect(void){
 
 void AppInterface::begin(){
     ble.sendCommandCheckOK("AT+BAUDRATE=921600");
-    // LED Activity command is only supported from 0.6.6
+    // LED Activity command is only supported from 0.6.6: MODE, BLEUART
     ble.sendCommandCheckOK("AT+HWMODELED=BLEUART");
     ble.sendCommandCheckOK("AT+GAPDEVNAME=Pano Controller");
     
     gatt = new Adafruit_BLEGatt(ble);
     service_id = gatt->addService(SERVICE_UUID);
     config_char_id = gatt->addCharacteristic(CONFIG_CHAR_UUID, GATT_CHARS_PROPERTIES_READ | GATT_CHARS_PROPERTIES_WRITE | GATT_CHARS_PROPERTIES_WRITE_WO_RESP,
-                                             5, 20, BLE_DATATYPE_BYTEARRAY, "Configuration");
+                                             3, 20, BLE_DATATYPE_BYTEARRAY, "Configuration");
     status_char_id = gatt->addCharacteristic(STATUS_CHAR_UUID, GATT_CHARS_PROPERTIES_READ | GATT_CHARS_PROPERTIES_NOTIFY,
                                              sizeof(PanoState), sizeof(PanoState), BLE_DATATYPE_BYTEARRAY, "Status");
     cmd_char_id = gatt->addCharacteristic(CMD_CHAR_UUID, GATT_CHARS_PROPERTIES_WRITE,
@@ -69,7 +71,8 @@ void AppInterface::begin(){
     ble.setDisconnectCallback(callbackDidDisconnect);
     ble.setBleGattRxCallback(config_char_id, callbackGattRX);
     ble.setBleGattRxCallback(cmd_char_id, callbackGattRX);
-    ble.setBleUartRxCallback(callbackUartRX);
+    //ble.setBleUartRxCallback(callbackUartRX); // direct polling is faster than ble.update()
+    ble.setMode(BLUEFRUIT_MODE_DATA);
 }
     
 void AppInterface::sendStatus(){
@@ -78,20 +81,15 @@ void AppInterface::sendStatus(){
 }
 
 void AppInterface::gattRX(int32_t char_id, uint8_t* data, uint16_t len){
-    if (char_id == config_char_id || char_id == cmd_char_id){
-        uartRX(data, len);
-    }
+    uartRX(data, len);
 }
 static bool unpack(settings_t& variable, uint8_t* &data, uint16_t& len){
-    if (len >= 2*sizeof(variable)){
-        len -= 2*sizeof(variable);
-        variable = 0;
-        for (int i=2*sizeof(variable); i; i--){
-            variable = (variable <<= 4) + (*data++ - 0x30);
-        }
+    if (len >= sizeof(variable)){
+        len -= sizeof(variable);
+        memcpy((void*)&variable, data, sizeof(variable));
+        data += sizeof(variable);
         return true;
     }
-    return false;
 }
 void AppInterface::uartRX(uint8_t* data, uint16_t len){
     static uint8_t keyCode;
@@ -123,7 +121,7 @@ void AppInterface::uartRX(uint8_t* data, uint16_t len){
             case 0x66: callbacks.goHome(); break;
             case 0x67: sendStatus(); break;
             case 0x68: // free move
-                if (len >= 2 * 2 * sizeof(settings_t)){
+                if (len >= 2 * sizeof(settings_t)){
                     settings_t horiz_move, vert_move;
                     unpack(horiz_move, data, len);
                     unpack(vert_move, data, len);
@@ -161,5 +159,24 @@ bool AppInterface::isConnected(void){
 }
 
 void AppInterface::poll(uint32_t timeout){
-    ble.update(timeout);
+    static char buffer[UART_BUFFER_SIZE];
+    static char* eob = buffer + UART_BUFFER_SIZE;
+    if (!connected || timeout > 0){
+        ble.update(timeout);
+    } else {
+        char* p = buffer;
+        int c;
+        do {
+            do {
+                // ble.read() can substitute for ble.available() because it can return EOF
+                c = ble.read();
+                if (c == EOF) break;
+                *p++ = (char)c;
+            } while (p < eob);
+
+            if (p != buffer){
+                callbackUartRX(buffer, p-buffer);
+            }
+        } while (p == eob); // we filled the buffer so there may be more to read
+    }
 }

@@ -288,7 +288,7 @@ void loop() {
     /*
      * BLE App async receive & execute thread
      */
-    app.poll(min(micros() - next_event_time, 20));
+    app.poll();
     /*
      * Collect and send state to menu navigator
      */
@@ -307,10 +307,12 @@ void loop() {
         if (!settings.motors_enable || state.running){
             app.sendStatus();
             displayPanoStatus(true);
+            app.poll(20);
         }
     } else {
         display.clearDisplay();
         display.display();
+        app.poll(20);
     }
     /*
      * In-progress pano execution
