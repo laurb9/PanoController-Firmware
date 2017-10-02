@@ -1,17 +1,17 @@
-# Pano Controller
+# Pano Controller 2.1
 
 Open Arduino-based Platform for high-resolution panoramic photography controlled via Bluetooth App.
 Started as a board replacement/upgrade for the Gigapan EPIC 100, but designed to be 
 flexible and support home-brew panoramic platforms.
 
-The design goals for the new version 2.1 are as follows:
+The design goals for the new versions 2.1 and beyond are as follows:
   1. (iOS) App is required to configure the device and start panorama (the platform cannot set up a pano without it)
   2. (Arduino) Platform can complete a full pano once started, even if App disconnects
   3. (iOS) App may enhance operation during pano execution (by reading status and influencing parameters)
 
 See the <a href="https://www.facebook.com/panocontroller">Official Facebook page</a> for demo videos and more progress photos.
 
-Will need the <a href="https://github.com/laurb9/PanoController">Pano Controller iOS App</a> (also in development).
+Will need the <a href="https://github.com/laurb9/PanoController">Pano Controller iOS App</a>.
 
 <img src="images/prototype.jpg" width="400" alt="Pano Controller 2.0 Executor Boards installed in Gigapan EPIC 100">
 <img src="images/pano-info.jpg" width="200" alt="Pano Controller 2.0 Information Display">
@@ -20,7 +20,7 @@ Will need the <a href="https://github.com/laurb9/PanoController">Pano Controller
 ### Software
 - **<a href="https://www.facebook.com/panocontroller/videos/1009260305834819/">Zero-motion shutter delay!</a>**
   When gyro is connected, waits for platform to stabilize before triggering. Useful to compensate for tripod stability, platform's own movement or wind gusts.
-- **<a href="https://www.facebook.com/panocontroller/videos/1143955072365341/">Remote Control Demo (2.0)</a>**
+- **<a href="https://www.facebook.com/panocontroller/videos/1488324751261703/">Smooth movement and iOS App Demo (2.1)</a>**
 - Focal length presets from 12 to 600mm. Precise sub-degree movement control.
 - Seamless 360 pano option
 - Display:
