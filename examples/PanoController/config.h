@@ -31,8 +31,8 @@
 #define MOTOR_RPM 500
 // do these belong in platform settings ?
 // acceleration/deceleration in steps/sec^2
-#define MOTOR_ACCEL 300
-#define MOTOR_DECEL 100
+#define MOTOR_ACCEL 1000
+#define MOTOR_DECEL 500
 
 // board-specific pin settings
 #if defined(ARDUINO_ARCH_SAMD) && defined(ARDUINO_SAMD_FEATHER_M0)
