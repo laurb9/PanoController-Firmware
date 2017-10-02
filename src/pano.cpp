@@ -244,9 +244,7 @@ void Pano::startMove(float h, float v){
 void Pano::endMove(void){
     motors.startBrake();
     // TODO: make this async too later ?
-    while (unsigned long next_event = motors.nextAction()){
-        microWaitUntil(micros() + next_event);
-    }
+    while (motors.nextAction());
 }
 /*
  * Run async operations if needed
@@ -256,12 +254,8 @@ unsigned long Pano::pollEvent(void){
     if (micros() > next_event_time){
         // for now the only async operation is the motor move
         // Pointless at this time because BLE polling takes 4000us and we need 50us spacing.
-        while (motors.isRunning()){
-            next_event_time = motors.nextAction();
-            Serial.println(next_event_time);
-            if (next_event_time < 25){ // if main loop cannot complete this fast, just wait here
-                microWaitUntil(micros() + next_event_time);
-            } else {
+        while (next_event_time = motors.nextAction()){
+            if (next_event_time > 500){ // enough time to yield control to main loop
                 next_event_time = micros() + next_event_time;
                 break;
             }
