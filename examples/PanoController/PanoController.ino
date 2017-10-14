@@ -16,6 +16,7 @@
 #include "mpu.h"
 #include "battery.h"
 #include "bluetooth.h"
+#include "gcode.h"
 
 static Display display(OLED_RESET);
 
@@ -28,6 +29,7 @@ static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
 static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
 static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
 static MultiDriver motors(horiz_motor, vert_motor);
+static GCode gcode(motors, camera, mpu, battery);
 
 void setup() {
     Serial.begin(115200);
@@ -59,7 +61,7 @@ void setup() {
     motors.disable(); // turn off motors at startup
     horiz_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
     vert_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-
+/*
     Serial.println("Configuring Bluefruit LE");
     ble.begin(true);
     ble.echo(false);     // disable command echo
@@ -72,7 +74,7 @@ void setup() {
 
     ble.sendCommandCheckOK("AT+BLEBATTEN=1"); // enable battery service
     // ble.sendCommandCheckOK("AT+BLEPOWERLEVEL=0"); // can be used to change transmit power
-
+*/
     Serial.print("Checking battery voltage... ");
     battery.begin();
     Serial.print(battery.voltage()); Serial.println("mV");
@@ -80,13 +82,27 @@ void setup() {
     Serial.println("System ready.");
 }
 
+#define BUF_SIZE 32
 void loop() {
-    static unsigned long next_event_time = 0;
+    static char buffer[BUF_SIZE];
+    static char *eob = buffer + BUF_SIZE;
+    static int len;
+
+    if (Serial.available()){
+        len = Serial.readBytesUntil('\n', buffer, BUF_SIZE);
+        Serial.print("Serial: ");
+        Serial.println(buffer);
+        //ble.print(buffer);
+        gcode.execute(buffer, buffer+len);
+        
+    }/* else if (ble.available()){
+        len = ble.readBytesUntil('\n', buffer, BUF_SIZE);
+        Serial.print("BLE: ");
+        Serial.println(buffer);
+        gcode.execute(buffer, buffer+len);
+    }*/
+
     /*
-     * BLE App async receive & execute thread
-     */
-    bluetooth.poll();
-   /*
      * Yield to other processes (ESP8266 and others)
      */
     yield();
