@@ -99,30 +99,6 @@ void GCode::execute(char buffer[], const char* eob){
      * https://www.tormach.com/order_execution_table.html
      */
 
-    // messages
-    if (cmd.nonmodal & NonModal::M114){
-        // current position
-        Serial.print("ok current A");Serial.print(cmd.current.a);
-        Serial.print(" C");Serial.print(cmd.current.c);
-        Serial.println();
-    }
-    if (cmd.nonmodal & NonModal::M115){
-        // firmware version and capabilities
-        Serial.println("ok PanoController 1.0");
-        Serial.println("axis A360 C175");
-        Serial.println("origin A0 C15");
-    }
-    if (cmd.nonmodal & NonModal::M117){
-        // print origin
-        Serial.print("ok origin A");Serial.print(cmd.origin.a);
-        Serial.print(" C");Serial.print(cmd.origin.c);
-        Serial.println();
-    }
-    if (cmd.nonmodal & NonModal::M503){
-        // current settings
-        Serial.println("ok");
-    }
-
     // acceleration ("feed rate")
     if (cmd.speed == Speed::CONSTANT){
         // motors.setSpeedProfile(MultiDriver::CONSTANT_SPEED);
@@ -140,7 +116,6 @@ void GCode::execute(char buffer[], const char* eob){
     }
     if (cmd.nonmodal & NonModal::M240){
         // Shutter
-        d("SHUTTER="); d(cmd.p); d("\n");
         camera.shutter(1000 * cmd.p, bool(cmd.q));
         if (cmd.r > 0){
             delay(1000 * cmd.r);
@@ -193,6 +168,30 @@ void GCode::execute(char buffer[], const char* eob){
         }
     }
 
+    // Data Query. These are here so we can read the final state of a move.
+    if (cmd.nonmodal & NonModal::M115){
+        // firmware version and capabilities
+        d("PanoController 2.2beta build "  __DATE__ " " __TIME__ "\n");
+        d("Options CAMERA BATT ZM\n");
+        d("Axis A C\n");
+    }
+    if (cmd.nonmodal & NonModal::M503){
+        // current settings
+        d("GearRatioA=1:");d(horiz_gear_ratio);d("\n");
+        d("GearRatioC=1:");d(vert_gear_ratio);d("\n");
+        d("Battery=");d(battery.voltage());d("\n");
+    }
+    if (cmd.nonmodal & NonModal::M117){
+        // print origin
+        d("OriginA=");d(cmd.origin.a);d("\n");
+        d("OriginC=");d(cmd.origin.c);d("\n");
+    }
+    if (cmd.nonmodal & NonModal::M114){
+        // current position
+        d("CurrentA=");d(cmd.current.a);d("\n");
+        d("CurrentC=");d(cmd.current.c);d("\n");
+    }
+    
     // pause
     switch (cmd.wait){
     case Wait::M0:
@@ -210,7 +209,6 @@ void GCode::execute(char buffer[], const char* eob){
 }
 
 void GCode::move(Motion motion, Coords coords, Position& current, Position& target){
-    d("MOVE ");d(target.a);d(" ");d(target.c);d("\n");
     if (coords == Coords::RELATIVE){
         motors.rotate(target.a * horiz_gear_ratio, target.c * vert_gear_ratio);
         current.a += target.a;
@@ -221,5 +219,4 @@ void GCode::move(Motion motion, Coords coords, Position& current, Position& targ
         current.a = target.a;
         current.c = target.c;
     };
-    d("AT ");d(cmd.current.a);d(" ");d(cmd.current.c);d("\n");
 }
