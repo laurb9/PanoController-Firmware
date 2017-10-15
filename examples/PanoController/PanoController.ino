@@ -35,7 +35,6 @@ void setup() {
     Serial.begin(115200);
     delay(2000); // wait for serial
     Serial.println("PanoController built " __DATE__ " " __TIME__);
-    Serial.println("setup()");
 
 /*
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
@@ -45,13 +44,6 @@ void setup() {
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
 */
-    Serial.println("Checking Camera Shutter Connection");
-    pinMode(CAMERA_FOCUS, INPUT_PULLDOWN);
-    pinMode(CAMERA_SHUTTER, INPUT_PULLDOWN);
-    Serial.print("  Focus: ");
-    Serial.println((digitalRead(CAMERA_FOCUS) ? "OK" : "N/C"));
-    Serial.print("  Shutter: ");
-    Serial.println((digitalRead(CAMERA_SHUTTER) ? "OK" : "N/C"));
 
     Serial.println("Configuring MPU");
     mpu.begin();
@@ -81,6 +73,7 @@ void setup() {
     battery.begin();
     Serial.print(battery.voltage()); Serial.println("mV");
 
+    Serial.println("Initializing G-Code interpreter...");
     gcode.begin();
     gcode.setGearRatio(HORIZ_GEAR_RATIO, VERT_GEAR_RATIO);
 
@@ -96,10 +89,9 @@ void loop() {
     if (Serial.available()){
         len = Serial.readBytesUntil('\n', buffer, BUF_SIZE);
         *(buffer+len) = '\0';
-        Serial.print("Received: ");
+        Serial.print("> ");
         Serial.println(buffer);
         gcode.execute(buffer, buffer+len);
-        
     }
 
     /*

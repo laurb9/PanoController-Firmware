@@ -180,6 +180,8 @@ void GCode::execute(char buffer[], const char* eob){
         d("GearRatioA=1:");d(horiz_gear_ratio);d("\n");
         d("GearRatioC=1:");d(vert_gear_ratio);d("\n");
         d("Battery=");d(battery.voltage());d("\n");
+        d("ShutterConnected=");d(camera.isShutterConnected() ? "true\n" : "false\n");
+        d("FocusConnected=");d(camera.isFocusConnected() ? "true\n" : "false\n");
     }
     if (cmd.nonmodal & NonModal::M117){
         // print origin
