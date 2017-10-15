@@ -76,6 +76,7 @@ typedef struct {
 
 class GCode {
 protected:
+    Stream& serial;
     MultiDriver& motors;
     Camera& camera;
     MPU& mpu;
@@ -84,10 +85,11 @@ protected:
     short int vert_gear_ratio = 1;
 
     Command cmd;
+
 public:
-    GCode(MultiDriver& motors, Camera& camera, MPU& mpu, Battery& battery)
-        :motors(motors), camera(camera), mpu(mpu), battery(battery){};
-    void begin(void){};
+    GCode(Stream& serial, MultiDriver& motors, Camera& camera, MPU& mpu, Battery& battery)
+        :serial(serial), motors(motors), camera(camera), mpu(mpu), battery(battery){};
+    void begin(){};
     void setGearRatio(short int horiz, short int vert){
         horiz_gear_ratio = horiz;
         vert_gear_ratio = vert;

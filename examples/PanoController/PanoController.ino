@@ -29,7 +29,7 @@ static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
 static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
 static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
 static MultiDriver motors(horiz_motor, vert_motor);
-static GCode gcode(motors, camera, mpu, battery);
+static GCode gcode(Serial, motors, camera, mpu, battery);
 
 void setup() {
     Serial.begin(115200);
@@ -82,7 +82,7 @@ void setup() {
 
     gcode.begin();
     gcode.setGearRatio(HORIZ_GEAR_RATIO, VERT_GEAR_RATIO);
-    
+
     Serial.println("System ready.");
 }
 
@@ -94,19 +94,13 @@ void loop() {
 
     if (Serial.available()){
         len = Serial.readBytesUntil('\n', buffer, BUF_SIZE);
-        *(buffer+len) = '\0';        
-        Serial.print("Serial: ");
+        *(buffer+len) = '\0';
+        Serial.print("Received: ");
         Serial.println(buffer);
-        //ble.print(buffer);
         gcode.execute(buffer, buffer+len);
         
-    }/* else if (ble.available()){
-        len = ble.readBytesUntil('\n', buffer, BUF_SIZE);
-        Serial.print("BLE: ");
-        Serial.println(buffer);
-        gcode.execute(buffer, buffer+len);
-    }*/
-
+    }
+    
     /*
      * Yield to other processes (ESP8266 and others)
      */

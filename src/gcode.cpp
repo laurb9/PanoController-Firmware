@@ -14,7 +14,7 @@
  */
 #include "gcode.h"
 
-#define d(x) Serial.print(x)
+#define d(x) serial.print(x)
 
 /*
  * Parse and execute a G-code command
