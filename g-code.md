@@ -47,21 +47,21 @@ Since the platform center is actually fixed, there are no movements available in
 Commands I think have to be supported, plus a few useful extras.
 Many of these are "sticky" including parameters (they apply to following lines until reset).
 
-- `G00 A# C#` - Move (rotate head) to position A C
-    - **sticky**: `A#` on the following line will continue to move in the same way
-- `G01 A# C# F#` - Linear interpolation positioning with speed F, same as above
+- `G00 A~ C~` - Move (rotate head) to position A C
+    - **sticky**: `A~` on the following line will continue to move in the same way
+- `G01 A~ C~ F~` - Linear interpolation positioning with speed F, same as above
 - `G28 A0 C0` - Move to origin via intermediate point.
 - `G90` - Use absolute coordinate system (default): `G90 G00 A10 C10`
 - `G91` - Use relative coordinate system: `G90 G00 A10 C10`
-- `G92 A0 C0` - Set Home position (`A# C#` would set it as offsets from home position)
+- `G92 A0 C0` - Set Home position (`A~ C~` would set it as offsets from home position)
 - `M00` - Pause and wait for button
 - `M01` - Pause if button pushed
 - `M02` - End of program
 - `M17` - Turn on motors, reset origin
 - `M18` - Turn off motors
-- `M116 P# Q#` - Zero-Motion wait up to `P` seconds to stabilize below `Q` degrees/s^2 *(PanoController custom)*
-- `G04 P#` - Dwell `P` seconds
-- `M240 P# Q# R#` - Shutter `P` seconds, (`Q0`=short, `Q1`=long), post shutter delay `R` seconds
+- `M116 P~ Q~` - Zero-Motion wait up to `P` seconds to stabilize below `Q` degrees/s^2 *(PanoController custom)*
+- `G04 P~` - Dwell `P` seconds
+- `M240 P~ Q~ R~` - Shutter `P` seconds, (`Q0`=short, `Q1`=long), post shutter delay `R` seconds
 - `M320` - Acceleration on 
 - `M321` - Acceleration off
 
@@ -77,16 +77,16 @@ The response format, if there is a standard, is not yet clear to me.
 ## Miscellania
 
 - `%` - Program start / end marker
-- `O#` - Program name or number
+- `O~` - Program name or number
 - `;` - Single line comment
 - `(...)` - Open/close comment
-- `N#` - Program line number identifier
+- `N~` - Program line number identifier
 
 ## Should these be implemented ?
 
 Just copying here some interesting commands from the 3d printer firmware.
 
-- `M42 P# S#` - change pin state (GPIO)
+- `M42 P~ S~` - change pin state (GPIO)
 - `M70` - display message with optional timeout
 - `M71` - display message and wait for button push with optional timeout
 - `M73` - set progress percentage (0-100)
