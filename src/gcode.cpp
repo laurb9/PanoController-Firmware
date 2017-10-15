@@ -63,6 +63,8 @@ void GCode::execute(char buffer[], const char* eob){
             case 0: cmd.wait = Wait::M0; break; // pause, wait for user
             case 1: cmd.wait = Wait::M1; break; // stop if button pressed
             case 2: cmd.wait = Wait::M2; break; // end program
+            case 17: motors_on = true; break;
+            case 18: motors_on = false; break;
             case 114: cmd.nonmodal |= NonModal::M114; break; // get current position
             case 115: cmd.nonmodal |= NonModal::M115; break; // get firmware version and capabilities
             case 116: cmd.nonmodal |= NonModal::M116; break; // zero-motion wait
@@ -71,15 +73,6 @@ void GCode::execute(char buffer[], const char* eob){
             case 320: cmd.speed = Speed::ACCEL; break;
             case 321: cmd.speed = Speed::CONSTANT; break;
             case 503: cmd.nonmodal |= NonModal::M503; break; // get current settings
-
-            case 17:
-                motors.enable();
-                // assume new origin since motors could have been moved
-                cmd.origin.a = cmd.origin.c = 0;
-                break;
-            case 18: 
-                motors.disable();
-                break;
             };
             break;
 
@@ -147,6 +140,13 @@ void GCode::execute(char buffer[], const char* eob){
         cmd.target.c = 0;
     }
 
+    // power steppers on / off 
+    if (motors_on){
+        motors.enable();
+    } else {
+        motors.disable();
+    }
+
     // motion
 
     if (cmd.nonmodal & NonModal::G28){
@@ -172,8 +172,8 @@ void GCode::execute(char buffer[], const char* eob){
     if (cmd.nonmodal & NonModal::M115){
         // firmware version and capabilities
         d("PanoController 2.2beta build "  __DATE__ " " __TIME__ "\n");
-        d("Options CAMERA BATT ZM\n");
-        d("Axis A C\n");
+        d("Options=CAMERA BATT ZM\n");
+        d("Axis=A C\n");
     }
     if (cmd.nonmodal & NonModal::M503){
         // current settings
@@ -182,6 +182,10 @@ void GCode::execute(char buffer[], const char* eob){
         d("Battery=");d(battery.voltage());d("\n");
         d("ShutterConnected=");d(camera.isShutterConnected() ? "true\n" : "false\n");
         d("FocusConnected=");d(camera.isFocusConnected() ? "true\n" : "false\n");
+        d("MotorsEnabled=");d(motors_on ? "true\n" : "false\n");
+        d("MotionMode=");d(cmd.motion);d("\n");
+        d("Distance=");d((cmd.coords==Coords::ABSOLUTE) ? "ABSOLUTE\n" : "RELATIVE\n");
+        d("Speed=");d((cmd.speed==Speed::CONSTANT) ? "CONSTANT\n" : "ACCELERATED\n");
     }
     if (cmd.nonmodal & NonModal::M117){
         // print origin

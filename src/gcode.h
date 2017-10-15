@@ -83,6 +83,7 @@ protected:
     Battery& battery;
     short int horiz_gear_ratio = 1;
     short int vert_gear_ratio = 1;
+    bool motors_on = false;
 
     Command cmd;
 
