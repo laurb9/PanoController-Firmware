@@ -18,7 +18,7 @@
 #include "bluetooth.h"
 #include "gcode.h"
 
-static Display display(OLED_RESET);
+// static Display display(OLED_RESET);
 
 static Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 static Bluetooth bluetooth(ble);
@@ -37,13 +37,14 @@ void setup() {
     Serial.println("PanoController built " __DATE__ " " __TIME__);
     Serial.println("setup()");
 
+/*
     display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_I2C_ADDRESS, false);
     display.setRotation(0);
     display.clearDisplay();
     display.setTextCursor(0,0);
     display.setTextColor(WHITE);
     display.setTextSize(TEXT_SIZE);
-
+*/
     Serial.println("Checking Camera Shutter Connection");
     pinMode(CAMERA_FOCUS, INPUT_PULLDOWN);
     pinMode(CAMERA_SHUTTER, INPUT_PULLDOWN);
@@ -100,7 +101,7 @@ void loop() {
         gcode.execute(buffer, buffer+len);
         
     }
-    
+
     /*
      * Yield to other processes (ESP8266 and others)
      */
