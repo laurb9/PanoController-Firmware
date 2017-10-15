@@ -31,6 +31,10 @@
 #define MOTOR_ACCEL 1000
 #define MOTOR_DECEL 500
 
+// Platform parameters
+#define HORIZ_GEAR_RATIO 5   // 1:5
+#define VERT_GEAR_RATIO 15   // 1:15
+
 // board-specific pin settings
 #if defined(ARDUINO_ARCH_SAMD) && defined(ARDUINO_SAMD_FEATHER_M0)
 #include "config_feather_m0.h"

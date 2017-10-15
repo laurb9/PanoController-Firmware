@@ -28,14 +28,14 @@ void GCode::execute(char buffer[], const char* eob){
     // reset the parameters
     cmd.target.a = 0;
     cmd.target.c = 0;
-    cmd.delay_ms = 0;
+    cmd.p = 0;
     cmd.lineno = 0;
     cmd.nonmodal = NONE;
 
     while (buffer < eob){
         char* next = buffer;
         float value;
-        char letter = *buffer++;
+        char letter = toupper(*buffer++);
         if (letter == ' ') continue;
         value = strtod(buffer, &next);
 
@@ -63,26 +63,33 @@ void GCode::execute(char buffer[], const char* eob){
             case 0: cmd.wait = Wait::M0; break; // pause, wait for user
             case 1: cmd.wait = Wait::M1; break; // stop if button pressed
             case 2: cmd.wait = Wait::M2; break; // end program
-            case 17: motors.enable(); break;
-            case 18: motors.disable(); break;
-            case 116: cmd.wait = Wait::M116; break; // zero-motion wait
-            case 240: cmd.wait = Wait::M240; break; // shutter
-            case 320: cmd.speed = Speed::ACCEL; break;
-            case 321: cmd.speed = Speed::CONSTANT; break;
-
-            case 117: cmd.nonmodal |= NonModal::M117; break; // get origin position
             case 114: cmd.nonmodal |= NonModal::M114; break; // get current position
             case 115: cmd.nonmodal |= NonModal::M115; break; // get firmware version and capabilities
+            case 116: cmd.nonmodal |= NonModal::M116; break; // zero-motion wait
+            case 117: cmd.nonmodal |= NonModal::M117; break; // get origin position
+            case 240: cmd.nonmodal |= NonModal::M240; break; // shutter
+            case 320: cmd.speed = Speed::ACCEL; break;
+            case 321: cmd.speed = Speed::CONSTANT; break;
             case 503: cmd.nonmodal |= NonModal::M503; break; // get current settings
+
+            case 17:
+                motors.enable();
+                // assume new origin since motors could have been moved
+                cmd.origin.a = cmd.origin.c = 0;
+                break;
+            case 18: 
+                motors.disable();
+                break;
             };
             break;
 
         /* Variables */
         case 'A': cmd.target.a = value; break;
         case 'C': cmd.target.c = value; break;
-        case 'P': cmd.delay_ms = 1000 * value; break;
-        case 'S': cmd.delay_ms = value; break;
-        case 'F': break; // accel value
+        case 'P': cmd.p = value; break;
+        case 'Q': cmd.q = value; break;
+        case 'R': cmd.r = value; break;
+        case 'F': cmd.f = value; break;
         };
     }
 
@@ -93,12 +100,6 @@ void GCode::execute(char buffer[], const char* eob){
      */
 
     // messages
-    if (cmd.nonmodal & NonModal::M117){
-        // print origin
-        Serial.print("ok origin A");Serial.print(cmd.origin.a);
-        Serial.print(" C");Serial.print(cmd.origin.c);
-        Serial.println();
-    }
     if (cmd.nonmodal & NonModal::M114){
         // current position
         Serial.print("ok current A");Serial.print(cmd.current.a);
@@ -110,6 +111,12 @@ void GCode::execute(char buffer[], const char* eob){
         Serial.println("ok PanoController 1.0");
         Serial.println("axis A360 C175");
         Serial.println("origin A0 C15");
+    }
+    if (cmd.nonmodal & NonModal::M117){
+        // print origin
+        Serial.print("ok origin A");Serial.print(cmd.origin.a);
+        Serial.print(" C");Serial.print(cmd.origin.c);
+        Serial.println();
     }
     if (cmd.nonmodal & NonModal::M503){
         // current settings
@@ -123,9 +130,26 @@ void GCode::execute(char buffer[], const char* eob){
         // motors.setSpeedProfile(MultiDriver::LINEAR_SPEED, accel, decel);
     }
 
+    // Camera operations
+    if (cmd.nonmodal & NonModal::M116){
+        // Zero-Motion wait
+        int start = millis();
+        bool success = mpu.zeroMotionWait(100 * cmd.q, 1000 * cmd.p);
+        d("ZM="); d(millis()-start);
+        d((success) ? "\n" : " (failed)\n");
+    }
+    if (cmd.nonmodal & NonModal::M240){
+        // Shutter
+        d("SHUTTER="); d(cmd.p); d("\n");
+        camera.shutter(1000 * cmd.p, bool(cmd.q));
+        if (cmd.r > 0){
+            delay(1000 * cmd.r);
+        }
+    }    
+
     // dwell
     if (cmd.nonmodal & NonModal::G4){
-        delay(cmd.delay_ms);
+        delay(1000 * cmd.p);
     }
 
     // units
@@ -160,11 +184,13 @@ void GCode::execute(char buffer[], const char* eob){
         move(cmd.motion, Coords::ABSOLUTE, cmd.current, cmd.target);
         cmd.target.a = cmd.target.c = 0;
     }
-     
+
     switch (cmd.motion){
     case Motion::G0:
     case Motion::G1:
-        move(cmd.motion, cmd.coords, cmd.current, cmd.target);
+        if (cmd.target.a != 0 || cmd.target.c != 0){
+            move(cmd.motion, cmd.coords, cmd.current, cmd.target);
+        }
     }
 
     // pause
@@ -180,20 +206,18 @@ void GCode::execute(char buffer[], const char* eob){
     case Wait::M2:
         d("END\n");
         break;
-    case Wait::M240:
-        camera.shutter(cmd.delay_ms, false);
-        break;
     }
 }
 
 void GCode::move(Motion motion, Coords coords, Position& current, Position& target){
     d("MOVE ");d(target.a);d(" ");d(target.c);d("\n");
     if (coords == Coords::RELATIVE){
-        motors.rotate(target.a, target.c);
+        motors.rotate(target.a * horiz_gear_ratio, target.c * vert_gear_ratio);
         current.a += target.a;
         current.c += target.c;                    
     } else {
-        motors.rotate(target.a - current.a, target.c - current.c);
+        motors.rotate((target.a - current.a) * horiz_gear_ratio, 
+                      (target.c - current.c) * vert_gear_ratio);
         current.a = target.a;
         current.c = target.c;
     };

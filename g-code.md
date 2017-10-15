@@ -6,10 +6,17 @@ The plan is to eventually be as close as reasonably possible to [G-code](), but 
 ## Example Program
 
 ```GCode
-N1 G1 G91 A30 C-5 (rotate by 30° to the right and 15° down)
-N3 M240 S0.1 (trigger shutter for 0.1 seconds)
-N2 G4 P250 (hang there for 250 milliseconds)
-N4 G0 G28 A0 C0 (return quickly to home position)
+; 3-photo pano at 60°
+N1 M17 G1 G91 (turn motors on, use relative move mode)
+N2 M116 P5 Q0.75 (wait 5 seconds for platform shake to be under 0.75°/s^2)
+N3 M240 P0.1 R0.5 (trigger shutter for 0.1s then wait for another 0.5s)
+N4 A60 (rotate by 90° to the right)
+N5 M116 P5 Q0.75
+N6 M240 P0.1 R0.5
+N7 A60
+N8 M116 P5 Q0.75
+N9 M240 P0.1 R0.5
+N10 G0 G28 A0 C0 (return quickly to home position)
 ```
 
 (Need to work on the shutter command, I'd like to combine the zero-motion wait, shutter pulse length, shutter duration and post-processing wait in a single command if I can)
@@ -33,7 +40,7 @@ Since the platform center is actually fixed, there are no movements available in
 - Degrees for rotation (`A`, `B`, `C`)
 - Degrees/s for speed (`F`)
 - Degrees/s^2 for acceleration
-- Seconds (`S`) or Milliseconds (`P`) for duration 
+- Seconds for duration (fractional to ms precision: 0.001)
 
 ## Commands
 
@@ -41,7 +48,7 @@ Commands I think have to be supported, plus a few useful extras.
 Many of these are "sticky" including parameters (they apply to following lines until reset).
 
 - `G00 A# C#` - Move (rotate head) to position A C
-    - sticky: `A#` on the following line will continue to move in the same way
+    - **sticky**: `A#` on the following line will continue to move in the same way
 - `G01 A# C# F#` - Linear interpolation positioning with speed F, same as above
 - `G28 A0 C0` - Move to origin via intermediate point.
 - `G90` - Use absolute coordinate system (default): `G90 G00 A10 C10`
@@ -50,11 +57,11 @@ Many of these are "sticky" including parameters (they apply to following lines u
 - `M00` - Pause and wait for button
 - `M01` - Pause if button pushed
 - `M02` - End of program
-- `M17` - Turn on motors (resets home position for those)
-- `M18` - Turn off motors (forgets home position for those)
-- `M116 A# S# P#` - Zero-Motion wait to stabilize below `A#` degrees/s^2 with a max wait of `S#` seconds or `P#` milliseconds *(PanoController custom)*
-- `G04 P#` - Dwell milliseconds
-- `M240 S# P#` - Shutter `S#` seconds (can be fractional) or `P#` milliseconds
+- `M17` - Turn on motors, reset origin
+- `M18` - Turn off motors
+- `M116 P# Q#` - Zero-Motion wait up to `P` seconds to stabilize below `Q` degrees/s^2 *(PanoController custom)*
+- `G04 P#` - Dwell `P` seconds
+- `M240 P# Q# R#` - Shutter `P` seconds, (`Q0`=short, `Q1`=long), post shutter delay `R` seconds
 - `M320` - Acceleration on 
 - `M321` - Acceleration off
 
@@ -79,7 +86,7 @@ The response format, if there is a standard, is not yet clear to me.
 
 Just copying here some interesting commands from the 3d printer firmware.
 
-- `M42` - change pin state (GPIO)
+- `M42 P# S#` - change pin state (GPIO)
 - `M70` - display message with optional timeout
 - `M71` - display message and wait for button push with optional timeout
 - `M73` - set progress percentage (0-100)
@@ -101,3 +108,5 @@ Just copying here some interesting commands from the 3d printer firmware.
 - [Tormach G-Codes](https://www.tormach.com/machine_codes_gcodes.html)
 - [G-Code for 3D Printing](https://softsolder.com/2013/03/14/g-code-and-m-code-grand-master-list/)
 - [Marlin Series 1 G-Codes](https://typeamachines.zendesk.com/hc/en-us/articles/200364725-Gcode-Supported-By-Marlin-and-Series-1)
+- [LinuxCNC Quick Reference](http://linuxcnc.org/docs/html/gcode.html)
+- [LinuxCNC G-Code Docs](http://linuxcnc.org/docs/html/gcode/overview.html)

@@ -30,32 +30,37 @@ enum Plane {G17, G18, G19};
 // Modal Group 3 - Distance Mode
 enum Distance {G90, G91};
 // Modal GRoup 4 - Stopping
-enum Wait {M0, M1, M2, M30, M60, M116, M226, M240}; // M116,M226,M240 added by me
+enum Wait {M0, M1, M2, M30, M60, M226}; // M116,M226,M240 added by me
 // Modal Group 6 - Units
 enum Units {G20, G21};
 // Non-Modal Group 0
 enum NonModal {
     NONE=0,
-    G4=1,
-    G10=2,
-    G28=4,
-    G30=8,
-    G53=16,
-    G92=32,
-    G92_1=64,
-    G92_2=128,
-    G92_3=256,
-    M114=512,
-    M115=1024,
-    M117=2048,
-    M503=4096,
+    G4=1 << 0,
+    G10=1 << 1,
+    G28=1 << 2,
+    G30=1 << 3,
+    G53=1 << 4,
+    G92=1 << 5,
+    G92_1=1 << 6,
+    G92_2=1 << 7,
+    G92_3=1 << 8,
+    M114=1 << 9,
+    M115=1 << 10,
+    M116=1 << 11,
+    M117=1 << 12,
+    M240=1 << 13,
+    M503=1 << 14,
 };
 
 typedef struct {
     Position current = {0, 0};
     Position target = {0, 0};
     Position origin = {0, 0};
-    int delay_ms = 0;
+    float p = 0;
+    float q = 0;
+    float r = 0;
+    float f = 0;
     int lineno = 0;
     Motion motion = NO_MOTION;
     Plane plane = G17;
@@ -75,11 +80,18 @@ protected:
     Camera& camera;
     MPU& mpu;
     Battery& battery;
+    short int horiz_gear_ratio = 1;
+    short int vert_gear_ratio = 1;
 
     Command cmd;
 public:
     GCode(MultiDriver& motors, Camera& camera, MPU& mpu, Battery& battery)
-        :motors(motors),camera(camera),mpu(mpu),battery(battery){};
+        :motors(motors), camera(camera), mpu(mpu), battery(battery){};
+    void begin(void){};
+    void setGearRatio(short int horiz, short int vert){
+        horiz_gear_ratio = horiz;
+        vert_gear_ratio = vert;
+    }
     void execute(char buffer[], const char* eob);
     void move(Motion motion, Coords coords, Position& current, Position& target);
 };

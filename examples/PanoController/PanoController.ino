@@ -61,6 +61,7 @@ void setup() {
     motors.disable(); // turn off motors at startup
     horiz_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
     vert_motor.setSpeedProfile(DRV8834::LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+
 /*
     Serial.println("Configuring Bluefruit LE");
     ble.begin(true);
@@ -79,6 +80,9 @@ void setup() {
     battery.begin();
     Serial.print(battery.voltage()); Serial.println("mV");
 
+    gcode.begin();
+    gcode.setGearRatio(HORIZ_GEAR_RATIO, VERT_GEAR_RATIO);
+    
     Serial.println("System ready.");
 }
 
@@ -90,6 +94,7 @@ void loop() {
 
     if (Serial.available()){
         len = Serial.readBytesUntil('\n', buffer, BUF_SIZE);
+        *(buffer+len) = '\0';        
         Serial.print("Serial: ");
         Serial.println(buffer);
         //ble.print(buffer);
