@@ -7,16 +7,16 @@ The plan is to eventually be as close as reasonably possible to [G-code](), but 
 
 ```GCode
 ; 3-photo pano at 60°
-N1 M17 G1 G91 (turn motors on, use relative move mode)
-N2 M116 P5 Q0.75 (wait 5 seconds for platform shake to be under 0.75°/s^2)
-N3 M240 P0.1 R0.5 (trigger shutter for 0.1s then wait for another 0.5s)
-N4 A60 (rotate by 90° to the right)
-N5 M116 P5 Q0.75
-N6 M240 P0.1 R0.5
-N7 A60
-N8 M116 P5 Q0.75
-N9 M240 P0.1 R0.5
-N10 G0 G28 A0 C0 (return quickly to home position)
+M17 G1 G91 (turn motors on, use relative move mode)
+M116 P5 Q0.75 (wait 5 seconds for platform shake to be under 0.75°/s^2)
+M240 P0.1 R0.5 (trigger shutter for 0.1s then wait for another 0.5s)
+A60 (rotate by 90° to the right)
+M116 P5 Q0.75
+M240 P0.1 R0.5
+A60
+M116 P5 Q0.75
+M240 P0.1 R0.5
+G0 G28 A0 C0 (return quickly to home position)
 ```
 
 (Need to work on the shutter command, I'd like to combine the zero-motion wait, shutter pulse length, shutter duration and post-processing wait in a single command if I can)

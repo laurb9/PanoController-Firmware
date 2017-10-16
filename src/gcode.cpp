@@ -30,7 +30,7 @@ void GCode::execute(char buffer[], const char* eob){
     cmd.target.a = 0;
     cmd.target.c = 0;
     cmd.p = 0;
-    cmd.lineno = 0;
+    cmd.lineno++;
     cmd.nonmodal = NONE;
 
     while (buffer < eob){
@@ -41,7 +41,7 @@ void GCode::execute(char buffer[], const char* eob){
         value = strtod(buffer, &next);
 
         switch (letter){
-        case 'N': cmd.lineno = int(value); continue;
+        case 'N': continue;
         case ';':
         case '%': break;
         case 'O': break; // program name
