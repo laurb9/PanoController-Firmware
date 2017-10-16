@@ -15,6 +15,7 @@
 #include "gcode.h"
 
 #define d(x) serial.print(x)
+#define dln(x) serial.println(x)
 
 /*
  * Parse and execute a G-code command
@@ -105,7 +106,7 @@ void GCode::execute(char buffer[], const char* eob){
         int start = millis();
         bool success = mpu.zeroMotionWait(100 * cmd.q, 1000 * cmd.p);
         d("ZM="); d(millis()-start);
-        d((success) ? "\n" : " (failed)\n");
+        dln((success) ? "" : " (failed)");
     }
     if (cmd.nonmodal & NonModal::M240){
         // Shutter
@@ -171,45 +172,45 @@ void GCode::execute(char buffer[], const char* eob){
     // Data Query. These are here so we can read the final state of a move.
     if (cmd.nonmodal & NonModal::M115){
         // firmware version and capabilities
-        d("PanoController 2.2beta build "  __DATE__ " " __TIME__ "\n");
-        d("Options=CAMERA BATT ZM\n");
-        d("Axis=A C\n");
+        dln("PanoController 2.2beta build "  __DATE__ " " __TIME__);
+        dln("Options=CAMERA BATT ZM");
+        dln("Axis=A C");
     }
     if (cmd.nonmodal & NonModal::M503){
         // current settings
-        d("GearRatioA=1:");d(horiz_gear_ratio);d("\n");
-        d("GearRatioC=1:");d(vert_gear_ratio);d("\n");
-        d("Battery=");d(battery.voltage());d("\n");
-        d("ShutterConnected=");d(camera.isShutterConnected() ? "true\n" : "false\n");
-        d("FocusConnected=");d(camera.isFocusConnected() ? "true\n" : "false\n");
-        d("MotorsEnabled=");d(motors_on ? "true\n" : "false\n");
-        d("MotionMode=");d(cmd.motion);d("\n");
-        d("Distance=");d((cmd.coords==Coords::ABSOLUTE) ? "ABSOLUTE\n" : "RELATIVE\n");
-        d("Speed=");d((cmd.speed==Speed::CONSTANT) ? "CONSTANT\n" : "ACCELERATED\n");
+        d("GearRatioA=1:");dln(horiz_gear_ratio);
+        d("GearRatioC=1:");dln(vert_gear_ratio);
+        d("Battery=");dln(battery.voltage());
+        d("ShutterConnected=");dln(camera.isShutterConnected() ? "true" : "false");
+        d("FocusConnected=");dln(camera.isFocusConnected() ? "true" : "false");
+        d("MotorsEnabled=");dln(motors_on ? "true" : "false");
+        d("MotionMode=");dln(cmd.motion);
+        d("Distance=");dln((cmd.coords==Coords::ABSOLUTE) ? "ABSOLUTE" : "RELATIVE");
+        d("Speed=");dln((cmd.speed==Speed::CONSTANT) ? "CONSTANT" : "ACCELERATED");
     }
     if (cmd.nonmodal & NonModal::M117){
         // print origin
-        d("OriginA=");d(cmd.origin.a);d("\n");
-        d("OriginC=");d(cmd.origin.c);d("\n");
+        d("OriginA=");dln(cmd.origin.a);
+        d("OriginC=");dln(cmd.origin.c);
     }
     if (cmd.nonmodal & NonModal::M114){
         // current position
-        d("CurrentA=");d(cmd.current.a);d("\n");
-        d("CurrentC=");d(cmd.current.c);d("\n");
+        d("CurrentA=");dln(cmd.current.a);
+        d("CurrentC=");dln(cmd.current.c);
     }
     
     // pause
     switch (cmd.wait){
     case Wait::M0:
-        d("STOP\n");
+        dln("STOP");
         break;
     case Wait::M1:
         if (false){ // FIXME: replace w/ check button
-            d("STOP\n");
+            dln("STOP");
         }
         break;
     case Wait::M2:
-        d("END\n");
+        dln("END");
         break;
     }
 }
