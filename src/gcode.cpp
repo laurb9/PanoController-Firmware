@@ -22,7 +22,7 @@
  * Example program line
  * G1 G91 A5.3 C-0.5 (rotation by 5.3° horiz and -0.5° vert)
  */
-void GCode::execute(char buffer[], const char* eob){
+void GCode::execute(char buffer[]){
     /*
      * Parse the command line
      */
@@ -33,7 +33,7 @@ void GCode::execute(char buffer[], const char* eob){
     cmd.lineno++;
     cmd.nonmodal = NONE;
 
-    while (buffer < eob){
+    while (*buffer){
         char* next = buffer;
         float value;
         char letter = toupper(*buffer++);
@@ -104,9 +104,8 @@ void GCode::execute(char buffer[], const char* eob){
     if (cmd.nonmodal & NonModal::M116){
         // Zero-Motion wait
         int start = millis();
-        bool success = mpu.zeroMotionWait(100 * cmd.q, 1000 * cmd.p);
-        d("ZM="); d(millis()-start);
-        dln((success) ? "" : " (failed)");
+        bool success = mpu.zeroMotionWait(int(cmd.q)/10, 1000 * cmd.p);
+        d("ZeroMotionWait="); dln(float(millis()-start)/1000);
     }
     if (cmd.nonmodal & NonModal::M240){
         // Shutter
@@ -180,7 +179,7 @@ void GCode::execute(char buffer[], const char* eob){
         // current settings
         d("GearRatioA=1:");dln(horiz_gear_ratio);
         d("GearRatioC=1:");dln(vert_gear_ratio);
-        d("Battery=");dln(battery.voltage());
+        d("Battery=");dln(battery.voltage()/1000.0);
         d("ShutterConnected=");dln(camera.isShutterConnected() ? "true" : "false");
         d("FocusConnected=");dln(camera.isFocusConnected() ? "true" : "false");
         d("MotorsEnabled=");dln(motors_on ? "true" : "false");

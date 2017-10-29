@@ -95,7 +95,7 @@ public:
         horiz_gear_ratio = horiz;
         vert_gear_ratio = vert;
     }
-    void execute(char buffer[], const char* eob);
+    void execute(char buffer[]);
     void move(Motion motion, Coords coords, Position& current, Position& target);
 };
 
