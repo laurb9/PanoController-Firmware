@@ -8,15 +8,15 @@ The plan is to eventually be as close as reasonably possible to [G-code](), but 
 ```GCode
 ; 3-photo pano at 60°
 M17 G1 G91 (turn motors on, use relative move mode)
-M116 P5 Q0.75 (wait 5 seconds for platform shake to be under 0.75°/s^2)
-M240 P0.1 R0.5 (trigger shutter for 0.1s then wait for another 0.5s)
+M116 P5 Q750 (wait 5 seconds for platform shake to be under 0.75°/s^2)
+M240 P0.1 R0.5 (trigger shutter for 1/10s then wait for another 0.5s)
 A60 (rotate by 90° to the right)
-M116 P5 Q0.75
+M116 P5 Q750
 M240 P0.1 R0.5
 A60
-M116 P5 Q0.75
+M116 P5 Q750
 M240 P0.1 R0.5
-G0 G28 A0 C0 (return quickly to home position)
+G0 G28 (return quickly to home position)
 ```
 
 (Need to work on the shutter command, I'd like to combine the zero-motion wait, shutter pulse length, shutter duration and post-processing wait in a single command if I can)
@@ -39,7 +39,7 @@ Since the platform center is actually fixed, there are no movements available in
 - Millimeters for distance (`X`, `Y`, `Z`). _Note: standard G-Code could switch to inches via `G20` and to mm via `G21`_.
 - Degrees for rotation (`A`, `B`, `C`)
 - Degrees/s for speed (`F`)
-- Degrees/s^2 for acceleration
+- Degrees/s^2 for acceleration. _Note: M116 (Zero Motion Wait) uses thousandths (1/1000°)_.
 - Seconds for duration (fractional to ms precision: 0.001)
 
 ## Commands
@@ -49,7 +49,7 @@ Many of these are "sticky" including parameters (they apply to following lines u
 
 - `G00 A~ C~` - Move (rotate head) to position A C
     - **sticky**: `A~` on the following line will continue to move in the same way
-- `G01 A~ C~ F~` - Linear interpolation positioning with speed F, same as above
+- `G01 A~ C~ F~` - Linear interpolation positioning with speed F, same as above. _Note: F~ not implemented_.
 - `G28 A0 C0` - Move to origin via intermediate point.
 - `G90` - Use absolute coordinate system (default): `G90 G00 A10 C10`
 - `G91` - Use relative coordinate system: `G90 G00 A10 C10`
@@ -69,8 +69,8 @@ Many of these are "sticky" including parameters (they apply to following lines u
 
 The response format, if there is a standard, is not yet clear to me.
 
-- `M117` - Get Zero (Home) Position
-- `M114` - Get Current position
+- `M117` - Get Home position
+- `M114` - Get current position
 - `M115` - Get firmware version and capabilities
 - `M503` - Get current settings
 
