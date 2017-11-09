@@ -21,7 +21,7 @@ or directly via any Bluetooth LE client in UART mode.
 - **<a href="https://www.facebook.com/panocontroller/videos/1009260305834819/">Zero-motion shutter delay!</a>**
   When gyro is connected, waits for platform to stabilize before triggering. 
   Extremely useful feature to compensate for tripod stability, platform's own movement or wind gusts.
-- Supports a subset of <a href="g-code.md">G-Code</a> allowing full remote operation of the platform
+- Supports a subset of **<a href="g-code.md">G-Code</a>** allowing full remote operation of the platform
   via a Bluetooth LE UART link or serial. This enables running other programs than just panoramas 
   (time lapse for example)
 - Precision sub-degree movement using the <a href="https://github.com/laurb9/StepperDriver">StepperDriver library</a>
