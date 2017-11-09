@@ -162,7 +162,7 @@ void GCode::execute(char buffer[]){
     }
 
     // power steppers on / off 
-    if (motors_on){
+    if (motors_on && battery.voltage() > 3000){
         motors->enable();
     } else {
         motors->disable();
