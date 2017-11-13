@@ -163,9 +163,9 @@ void GCode::execute(char buffer[]){
 
     // power steppers on / off 
     if (motors_on && battery.voltage() > 3000){
-        motors->enable();
+        motors.enable();
     } else {
-        motors->disable();
+        motors.disable();
     }
 
     // motion
@@ -204,10 +204,10 @@ void GCode::execute(char buffer[]){
         d("GearRatioA=1:"); dln(horiz_gear_ratio);
         d("GearRatioC=1:"); dln(vert_gear_ratio);
         */
-        d("MaxAccelA="); dln(platformAccel(max_accel, horiz_motor_steps, horiz_gear_ratio));
-        d("MaxAccelC="); dln(platformAccel(max_accel, vert_motor_steps, vert_gear_ratio));
-        d("MaxDecelA="); dln(platformAccel(max_decel, horiz_motor_steps, horiz_gear_ratio));
-        d("MaxDecelC="); dln(platformAccel(max_decel, vert_motor_steps, vert_gear_ratio));
+        d("MaxAccelA="); dln(platformAccel(max_accel, horiz_motor.getSteps(), horiz_gear_ratio));
+        d("MaxAccelC="); dln(platformAccel(max_accel, vert_motor.getSteps(), vert_gear_ratio));
+        d("MaxDecelA="); dln(platformAccel(max_decel, horiz_motor.getSteps(), horiz_gear_ratio));
+        d("MaxDecelC="); dln(platformAccel(max_decel, vert_motor.getSteps(), vert_gear_ratio));
         d("MovePrecisionA=");serial.println(1.0/horiz_gear_ratio/horiz_motor.calcStepsForRotation(1.0), 4);
         d("MovePrecisionC=");serial.println(1.0/vert_gear_ratio/vert_motor.calcStepsForRotation(1.0), 4);
     }
@@ -221,10 +221,10 @@ void GCode::execute(char buffer[]){
             d("SpeedMode=");dln((cmd.speed==Speed::CONSTANT) ? "CONSTANT" : "ACCELERATED");
             d("SpeedA=");dln(platformSpeed(horiz_motor.getRPM(), horiz_gear_ratio));
             d("SpeedC=");dln(platformSpeed(vert_motor.getRPM(), vert_gear_ratio));
-            d("AccelA=");dln(platformAccel(horiz_accel, horiz_motor_steps, horiz_gear_ratio));
-            d("AccelC=");dln(platformAccel(vert_accel, vert_motor_steps, vert_gear_ratio));
-            d("DecelA=");dln(platformAccel(horiz_decel, horiz_motor_steps, horiz_gear_ratio));
-            d("DecelC=");dln(platformAccel(vert_decel, vert_motor_steps, vert_gear_ratio));
+            d("AccelA=");dln(platformAccel(horiz_accel, horiz_motor.getSteps(), horiz_gear_ratio));
+            d("AccelC=");dln(platformAccel(vert_accel, vert_motor.getSteps(), vert_gear_ratio));
+            d("DecelA=");dln(platformAccel(horiz_decel, horiz_motor.getSteps(), horiz_gear_ratio));
+            d("DecelC=");dln(platformAccel(vert_decel, vert_motor.getSteps(), vert_gear_ratio));
         }
         if (!code || code & M503Options::M503_BATTERY){
             d("Battery=");dln(battery.voltage()/1000.0);
@@ -264,11 +264,11 @@ void GCode::execute(char buffer[]){
 
 void GCode::move(Motion motion, Coords coords, Position& current, Position& target){
     if (coords == Coords::RELATIVE){
-        motors->rotate(target.a * horiz_gear_ratio, target.c * vert_gear_ratio);
+        motors.rotate(target.a * horiz_gear_ratio, target.c * vert_gear_ratio);
         current.a += target.a;
         current.c += target.c;                    
     } else {
-        motors->rotate((target.a - current.a) * horiz_gear_ratio, 
+        motors.rotate((target.a - current.a) * horiz_gear_ratio, 
                       (target.c - current.c) * vert_gear_ratio);
         current.a = target.a;
         current.c = target.c;
@@ -283,8 +283,10 @@ void GCode::move(Motion motion, Coords coords, Position& current, Position& targ
  * Set acceleration
  */
 void GCode::setAccel(float horiz_plat_accel, float vert_plat_accel){
-    horiz_accel = min(max_accel, motorAccel(horiz_plat_accel, horiz_motor_steps, horiz_gear_ratio));
-    vert_accel = min(max_accel, motorAccel(vert_plat_accel, vert_motor_steps, vert_gear_ratio));
+    horiz_accel = min(max_accel, motorAccel(horiz_plat_accel, horiz_motor.getSteps(), horiz_gear_ratio));
+    vert_accel = min(max_accel, motorAccel(vert_plat_accel, vert_motor.getSteps(), vert_gear_ratio));
+    horiz_decel = horiz_accel;
+    vert_decel = vert_accel;
 }
 /*
  * Set speed profile

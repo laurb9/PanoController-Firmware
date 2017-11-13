@@ -86,9 +86,7 @@ protected:
     Camera& camera;
     MPU& mpu;
     Battery& battery;
-    MultiDriver* motors;
-    short horiz_motor_steps = 200;
-    short vert_motor_steps = 200;
+    MultiDriver& motors;
     short horiz_gear_ratio = 1;
     short vert_gear_ratio = 1;
     short max_accel, horiz_accel, vert_accel = 1000;
@@ -99,20 +97,18 @@ protected:
 
     Command cmd;
 
+    GCode(Stream& serial, MultiDriver& motors, Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, Battery& battery)
+        :serial(serial), motors(motors), horiz_motor(horiz_motor), vert_motor(vert_motor), camera(camera), mpu(mpu), battery(battery) {
+    };
 public:
-    GCode(Stream& serial, Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, Battery& battery)
-        :serial(serial), horiz_motor(horiz_motor), vert_motor(vert_motor), camera(camera), mpu(mpu), battery(battery) {
-            motors = new MultiDriver(horiz_motor, vert_motor);
-        };
+    GCode(Stream& serial, MultiDriver& motors, Camera& camera, MPU& mpu, Battery& battery)
+        :GCode(serial, motors, motors.getMotor(0), motors.getMotor(1), camera, mpu, battery) {
+    }
     void begin(){
     };
     /*
      * Set motor and platform parameters. These should be set and exposed in the Motor class
      */
-    void setMotorSteps(short horiz, short vert){
-        horiz_motor_steps = horiz;
-        vert_motor_steps = vert;
-    }
     void setMaxAccel(short accel, short decel){
         max_accel = horiz_accel = vert_accel = accel;
         max_decel = horiz_decel = vert_decel = decel;

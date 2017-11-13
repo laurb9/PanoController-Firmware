@@ -25,7 +25,7 @@ static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
 static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
 static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
 static MultiDriver motors(horiz_motor, vert_motor);
-static GCode gcode(ble, horiz_motor, vert_motor, camera, mpu, battery);
+static GCode gcode(ble, motors, camera, mpu, battery);
 
 void setup() {
     Serial.begin(115200);
@@ -59,7 +59,6 @@ void setup() {
 
     Serial.println("Initializing G-Code interpreter...");
     gcode.begin();
-    gcode.setMotorSteps(MOTOR_STEPS, MOTOR_STEPS);
     gcode.setMaxRPM(MOTOR_RPM, MOTOR_RPM/2);
     gcode.setGearRatio(HORIZ_GEAR_RATIO, VERT_GEAR_RATIO);
     gcode.setMaxAccel(MOTOR_ACCEL, MOTOR_DECEL);
