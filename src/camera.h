@@ -29,6 +29,8 @@ protected:
 public:
     int aspect = 23;
     Camera(int focus_pin, int shutter_pin);
+    bool isShutterConnected(void);
+    bool isFocusConnected(void);
     void shutter(int delay_ms, bool long_pulse);
     unsigned setFocalLength(unsigned focal_length);
     unsigned getFocalLength(void){ return focal_length; };

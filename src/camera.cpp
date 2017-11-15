@@ -17,6 +17,18 @@ Camera::Camera(int focus_pin, int shutter_pin)
     setFocalLength(24);
 }
 
+bool Camera::isShutterConnected(void){
+    pinMode(shutter_pin, INPUT_PULLDOWN);
+    delay(10);
+    return digitalRead(shutter_pin);
+}
+
+bool Camera::isFocusConnected(void){
+    pinMode(focus_pin, INPUT_PULLDOWN);
+    delay(10);
+    return digitalRead(focus_pin);
+}
+
 void Camera::shutter(int delay_ms, bool long_pulse){
     int shutter_pulse;
     if (long_pulse){

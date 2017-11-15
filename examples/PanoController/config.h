@@ -12,12 +12,10 @@
 
 // Battery monitoring settings
 #define VCC 3300
-#define LOW_BATTERY 7000
 // R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vin)
 // measure resistors and enter actual values for a more accurate voltage
 #define BATT_R1 9980
 #define BATT_R2 46500
-#define BATT_RANGE (VCC * (BATT_R1 + BATT_R2) / BATT_R1)
 
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
@@ -29,10 +27,13 @@
 #define MICROSTEPS 32
 // max RPM 
 #define MOTOR_RPM 500
-// do these belong in platform settings ?
-// acceleration/deceleration in steps/sec^2
+// max acceleration/deceleration in steps/sec^2
 #define MOTOR_ACCEL 1000
-#define MOTOR_DECEL 500
+#define MOTOR_DECEL 1000
+
+// Platform parameters
+#define HORIZ_GEAR_RATIO 5   // 1:5
+#define VERT_GEAR_RATIO 15   // 1:15
 
 // board-specific pin settings
 #if defined(ARDUINO_ARCH_SAMD) && defined(ARDUINO_SAMD_FEATHER_M0)
