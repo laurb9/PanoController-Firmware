@@ -1,20 +1,22 @@
-# Pano Controller 2.1
+# Pano Controller Firmware 2.2
 
 Open Arduino-based Platform for high-resolution panoramic photography controlled via Bluetooth App.
 Started as a board replacement/upgrade for the Gigapan EPIC 100, but designed to be 
 flexible and support other home-brew panoramic platforms with stepper motor movement.
 
-The design goals for the new versions 2.1 and beyond are as follows:
-  1. (iOS) App is required to configure the device and start panorama (the platform cannot set up a pano without it)
-  2. (Arduino) Platform can complete a full pano once started, even if App disconnects
-  3. (iOS) App may enhance operation during pano execution (by reading status and updating parameters)
+The design goals for the new versions 2.2 and beyond are as follows:
+  1. Expose all basic operations that the platform is capable of as discrete **<a href="g-code.md">G-Code</a>** 
+     commands via Serial/UART
+  2. On-demand send platform parameters and current status (position, battery etc) needed to configure 
+     an application and track the execution.
+  3. The <a href="https://github.com/laurb9/PanoController-iOS">External (iOS) App</a> (Bluetooth LE) 
+     or similar application will create and send the G-Code program to run the panorama or other activities.
+  4. As the above App can display all the information, a display is no longer necessary on the platform.
 
 See the <a href="https://www.facebook.com/panocontroller">Official Facebook page</a> for demo videos and more progress photos.
 
-Operated over Bluetooth LE via the <a href="https://github.com/laurb9/PanoController">Pano Controller iOS App</a>
-or directly via any Bluetooth LE client in UART mode. 
-
-<img src="images/prototype.jpg" width="400" alt="Pano Controller 2.0 Executor Boards installed in Gigapan EPIC 100">
+<img src="images/gigapan.jpg" width="400" alt="Adafruit Feather M0-based Pano Controller installed in Gigapan EPIC 100">
+<img src="images/gcode.png" width="400" alt="G-Code Panorama Program">
 
 ## Features:
 ### Software
@@ -22,7 +24,7 @@ or directly via any Bluetooth LE client in UART mode.
   When gyro is connected, waits for platform to stabilize before triggering. 
   Extremely useful feature to compensate for tripod stability, platform's own movement or wind gusts.
 - Supports a subset of **<a href="g-code.md">G-Code</a>** allowing full remote operation of the platform
-  via a Bluetooth LE UART link or serial. This enables running other programs than just panoramas 
+  via a Bluetooth LE or serial. This enables running other programs than just panoramas 
   (time lapse for example)
 - Precision sub-degree movement using the <a href="https://github.com/laurb9/StepperDriver">StepperDriver library</a>
 - **<a href="https://www.facebook.com/panocontroller/videos/1488324751261703/">Smooth movement and iOS App Demo (2.1)</a>**
@@ -31,15 +33,44 @@ or directly via any Bluetooth LE client in UART mode.
 ### Hardware
 - 32-bit ARM controllers (Gigapan had 8-bit AVR)
 - Bluetooth LE control via iOS App
-- Battery voltage from 10V down to 6V
+- Battery voltage from 10V down to 6V due to the DRV8834 stepper driver used.
+  Other drivers will enable different voltage ranges if necessary.
 
 ## Wiring map
 
-Wiring is still a work in progress. An Adafruit BLE device is now required for Bluetooth LE connectivity.
+An Adafruit BLE device is now required for Bluetooth LE connectivity.
+Wiring is mostly stable but subject to change if new devices or options are added.
 
 ### Controller
 
 The controller unit comes with no display. All the controls and status are presented via the iOS App.
+
+#### Feather M0 / Bluefruit
+
+Status: in active development. Using onboard Feather/BLE. 
+- A0
+- A1
+- A2
+- A3
+- A4 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
+- A5
+- SCK - BLE(internal)
+- MOSI - BLE(internal)
+- MISO - BLE(internal)
+- RX/0 - CAMERA_FOCUS active LOW
+- TX/1 - CAMERA_SHUTTER active LOW
+- 4[BLE] CS  (internally connected)
+- 7[BLE] IRQ (internally connected)
+- 8[BLE] RST (internally connected)
+- SDA/20 - MPU-6050 board
+- SCL/21 - MPU-6050 board
+- 5 - DIR
+- 6 - VERT_STEP
+- 9[A7] - HORIZ_STEP
+- 10 - nENABLE
+- 11
+- 12 - MPU-6050 INT
+- 13[LED]
 
 #### Teensy LC / 3.x
 
@@ -69,43 +100,16 @@ Bluefruit SPI Friend is required.
 - D12 - SPI_MISO - BLUEFRUIT
 - D13 - SPI_SCK - BLUEFRUIT
 
-#### Feather M0 / Bluefruit
-
-Status: in active development. Using onboard Feather/BLE. 
-- A0
-- A1
-- A2
-- A3
-- A4 - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
-- A5
-- SCK - BLE(internal)
-- MOSI - BLE(internal)
-- MISO - BLE(internal)
-- RX/0 - CAMERA_FOCUS active LOW
-- TX/1 - CAMERA_SHUTTER active LOW
-- 4[BLE] CS  (internally connected)
-- 7[BLE] IRQ (internally connected)
-- 8[BLE] RST (internally connected)
-- SDA/20 - MPU-6050 board
-- SCL/21 - MPU-6050 board
-- 5 - DIR
-- 6 - VERT_STEP
-- 9[A7] - HORIZ_STEP
-- 10 - nENABLE
-- 11
-- 12 - MPU-6050 INT
-- 13[LED]
-
 #### All
 
-- Vin is 6-10V
+- Vin is 6-10V when using DRV8834
 - 3.3V step-down adapter from Vin to Vcc for logic power
 - All ~SLEEP tied to Vcc
 - All VMOT tied to Vin
-- All M1 tied to Vcc      (1:32 mode)
-- All M0 left unconnected (1:32 mode)
+- All M1 tied to Vcc      (preset 1:32 mode)
+- All M0 left unconnected (preset 1:32 mode)
 - All ~ENABLE tied together
-- All DIR tied together
+- All DIR tied together (multiplexed in software)
 - 100uF capacitor at Vin
 - 10uF capacitor at Vcc
 - 10K pull-up resistor from Vcc to ~ENABLE
@@ -114,12 +118,11 @@ Status: in active development. Using onboard Feather/BLE.
 ## Notes
 
 - *Atmega328-based boards are not supported*, see issue #57
-- BLE is required for the current design. Only the Adafruit_BluefruitLE library is supported for now, but any UART-type protocol should work with minimal changes.
-- Future rewiring plan
+- Serial or Bluetooth LE is required for the current design.
+  Only the Adafruit_BluefruitLE library is supported for now, but any UART-type protocol should work with minimal changes.
+- Other devices notes
   - if we want to use ESP-12 at some point, need fewer pins. ESP-12 only has 11: 
     (0,2,4,5,12,13,14,15,16,RXD,TXD,ADC)
-
-<img src="images/breadboard.jpg" width="500" alt="Breadboard playing with Feather M0">
 
 ### Setting stepper motor current limit for DRV8834
 
@@ -144,7 +147,7 @@ lower current even, if we reduce the speed.
 ### Electronics
 
 - Microcontroller, one of below
-  - Adafruit <a href="https://learn.adafruit.com/adafruit-feather-m0-bluefruit-le/overview">Feather M0 Bluefruit</a>
+  - Adafruit <a href="https://learn.adafruit.com/adafruit-feather-m0-bluefruit-le/overview">Feather M0 Bluefruit</a> *tested*
   - PJRC <a href="http://www.pjrc.com/store/teensylc.html">Teensy LC</a> 
   - PJRC <a href="http://www.pjrc.com/store/teensy32.html">Teensy 3.1+</a>
 - 2 x <a href="https://www.pololu.com/product/2134">DRV8834 Low-Voltage Stepper Motor Driver</a> from Pololu.
@@ -155,19 +158,19 @@ lower current even, if we reduce the speed.
 - 10K resistor
 - 47K resistor
 - 2 x 4-pin female connectors for motor connections
-- 3-pin connector/jack for remote shutter
+- 3-pin connector/jack for remote shutter and camera-specific cable with connector.
 - 2-pin power connector/DC power jack 
 - 6AA battery holder or a 6V-10V power source.
 
 ### Libraries
 - Adafruit_BluefruitLE_SPI
-- Wire
 - <a href="https://github.com/laurb9/StepperDriver/releases">StepperDriver</a>
+- Wire
 
 ### Hardware
 
-Well, this is a controller, so it needs a pano bot platform to control. I used the Gigapan
-Epic 100 but any platform with two motors (or even one, I suppose) can be used.
+Well, this is a controller, so it needs a pano platform to control. I used the Gigapan Epic 100 
+but any platform with two motors (or even one, I suppose) can be used.
 The only thing required of the platform is the two stepper motors, one for horizontal movement 
 and the other for vertical.
 
@@ -176,9 +179,9 @@ and the other for vertical.
   - Examples:
     - 39BYG101 0.5A 
     - 39BYG001 1A (used in Gigapan platform)
-  - Notes: 
+  - Notes:
     - the DRV8834 current limit must be set according to motor spec
-    - reduction gear settings are hardcoded in pano.h
+    - reduction gear settings, motor acceleration and RPM are set in <a href="https://github.com/laurb9/PanoController-Firmware/blob/master/examples/PanoController/config.h">examples/PanoController/config.h</a>
 
 ## Previous Versions
 
@@ -188,5 +191,3 @@ The previous versions of this project had different goals and do not require an 
   - https://github.com/laurb9/pano-controller/tree/v1.4
 - Version 2.0 is a two-unit (platform and remote control, both Arduino) using 2.4GHz radio
   - https://github.com/laurb9/pano-controller/tree/v2.0-beta
-
-<img src="images/navigator.jpg" width="400" alt="Pano Controller 2.0 Remote Navigator Unit">
