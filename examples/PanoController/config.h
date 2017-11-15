@@ -29,7 +29,7 @@
 #define MOTOR_RPM 500
 // max acceleration/deceleration in steps/sec^2
 #define MOTOR_ACCEL 1000
-#define MOTOR_DECEL 500
+#define MOTOR_DECEL 1000
 
 // Platform parameters
 #define HORIZ_GEAR_RATIO 5   // 1:5

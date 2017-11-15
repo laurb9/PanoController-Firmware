@@ -44,12 +44,12 @@ void MPU::read(void){
     gyro_y = map(readNextRegister() + gyro_offset_y, -32768, 32767, -gyro_scale, gyro_scale);
     gyro_z = map(readNextRegister() + gyro_offset_z, -32768, 32767, -gyro_scale, gyro_scale);
 
-/*
+    /*
     char tmp[60];
     snprintf(tmp, 60, "x=%5d y=%5d z=%5d Gx=%5d Gy=%5d Gz=%5d t=%d",
-             accelX, accelY, accelZ, gyroX, gyroY, gyroZ, round(temp));
+             acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, round(temp));
     Serial.println(tmp);
-*/
+    */
 }
 
 /*
@@ -62,7 +62,7 @@ bool MPU::zeroMotionWait(int target, const int timeout){
     static int avg_gyro_x, avg_gyro_y, avg_gyro_z;
     bool zero_motion = false;
     unsigned zero_motion_duration = 0;
-    unsigned end_timeout = millis() + timeout;
+    unsigned long start_time = millis();
 
     // a target less than GYRO_NOISE will never be reached
     target = max(GYRO_NOISE, target);
@@ -72,7 +72,7 @@ bool MPU::zeroMotionWait(int target, const int timeout){
     avg_gyro_y = gyro_y;
     avg_gyro_z = gyro_z;
 
-    while (millis() < end_timeout && !zero_motion){
+    while (millis() - start_time < timeout && !zero_motion){
         int span_x, span_y, span_z;
         int max_gyro_x = -gyro_scale, max_gyro_y = -gyro_scale, max_gyro_z = -gyro_scale;
         int min_gyro_x = gyro_scale, min_gyro_y = gyro_scale, min_gyro_z = gyro_scale;
@@ -95,6 +95,12 @@ bool MPU::zeroMotionWait(int target, const int timeout){
         span_y = max_gyro_y - min_gyro_y;
         span_z = max_gyro_z - min_gyro_z;
 
+        /*
+        char tmp[60];
+        snprintf(tmp, 60, "Gx=%5d Gy=%5d Gz=%5d", span_x, span_y, span_z);
+        Serial.println(tmp);
+        */
+    
         if (span_x < target && span_y < target && span_z < target){
             // one event of "zero" motion
             if (!zero_motion_duration){

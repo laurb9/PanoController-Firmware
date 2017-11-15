@@ -17,6 +17,7 @@
 enum Coords {ABSOLUTE, RELATIVE};
 enum Move {RAPID, LINEAR};
 enum Speed {CONSTANT, ACCEL};
+enum M503Options {M503_MOTION=1, M503_BATTERY=2, M503_CAMERA=4};
 typedef struct {
     float a, c;
 } Position;
@@ -49,8 +50,10 @@ enum NonModal {
     M115=1 << 10,
     M116=1 << 11,
     M117=1 << 12,
-    M240=1 << 13,
-    M503=1 << 14,
+    M202=1 << 13,
+    M203=1 << 14,
+    M240=1 << 15,
+    M503=1 << 16,
 };
 
 typedef struct {
@@ -60,6 +63,7 @@ typedef struct {
     float p = 0;
     float q = 0;
     float r = 0;
+    float s = 0;
     float f = 0;
     int lineno = 0;
     Motion motion = NO_MOTION;
@@ -77,26 +81,52 @@ typedef struct {
 class GCode {
 protected:
     Stream& serial;
-    MultiDriver& motors;
+    Motor& horiz_motor;
+    Motor& vert_motor;
     Camera& camera;
     MPU& mpu;
     Battery& battery;
-    short int horiz_gear_ratio = 1;
-    short int vert_gear_ratio = 1;
+    MultiDriver& motors;
+    short horiz_gear_ratio = 1;
+    short vert_gear_ratio = 1;
+    short max_accel, horiz_accel, vert_accel = 1000;
+    short max_decel, horiz_decel, vert_decel = 1000;
+    short max_horiz_rpm = 90;
+    short max_vert_rpm = 90;
     bool motors_on = false;
 
     Command cmd;
 
+    GCode(Stream& serial, MultiDriver& motors, Motor& horiz_motor, Motor& vert_motor, Camera& camera, MPU& mpu, Battery& battery)
+        :serial(serial), motors(motors), horiz_motor(horiz_motor), vert_motor(vert_motor), camera(camera), mpu(mpu), battery(battery) {
+    };
 public:
     GCode(Stream& serial, MultiDriver& motors, Camera& camera, MPU& mpu, Battery& battery)
-        :serial(serial), motors(motors), camera(camera), mpu(mpu), battery(battery){};
-    void begin(){};
-    void setGearRatio(short int horiz, short int vert){
+        :GCode(serial, motors, motors.getMotor(0), motors.getMotor(1), camera, mpu, battery) {
+    }
+    void begin(){
+    };
+    /*
+     * Set motor and platform parameters. These should be set and exposed in the Motor class
+     */
+    void setMaxAccel(short accel, short decel){
+        max_accel = horiz_accel = vert_accel = accel;
+        max_decel = horiz_decel = vert_decel = decel;
+    }
+    void setGearRatio(short horiz, short vert){
         horiz_gear_ratio = horiz;
         vert_gear_ratio = vert;
     }
-    void execute(char buffer[], const char* eob);
+    void setMaxRPM(short horiz, short vert){
+        max_horiz_rpm = horiz;
+        max_vert_rpm = vert;
+        horiz_motor.setRPM(horiz);
+        vert_motor.setRPM(vert);
+    }
+    void execute(char buffer[]);
     void move(Motion motion, Coords coords, Position& current, Position& target);
+    void setAccel(float horiz_plat_accel, float vert_plat_accel);
+    void setSpeed(Speed speed, short horiz_rpm, short vert_rpm);
 };
 
 #endif /* GCODE_H_ */
