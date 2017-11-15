@@ -64,7 +64,7 @@ void GCode::execute(char buffer[]){
             case 80: cmd.motion = NO_MOTION; break; // cancel modal mode
             case 90: cmd.coords = Coords::ABSOLUTE; break;
             case 91: cmd.coords = Coords::RELATIVE; break;
-            case 92: cmd.nonmodal |= (value == 92.1) ? NonModal::G92_1 : NonModal::G92; break;
+            case 92: cmd.nonmodal |= (value == 92.1f) ? NonModal::G92_1 : NonModal::G92; break;
             };
             break;
 

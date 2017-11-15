@@ -59,6 +59,7 @@ Many of these are "sticky" including parameters (they apply to following lines u
 - `G90` - Use absolute coordinate system (default): `G90 G00 A10 C10`
 - `G91` - Use relative coordinate system: `G90 G00 A10 C10`
 - `G92 A0 C0` - Set current position (`A~ C~` would set it as offsets from home position)
+- `G92.1` - Reset home position to 0
 - `M0 S~/P~` - Pause and wait for button `S` seconds or `P` milliseconds
 - `M1 S~/P~` - Pause if button pushed `S` seconds or `P` milliseconds
 - `M2` or `M30` - End of program

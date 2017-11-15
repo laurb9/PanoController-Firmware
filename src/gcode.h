@@ -125,7 +125,7 @@ public:
     }
     void execute(char buffer[]);
     void move(Motion motion, Coords coords, Position& current, Position& target);
-    void setAccel(float horiz_accel, float vert_accel);
+    void setAccel(float horiz_plat_accel, float vert_plat_accel);
     void setSpeed(Speed speed, short horiz_rpm, short vert_rpm);
 };
 
