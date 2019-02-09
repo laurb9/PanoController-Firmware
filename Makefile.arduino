@@ -2,10 +2,10 @@
 #
 #
 
-ARDUINO := arduino --preserve-temp-files
+ARDUINO := /Applications/Arduino.app/Contents/MacOS/Arduino --verbose --preserve-temp-files
 
 ifndef board
-$(error Usage: make <executor|navigator|panocontroller> board=<teensy31|teensyLC|feather>)
+$(error Usage: make board=<teensy31|teensyLC|feather>)
 endif
 
 ifeq ($(board),teensy31)
@@ -34,8 +34,6 @@ ifeq ($(board),uno)
 	PORT = /dev/ttyUSB0
 endif
 
-# Mac
-#ARDUINO := Arduino.app/Contents/MacOS/Arduino --verbose --preserve-temp-files
 TMPDIR := /tmp/pano-controller-build
 
 LIB_SOURCES =  src/*.cpp src/*.h
@@ -43,11 +41,5 @@ LIB_SOURCES =  src/*.cpp src/*.h
 panocontroller: examples/PanoController/PanoController.ino $(LIB_SOURCES) $(TMPDIR)
 	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
 
-navigator: examples/Navigator/Navigator.ino $(LIB_SOURCES) $(TMPDIR)
-	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
-
-executor: examples/Executor/Executor.ino $(LIB_SOURCES) $(TMPDIR)
-	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
-	
 $(TMPDIR):
 	mkdir -p $(TMPDIR)
