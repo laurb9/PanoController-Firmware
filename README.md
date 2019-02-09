@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/laurb9/PanoController-Firmware.svg?branch=master)](https://travis-ci.com/laurb9/PanoController-Firmware)
+
 # Pano Controller Firmware 2.2
 
 Open Arduino-based Platform for high-resolution panoramic photography controlled via Bluetooth App.
