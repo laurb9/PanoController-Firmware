@@ -70,7 +70,7 @@ Status: in active development. Using onboard Feather/BLE.
 - 6 - VERT_STEP
 - 9[A7] - HORIZ_STEP
 - 10 - nENABLE
-- 11
+- 11 - MPU-6050 Vcc (to be able to power on separately)
 - 12 - MPU-6050 INT
 - 13[LED]
 
@@ -90,7 +90,7 @@ Bluefruit SPI Friend is required.
 - D0/RX - CAMERA_FOCUS active LOW
 - D1/TX - CAMERA_SHUTTER active LOW
 - D2 - MPU-6050 INT
-- D3
+- D3 - MPU-6050 Vcc (to be able to power on separately)
 - D4 - BLUEFRUIT_SPI_RST
 - D5 - DIR
 - D6 - VERT_STEP
