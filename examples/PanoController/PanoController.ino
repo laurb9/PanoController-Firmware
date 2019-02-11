@@ -29,16 +29,20 @@ static GCode gcode(ble, motors, camera, mpu, battery);
 
 void setup() {
     Serial.begin(115200);
-    delay(2000); // wait for serial
+    delay(3000); // wait for serial
     Serial.println("PanoController built " __DATE__ " " __TIME__);
-
-    Serial.println("Configuring MPU");
-    mpu.begin();
 
     Serial.println("Configuring stepper drivers");
     horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
     vert_motor.begin(MOTOR_RPM/2, MICROSTEPS);
     motors.disable(); // turn off motors at startup
+    Serial.print("Horiz RPM="); Serial.println(horiz_motor.getRPM());
+    Serial.print("Vert  RPM="); Serial.println(vert_motor.getRPM());
+
+    Serial.println("Configuring MPU");
+    pinMode(MPU_VCC, OUTPUT);
+    digitalWrite(MPU_VCC, HIGH);
+    mpu.begin();
 
     Serial.println("Configuring Bluefruit LE");
     ble.begin(true);

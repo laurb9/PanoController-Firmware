@@ -24,6 +24,7 @@
 
 // MPU (accel/gyro)
 #define MPU_INT 2
+#define MPU_VCC 3
 
 // Future devices
 //#define COMPASS_DRDY 4

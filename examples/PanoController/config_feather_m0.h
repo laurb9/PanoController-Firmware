@@ -19,9 +19,10 @@
 
 // MPU (accel/gyro)
 #define MPU_INT 12
+#define MPU_VCC 11
 
 // Future devices
-//#define COMPASS_DRDY 11
+//#define COMPASS_DRDY xx
 
 // Stepper drivers control
 #define DIR 5

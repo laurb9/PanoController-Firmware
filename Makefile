@@ -1,53 +1,60 @@
-#
-#
-#
+# Default build architecture and board
+TARGET ?= adafruit:samd:adafruit_feather_m0
 
-ARDUINO := arduino --preserve-temp-files
+# Libraries needed for this application
+LIBS ?= "StepperDriver" "Adafruit BluefruitLE nRF51" "Adafruit SSD1306" "Adafruit GFX Library"
 
-ifndef board
-$(error Usage: make <executor|navigator|panocontroller> board=<teensy31|teensyLC|feather>)
-endif
+# Default list of cores to install with `make setup`
+CORES ?= adafruit:samd
 
-ifeq ($(board),teensy31)
-	# Teensy 3.1/3.2 target
-	# Teensy options hardware/teensy/avr/boards.txt
-	BOARD = teensy:avr:teensy31:usb=serial,keys=en-us,speed=72
-	PORT = /dev/ttyACM0
-endif 
-ifeq ($(board),teensyLC) 
-	# Teensy LC target
-	# Teensy options hardware/teensy/avr/boards.txt
-	BOARD = teensy:avr:teensyLC:usb=serial,keys=en-us,speed=48
-	PORT = /dev/ttyACM0
-endif
-ifeq ($(board),feather)
-    # Adafruit Feather M0
-    # must be installed with arduino --install-boards "adafruit:samd"
-    # ~/.arduino15/packages/adafruit/hardware/samd/1.0.13/boards.txt
-    BOARD = adafruit:samd:adafruit_feather_m0
-    PORT = /dev/ttyACM0
-endif
-ifeq ($(board),uno)
-	# Arduino UNO target
-	# arduino options hardware/arduino/avr/boards.txt
-	BOARD = arduino:avr:uno
-	PORT = /dev/ttyUSB0
-endif
+# Where to save the Arduino support files, this should match what is in .cli-config.yml
+ARDUINO_DIR ?= .arduino
 
-# Mac
-#ARDUINO := Arduino.app/Contents/MacOS/Arduino --verbose --preserve-temp-files
-TMPDIR := /tmp/pano-controller-build
+default:
+	#################################################################################################
+	# Initial setup: make .arduino/arduino-cli setup
+	#
+	# Build: make PanoController.hex TARGET=adafruit:samd:adafruit_feather_m0
+	#
+	# Install more cores: make setup CORES=arduino:samd
+	# (edit .cli-config.yml and add repository if needed)
+	#################################################################################################
 
-LIB_SOURCES =  src/*.cpp src/*.h
+ARDUINO_CLI_URL = http://downloads.arduino.cc/arduino-cli/arduino-cli-latest-linux64.tar.bz2
+ARDUINO_CLI ?= $(ARDUINO_DIR)/arduino-cli --config-file .cli-config.yml
+EXAMPLES := $(shell ls examples)
 
-panocontroller: examples/PanoController/PanoController.ino $(LIB_SOURCES) $(TMPDIR)
-	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
+all: # Build all example sketches
+all: $(EXAMPLES:%=%.hex)
 
-navigator: examples/Navigator/Navigator.ino $(LIB_SOURCES) $(TMPDIR)
-	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
+%.hex: # Generic rule for compiling sketch to uploadable hex file
+%.hex: examples/%
+	$(ARDUINO_CLI) compile --warnings all --fqbn $(TARGET) $< --output $@
+	ls -l $@*
 
-executor: examples/Executor/Executor.ino $(LIB_SOURCES) $(TMPDIR)
-	$(ARDUINO) --upload $< --board $(BOARD) --port $(PORT) --pref build.path=$(TMPDIR)
-	
-$(TMPDIR):
-	mkdir -p $(TMPDIR)
+# Remove built objects
+clean:
+	rm -fv $(EXAMPLES:%=%.{hex,elf}*)
+
+$(ARDUINO_DIR)/arduino-cli:  # Download and install arduino-cli
+$(ARDUINO_DIR)/arduino-cli:
+	mkdir -p $(ARDUINO_DIR)
+	cd $(ARDUINO_DIR)
+	curl -s $(ARDUINO_CLI_URL) \
+	| tar xfj - -O -C $(ARDUINO_DIR) \
+	> $@
+	chmod 755 $@
+
+setup: # Configure cores and libraries for arduino-cli (which it will download if missing)
+setup: $(ARDUINO_DIR)/arduino-cli
+	mkdir -p $(ARDUINO_DIR)/libraries
+	ln -sf $(CURDIR) $(ARDUINO_DIR)/libraries/
+	$(ARDUINO_CLI) config dump
+	$(ARDUINO_CLI) core update-index
+	$(ARDUINO_CLI) core install $(CORES)
+	$(ARDUINO_CLI) core list
+	for lib in $(LIBS); do \
+		$(ARDUINO_CLI) lib install "$${lib}" || true ; \
+	done
+
+.PHONY: clean %.hex all setup
