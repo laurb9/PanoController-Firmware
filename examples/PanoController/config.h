@@ -36,7 +36,7 @@
 #define VERT_GEAR_RATIO 15   // 1:15
 
 // board-specific pin settings
-#if defined(ARDUINO_ARCH_SAMD) && defined(ADAFRUIT_FEATHER_M0)
+#if defined(ARDUINO_SAMD_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0)
 #include "config_feather_m0.h"
 
 #elif defined(__arm__) && defined(CORE_TEENSY)
