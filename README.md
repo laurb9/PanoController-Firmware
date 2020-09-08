@@ -1,5 +1,5 @@
 [![Actions Status](https://github.com/laurb9/PanoController-Firmware/workflows/PlatformIO/badge.svg)](https://github.com/laurb9/PanoController-Firmware/actions)
-[![Build Status](https://travis-ci.com/laurb9/PanoController-Firmware.svg?branch=master)](https://travis-ci.com/laurb9/PanoController-Firmware)
+[![Actions Status](https://github.com/laurb9/PanoController-Firmware/workflows/Arduino/badge.svg)](https://github.com/laurb9/PanoController-Firmware/actions)
 
 # Pano Controller Firmware 2.2
 

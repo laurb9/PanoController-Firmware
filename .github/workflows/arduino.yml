@@ -1,4 +1,4 @@
-name: PlatformIO
+name: Arduino
 
 on:
   push:
@@ -17,20 +17,17 @@ jobs:
       fail-fast: false
       matrix:
         board:
-          - adafruit_feather_m0
-          - teensylc
-          
+          - adafruit:samd:adafruit_feather_m0
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v1
-        with:
-          python-version: 3
-      - name: Install PlatformIO
+      - name: Install arduino-cli
         run: |
-          python -m pip install --upgrade pip
-          pip install platformio
+          make setup
       - name: Build
         run: |
-          platformio run -e ${{ matrix.board }}
+          make setup
+          make all TARGET=${{ matrix.board }}

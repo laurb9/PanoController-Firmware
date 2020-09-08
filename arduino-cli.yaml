@@ -1,0 +1,10 @@
+directories:
+  data: .arduino
+  downloads: .arduino/staging
+  user: .arduino
+board_manager:
+  additional_urls:
+    - https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+    - https://dl.espressif.com/dl/package_esp32_index.json
+telemetry:
+  enabled: false
