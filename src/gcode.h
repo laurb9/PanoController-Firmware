@@ -81,12 +81,12 @@ typedef struct {
 class GCode {
 protected:
     Stream& serial;
+    MultiDriver& motors;
     Motor& horiz_motor;
     Motor& vert_motor;
     Camera& camera;
     MPU& mpu;
     Battery& battery;
-    MultiDriver& motors;
     short horiz_gear_ratio = 1;
     short vert_gear_ratio = 1;
     short max_accel, horiz_accel, vert_accel = 1000;

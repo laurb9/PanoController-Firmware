@@ -9,8 +9,9 @@
  */
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_I2CDevice.h>
 #include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #define SCREEN_WIDTH  SSD1306_LCDWIDTH
 #define SCREEN_HEIGHT SSD1306_LCDHEIGHT

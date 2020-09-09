@@ -9,6 +9,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <DRV8834.h>
+#include <SyncDriver.h>
 #include "config.h"
 #include "camera.h"
 #include "mpu.h"
@@ -24,7 +25,7 @@ static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
 static MPU mpu(MPU_I2C_ADDRESS, MPU_INT);
 static DRV8834 horiz_motor(MOTOR_STEPS, DIR, HORIZ_STEP, nENABLE);
 static DRV8834 vert_motor(MOTOR_STEPS, DIR, VERT_STEP);
-static MultiDriver motors(horiz_motor, vert_motor);
+static SyncDriver motors(horiz_motor, vert_motor);
 static GCode gcode(ble, motors, camera, mpu, battery);
 
 void setup() {
@@ -32,17 +33,16 @@ void setup() {
     delay(3000); // wait for serial
     Serial.println("PanoController built " __DATE__ " " __TIME__);
 
+    // turn on power to MPU but give it time to stabilize
+    pinMode(MPU_VCC, OUTPUT);
+    digitalWrite(MPU_VCC, HIGH);
+
     Serial.println("Configuring stepper drivers");
     horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
     vert_motor.begin(MOTOR_RPM/2, MICROSTEPS);
     motors.disable(); // turn off motors at startup
     Serial.print("Horiz RPM="); Serial.println(horiz_motor.getRPM());
     Serial.print("Vert  RPM="); Serial.println(vert_motor.getRPM());
-
-    Serial.println("Configuring MPU");
-    pinMode(MPU_VCC, OUTPUT);
-    digitalWrite(MPU_VCC, HIGH);
-    mpu.begin();
 
     Serial.println("Configuring Bluefruit LE");
     ble.begin(true);
@@ -61,6 +61,9 @@ void setup() {
     battery.begin();
     Serial.print(battery.voltage()); Serial.println("mV");
 
+    Serial.println("Configuring MPU...");
+    mpu.begin();
+
     Serial.println("Initializing G-Code interpreter...");
     gcode.begin();
     gcode.setMaxRPM(MOTOR_RPM, MOTOR_RPM/2);
@@ -77,7 +80,6 @@ void setup() {
 #define GCODE_BUF_SIZE 128
 void loop() {
     static char buffer[GCODE_BUF_SIZE+1];
-    static char *eob = buffer + GCODE_BUF_SIZE;
     static int len;
 
     if (ble.available()){
