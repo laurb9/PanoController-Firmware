@@ -19,21 +19,14 @@
 
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
-
-// Stepper motors and drivers configuration
-// steps per revolution
-#define MOTOR_STEPS 200
-// microsteps
-#define MICROSTEPS 32
-// max RPM 
-#define MOTOR_RPM 500
-// max acceleration/deceleration in steps/sec^2
-#define MOTOR_ACCEL 1000
-#define MOTOR_DECEL 1000
-
-// Platform parameters
-#define HORIZ_GEAR_RATIO 5   // 1:5
-#define VERT_GEAR_RATIO 15   // 1:15
+ 
+#include "platform_gigapan.h"
+#include "platform_panocontroller_v4.h"
+#ifndef MOTOR_STEPS
+#warning "Missing PLATFORM_ setting, default to PLATFORM_GIGAPAN"
+#define PLATFORM_GIGAPAN
+#include "platform_gigapan.h"
+#endif
 
 // board-specific pin settings
 #if defined(ARDUINO_SAMD_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0)
