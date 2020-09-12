@@ -4,8 +4,8 @@
 # Pano Controller Firmware 2.2
 
 Open Arduino-based Platform for high-resolution panoramic photography controlled via Bluetooth App.
-Started as a board replacement/upgrade for the Gigapan EPIC 100, but designed to be 
-flexible and support other home-brew panoramic platforms with stepper motor movement.
+Can be used to upgrade the board of a Gigapan EPIC 100, with the 3D-printed [PanoController V4 Platform](https://github.com/laurb9/Pano-Platform-3D) ([On Thingiverse](https://www.thingiverse.com/thing:3851893))
+or with other platforms with stepper motors.
 
 The design goals for the new versions 2.2 and beyond are as follows:
   1. Expose all basic operations that the platform is capable of as discrete **<a href="g-code.md">G-Code</a>** 
@@ -18,7 +18,8 @@ The design goals for the new versions 2.2 and beyond are as follows:
 
 See the <a href="https://www.facebook.com/panocontroller">Official Facebook page</a> for demo videos and more progress photos.
 
-<img src="images/gigapan.jpg" width="400" alt="Adafruit Feather M0-based Pano Controller installed in Gigapan EPIC 100">
+<img src="images/gigapan.jpg" width="400" alt="Adafruit Feather M0-based Pano Controller installed in Gigapan EPIC 100"><img src="images/panocontroller_v4.jpg" width="400" alt="Adafruit Feather M0-based Pano Controller installed in PanoController V4 3D-Printed Platform">
+
 <img src="images/gcode.png" width="400" alt="G-Code Panorama Program">
 
 ## Features:
@@ -34,7 +35,7 @@ See the <a href="https://www.facebook.com/panocontroller">Official Facebook page
 
 
 ### Hardware
-- 32-bit ARM controllers (Gigapan had 8-bit AVR)
+- 32-bit ARM controller board (Gigapan had 8-bit AVR)
 - Bluetooth LE control via iOS App
 - Battery voltage from 10V down to 6V due to the DRV8834 stepper driver used.
   Other drivers will enable different voltage ranges if necessary.
@@ -50,7 +51,7 @@ The controller unit comes with no display. All the controls and status are prese
 
 #### Feather M0 / Bluefruit
 
-Status: in active development. Using onboard Feather/BLE. 
+Status: in active development. Using onboard Feather/BLE. Builds in Arduino or PlatformIO.
 - A0
 - A1
 - A2
@@ -77,7 +78,7 @@ Status: in active development. Using onboard Feather/BLE.
 
 #### Teensy LC / 3.x
 
-Status: not tested (work in progress)
+Status: builds on PlatformIO.
 Bluefruit SPI Friend is required.
 
 - A0 - BATTERY - Battery Voltage via divider: Vin---[47K]---A0---[10K]---GND
@@ -123,9 +124,6 @@ Bluefruit SPI Friend is required.
 - *Atmega328-based boards are not supported*, see issue #57
 - Serial or Bluetooth LE is required for the current design.
   Only the Adafruit_BluefruitLE library is supported for now, but any UART-type protocol should work with minimal changes.
-- Other devices notes
-  - if we want to use ESP-12 at some point, need fewer pins. ESP-12 only has 11: 
-    (0,2,4,5,12,13,14,15,16,RXD,TXD,ADC)
 
 ### Setting stepper motor current limit for DRV8834
 
