@@ -187,6 +187,8 @@ void GCode::execute(char buffer[]){
         if (cmd.target.a != 0 || cmd.target.c != 0){
             move(cmd.motion, cmd.coords, cmd.current, cmd.target);
         }
+    default: // ESP32 environment uses -Werror=switch which would raise an error here
+        break;
     }
 
     // Data Query. These are here so we can read the final state of a move.
@@ -258,6 +260,8 @@ void GCode::execute(char buffer[]){
     case Wait::M2:
     case Wait::M30:
         dln("END");
+        break;
+    default: // ESP32 environment uses -Werror=switch which would raise an error here
         break;
     }
 }

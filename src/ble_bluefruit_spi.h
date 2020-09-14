@@ -1,3 +1,4 @@
+#if !defined(ESP32)
 /*
  * App Communication over Bluetooth LE Serial
  *
@@ -23,3 +24,4 @@ public:
 };
 
 #endif /* BLUETOOTH_H_ */
+#endif // !defined(ESP32)
