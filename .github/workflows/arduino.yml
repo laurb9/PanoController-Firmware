@@ -18,6 +18,7 @@ jobs:
       matrix:
         board:
           - adafruit:samd:adafruit_feather_m0
+          - esp32:esp32:esp32
 
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +28,7 @@ jobs:
       - name: Install arduino-cli
         run: |
           make setup
+          pip install pyserial
       - name: Build
         run: |
-          make setup
           make all TARGET=${{ matrix.board }}

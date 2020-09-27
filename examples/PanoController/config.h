@@ -33,6 +33,9 @@
 #if defined(ARDUINO_SAMD_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0)
 #include "config_feather_m0.h"
 
+#elif defined(ESP32)
+#include "config_esp32.h"
+
 #elif defined(__arm__) && defined(CORE_TEENSY)
 #include "config_teensy.h"
 

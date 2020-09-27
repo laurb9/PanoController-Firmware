@@ -1,3 +1,4 @@
+#if !defined(ESP32)
 /*
  * App Communication over Bluetooth LE Serial
  *
@@ -7,7 +8,7 @@
  * A copy of this license has been included with this distribution in the file LICENSE.
  */
 
-#include "bluetooth.h"
+#include "ble_bluefruit_spi.h"
 
 #define UART_BUFFER_SIZE BLE_BUFSIZE
 
@@ -16,6 +17,13 @@ Bluetooth::Bluetooth(Adafruit_BluefruitLE_SPI& ble)
 {}
 
 void Bluetooth::begin(){
+    ble.begin(true);
+    ble.echo(false);     // disable command echo
+    ble.factoryReset();
+    ble.info();
+    ble.verbose(false);  // turn off debug info
+    ble.sendCommandCheckOK("AT+BLEBATTEN=1"); // enable battery service
+    // ble.sendCommandCheckOK("AT+BLEPOWERLEVEL=0"); // can be used to change transmit power
     ble.sendCommandCheckOK("AT+BAUDRATE=921600");
     // LED Activity command is only supported from 0.6.6: MODE, BLEUART
     ble.sendCommandCheckOK("AT+HWMODELED=BLEUART");
@@ -48,3 +56,4 @@ void Bluetooth::poll(uint32_t timeout){
         } while (p == eob); // we filled the buffer so there may be more to read
     }
 }
+#endif // !defined(ESP32)

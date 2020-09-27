@@ -14,11 +14,16 @@
 #include "camera.h"
 #include "mpu.h"
 #include "battery.h"
-#include "bluetooth.h"
 #include "gcode.h"
 
+#if defined(BLUEFRUIT_SPI_CS)
+#include "ble_bluefruit_spi.h"
 static Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 static Bluetooth bluetooth(ble);
+#elif defined(ESP32)
+#include "ble_esp32.h"
+static Bluetooth ble;
+#endif
 
 static Battery battery(BATTERY, BATT_R1, BATT_R2, VCC);
 static Camera camera(CAMERA_FOCUS, CAMERA_SHUTTER);
@@ -38,24 +43,20 @@ void setup() {
     digitalWrite(MPU_VCC, HIGH);
 
     Serial.println("Configuring stepper drivers");
+
     horiz_motor.begin(MOTOR_RPM, MICROSTEPS);
     vert_motor.begin(MOTOR_RPM/2, MICROSTEPS);
     motors.disable(); // turn off motors at startup
     Serial.print("Horiz RPM="); Serial.println(horiz_motor.getRPM());
     Serial.print("Vert  RPM="); Serial.println(vert_motor.getRPM());
 
+#if !defined(ESP32)
     Serial.println("Configuring Bluefruit LE");
-    ble.begin(true);
-    ble.echo(false);     // disable command echo
-    ble.factoryReset();
-    ble.info();
-    ble.verbose(false);  // turn off debug info
-
-    Serial.println("Initializing BLE App Communication");
     bluetooth.begin();
-
-    ble.sendCommandCheckOK("AT+BLEBATTEN=1"); // enable battery service
-    // ble.sendCommandCheckOK("AT+BLEPOWERLEVEL=0"); // can be used to change transmit power
+#else
+    Serial.println("Starting Bluetooth");
+    ble.begin("PanoController");
+#endif
 
     Serial.print("Checking battery voltage... ");
     battery.begin();
@@ -71,7 +72,6 @@ void setup() {
     gcode.setMaxAccel(MOTOR_ACCEL, MOTOR_DECEL);
 
     Serial.println("System ready.");
-    
     while (!ble.isConnected()){
         delay(1000);
     }
@@ -83,7 +83,7 @@ void loop() {
     static int len;
 
     if (ble.available()){
-        len = ble.readline(buffer, GCODE_BUF_SIZE);
+        len = ble.readBytesUntil('\n', buffer, GCODE_BUF_SIZE);
         *(buffer+len) = '\0';
 
         Serial.print("BLE> ");

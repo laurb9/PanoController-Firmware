@@ -17,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         board:
+          - esp32dev
           - adafruit_feather_m0
           - teensylc
           
