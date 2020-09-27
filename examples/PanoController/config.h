@@ -14,14 +14,15 @@
 #define VCC 3300
 // R1/R2 is the voltage divisor in Ω (GND-R1-A0-R2-Vin)
 // measure resistors and enter actual values for a more accurate voltage
-#define BATT_R1 9980
-#define BATT_R2 46500
+#define BATT_R1 7060
+#define BATT_R2 42600
 
 // MPU (accel/gyro)
 #define MPU_I2C_ADDRESS 0x68
  
 #include "platform_gigapan.h"
 #include "platform_panocontroller_v4.h"
+#include "platform_mecha_e1.h"
 #ifndef MOTOR_STEPS
 #warning "Missing PLATFORM_ setting, default to PLATFORM_GIGAPAN"
 #define PLATFORM_GIGAPAN
