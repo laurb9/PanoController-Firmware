@@ -264,12 +264,13 @@ void GCode::execute(char buffer[]){
 
 void GCode::move(Motion motion, Coords coords, Position& current, Position& target){
     if (coords == Coords::RELATIVE){
-        motors.rotate(target.a * horiz_gear_ratio, target.c * vert_gear_ratio);
+        motors.rotate(target.a * horiz_gear_ratio, 0.0);
+        motors.rotate(0.0, target.c * vert_gear_ratio);
         current.a += target.a;
         current.c += target.c;                    
     } else {
-        motors.rotate((target.a - current.a) * horiz_gear_ratio, 
-                      (target.c - current.c) * vert_gear_ratio);
+        motors.rotate((target.a - current.a) * horiz_gear_ratio, 0.0);
+        motors.rotate(0.0, (target.c - current.c) * vert_gear_ratio);
         current.a = target.a;
         current.c = target.c;
     };
@@ -283,8 +284,8 @@ void GCode::move(Motion motion, Coords coords, Position& current, Position& targ
  * Set acceleration
  */
 void GCode::setAccel(float horiz_plat_accel, float vert_plat_accel){
-    horiz_accel = min(max_accel, motorAccel(horiz_plat_accel, horiz_motor.getSteps(), horiz_gear_ratio));
-    vert_accel = min(max_accel, motorAccel(vert_plat_accel, vert_motor.getSteps(), vert_gear_ratio));
+    horiz_accel = min(max_accel, (short) motorAccel(horiz_plat_accel, horiz_motor.getSteps(), horiz_gear_ratio));
+    vert_accel = min(max_accel, (short) motorAccel(vert_plat_accel, vert_motor.getSteps(), vert_gear_ratio));
     horiz_decel = horiz_accel;
     vert_decel = vert_accel;
 }
@@ -305,8 +306,8 @@ void GCode::setSpeed(Speed speed, short horiz_speed, short vert_speed){
     case Speed::CONSTANT:
         horiz_motor.setSpeedProfile(Motor::CONSTANT_SPEED);
         vert_motor.setSpeedProfile(Motor::CONSTANT_SPEED);
-        horiz_motor.setRPM(min(horiz_rpm, max_horiz_rpm/10));
-        vert_motor.setRPM(min(vert_rpm, max_vert_rpm/10));
+        horiz_motor.setRPM(min(horiz_rpm, (short) (max_horiz_rpm/10)));
+        vert_motor.setRPM(min(vert_rpm, (short) (max_vert_rpm/10)));
         break;
     }
 }
