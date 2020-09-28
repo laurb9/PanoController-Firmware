@@ -15,6 +15,7 @@
 #include "mpu.h"
 #include "battery.h"
 #include "gcode.h"
+#include "compat.h"
 
 #if defined(BLUEFRUIT_SPI_CS)
 #include "ble_bluefruit_spi.h"
@@ -36,8 +37,9 @@ static GCode gcode(ble, motors, camera, mpu, battery);
 void setup() {
     Serial.begin(115200);
     delay(3000); // wait for serial
-    Serial.println("PanoController " REVISION);
+    Serial.println("PanoController " GIT_VERSION);
     Serial.println("On " ARDUINO_VARIANT " board " ARDUINO_BOARD);
+    Serial.println("Platform " PANO_PLATFORM);
 
     // turn on power to MPU but give it time to stabilize
     pinMode(MPU_VCC, OUTPUT);
