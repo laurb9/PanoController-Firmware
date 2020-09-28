@@ -2,10 +2,6 @@
  * Pano Controller Master Configuration File
  */
 
-#if !defined(REVISION)
-#define REVISION __DATE__
-#endif
-
 // Battery monitoring settings
 #define VCC 3300
 
