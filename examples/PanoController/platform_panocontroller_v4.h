@@ -15,4 +15,9 @@
 #define HORIZ_GEAR_RATIO 4
 #define VERT_GEAR_RATIO  4
 
+// R1-R2[Ω] is the voltage divider: GND-[R1]-[ADC Input]-[R2]-Vin
+// measure resistors/pot and enter actual values for more accurate measure
+#define BATT_R1 9980
+#define BATT_R2 46500
+
 #endif // PLATFORM_PANOCONTROLLER_V4
