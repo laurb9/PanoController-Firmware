@@ -195,6 +195,9 @@ void GCode::execute(char buffer[]){
     if (cmd.nonmodal & NonModal::M115){
         // Firmware version, capabilities and static configuration
         // These only need to be read once, at connection time.
+#if !defined(REVISION)
+#define REVISION 2.2
+#endif
         dln("Name=PanoController");
         dln("Version=" REVISION);
         dln("Build="  __DATE__ " " __TIME__);
