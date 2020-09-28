@@ -6,14 +6,6 @@
 #define REVISION __DATE__
 #endif
 
-// Address of I2C OLED display. If screen looks scaled edit Adafruit_SSD1306.h
-// and pick SSD1306_128_64 or SSD1306_128_32 that matches display type.
-#define DISPLAY_I2C_ADDRESS 0x3C
-#define OLED_RESET 12
-#define TEXT_SIZE 1
-#define DISPLAY_ROWS SSD1306_LCDHEIGHT/8/TEXT_SIZE
-#define DISPLAY_COLS SSD1306_LCDWIDTH/6/TEXT_SIZE
-
 // Battery monitoring settings
 #define VCC 3300
 

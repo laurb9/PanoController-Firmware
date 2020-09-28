@@ -1,7 +1,7 @@
 # Default build architecture and board
 TARGET ?= adafruit:samd:adafruit_feather_m0
 CORE = $(shell echo $(TARGET) | cut -d: -f1,2)
-LIBS ?= "StepperDriver" "Adafruit BluefruitLE nRF51" "Adafruit SSD1306" "Adafruit GFX Library"
+LIBS ?= "StepperDriver" "Adafruit BluefruitLE nRF51"
 
 # Where to save the Arduino support files, this should match what is in arduino-cli.yaml
 ARDUINO_DIR ?= .arduino
