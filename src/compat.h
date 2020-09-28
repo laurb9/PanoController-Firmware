@@ -19,9 +19,9 @@
 #if !defined(PANO_PLATFORM)
 #if defined(PLATFORM_PANOCONTROLLER_V4)
 #define PANO_PLATFORM "PanoController V4"
-#elif defined(PLATFORM_GIGAPAN)
-#define PANO_PLATFORM "Gigapan Epic 100"
 #elif defined(PLATFORM_MECHA_E1)
 #define PANO_PLATFORM "Nodal Ninja MECHA E1"
+#else // defined(PLATFORM_GIGAPAN)
+#define PANO_PLATFORM "Gigapan Epic 100"
 #endif
 #endif
