@@ -36,7 +36,8 @@ static GCode gcode(ble, motors, camera, mpu, battery);
 void setup() {
     Serial.begin(115200);
     delay(3000); // wait for serial
-    Serial.println("PanoController built " __DATE__ " " __TIME__);
+    Serial.println("PanoController " REVISION);
+    Serial.println("On " ARDUINO_VARIANT " board " ARDUINO_BOARD);
 
     // turn on power to MPU but give it time to stabilize
     pinMode(MPU_VCC, OUTPUT);
