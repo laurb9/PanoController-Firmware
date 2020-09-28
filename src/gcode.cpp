@@ -196,8 +196,11 @@ void GCode::execute(char buffer[]){
         // Firmware version, capabilities and static configuration
         // These only need to be read once, at connection time.
         dln("Name=PanoController");
-        dln("Version=2.2");
+        dln("Version=" REVISION);
         dln("Build="  __DATE__ " " __TIME__);
+        dln("Arch=" ARDUINO_VARIANT);
+        dln("Board=" ARDUINO_BOARD);
+        d("Freq="); dln(F_CPU/1e+6);
         dln("BatteryMin=6.0"); // FIXME: should come from motor
         d("MaxSpeedA="); dln(platformSpeed(max_horiz_rpm, horiz_gear_ratio));
         d("MaxSpeedC="); dln(platformSpeed(max_vert_rpm, vert_gear_ratio));
