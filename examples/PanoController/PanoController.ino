@@ -1,7 +1,7 @@
 /*
  * Pano Controller Firmware
  *
- * Copyright (C)2015-2017 Laurentiu Badea
+ * Copyright (C)2015-2020 Laurentiu Badea
  *
  * This file may be redistributed under the terms of the MIT license.
  * A copy of this license has been included with this distribution in the file LICENSE.

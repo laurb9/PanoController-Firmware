@@ -17,7 +17,7 @@
 
 // R1-R2[Ω] is the voltage divider: GND-[R1]-[ADC Input]-[R2]-Vin
 // measure resistors/pot and enter actual values for more accurate measure
-#define BATT_R1 7060
+#define BATT_R1 6674
 #define BATT_R2 42600
 
 #endif // PLATFORM_MECHA_E1
