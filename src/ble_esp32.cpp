@@ -61,7 +61,14 @@ void RXCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
 };
 
 int RXCallbacks::read(void) {
-    return available() ? (int)(*readAt++) : EOF;
+    int c = EOF;
+    if (available()) {
+        c = *readAt++;
+        if (readAt >= buf + FIFO_SIZE){
+            readAt = buf;
+        }
+    }    
+    return c;
 }
 
 int RXCallbacks::peek(void) {
