@@ -31,7 +31,7 @@
 // GPIO_NUM_21 I2C SDA
 // GPIO_NUM_22 I2C SCL
 #define MPU_INT GPIO_NUM_13
-#define MPU_VCC GPIO_NUM_12
+#define MPU_VCC GPIO_NUM_17
 
 // Future devices
 //#define COMPASS_DRDY xx
